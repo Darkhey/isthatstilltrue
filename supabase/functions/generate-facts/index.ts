@@ -17,6 +17,9 @@ interface OutdatedFact {
   fact: string;
   correction: string;
   yearDebunked: number;
+  mindBlowingFactor: string;
+  sourceUrl?: string;
+  sourceName?: string;
 }
 
 serve(async (req) => {
@@ -35,48 +38,65 @@ serve(async (req) => {
     }
 
     const currentYear = new Date().getFullYear();
-    const prompt = `You are an expert in education systems and scientific developments. Generate EXACTLY 6 outdated facts that students in ${country} around the year ${graduationYear} might have learned, but are now considered outdated or inaccurate.
+    const prompt = `You are an expert historian and researcher specializing in how knowledge, laws, social norms, and scientific understanding have evolved over time. 
+
+Generate EXACTLY 8 comprehensive and mind-blowing comparisons between what students in ${country} learned around ${graduationYear} versus what we know today in ${currentYear}.
+
+FOCUS ON:
+- Rapidly changing fields (technology, medicine, physics, space science)
+- Social norms and cultural shifts that would shock someone from ${graduationYear}
+- Laws and legal frameworks that have dramatically changed
+- Scientific discoveries that completely revolutionized understanding
+- Environmental and climate knowledge evolution
+- Medical/health misconceptions vs modern understanding
 
 Context:
 - Country: ${country}
 - Graduation year: ${graduationYear}
 - Current year: ${currentYear}
-- Consider the specific education system and curriculum of ${country}
+- Consider the specific education system, culture, and legal framework of ${country}
 
-Categories (use EXACTLY these English designations):
-1. Biology
-2. Chemistry  
-3. Physics
-4. History
-5. Geography
-6. Technology
+Categories (use EXACTLY these designations):
+1. Science
+2. Technology  
+3. Medicine
+4. Society
+5. Laws
+6. Environment
+7. Physics
+8. Culture
 
-Respond EXCLUSIVELY in the following JSON format without additional text:
+For each fact, provide:
+- The outdated belief/knowledge from that era
+- The current understanding (be specific and detailed)
+- Why this change is mind-blowing or shocking
+- Credible source links when possible
+
+Respond EXCLUSIVELY in the following JSON format:
 
 [
   {
-    "category": "Biology",
-    "fact": "The outdated fact that was taught back then",
-    "correction": "The modern, correct information",
-    "yearDebunked": Year_of_correction
-  },
-  {
-    "category": "Chemistry",
-    "fact": "The outdated fact that was taught back then", 
-    "correction": "The modern, correct information",
-    "yearDebunked": Year_of_correction
-  },
-  ...
+    "category": "Science",
+    "fact": "Detailed description of what was believed/taught in ${graduationYear}",
+    "correction": "Comprehensive explanation of current understanding with specific details and numbers",
+    "yearDebunked": Year_when_this_changed,
+    "mindBlowingFactor": "Explain why this change is shocking, funny, or mind-blowing",
+    "sourceUrl": "https://credible-source-url.com",
+    "sourceName": "Name of the source (Scientific journal, institution, etc.)"
+  }
 ]
 
-Important rules:
-- EXACTLY 6 facts (one per category)
-- Facts must be relevant for the specific country and education period
-- yearDebunked must be after graduation year and before current year
-- Use English language
-- Be scientifically precise and educationally valuable`;
+Requirements:
+- EXACTLY 8 facts (one per category)
+- Each fact must be genuinely surprising or mind-blowing
+- Include specific numbers, dates, and details where possible
+- Focus on things that would absolutely shock someone from ${graduationYear}
+- yearDebunked must be between ${graduationYear} and ${currentYear}
+- Provide real, credible source URLs when possible
+- Make it educational but entertaining
+- Consider ${country}-specific context (laws, culture, education system)`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -88,8 +108,8 @@ Important rules:
           }]
         }],
         generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 2048,
+          temperature: 0.8,
+          maxOutputTokens: 4096,
         }
       })
     });
@@ -111,9 +131,9 @@ Important rules:
 
     const facts: OutdatedFact[] = JSON.parse(jsonMatch[0]);
 
-    // Validate that we have exactly 6 facts
-    if (facts.length !== 6) {
-      throw new Error(`Expected 6 facts, got ${facts.length}`);
+    // Validate that we have exactly 8 facts
+    if (facts.length !== 8) {
+      throw new Error(`Expected 8 facts, got ${facts.length}`);
     }
 
     console.log(`Successfully generated ${facts.length} facts`);

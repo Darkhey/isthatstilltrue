@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor } from "lucide-react";
+import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,6 +14,9 @@ interface OutdatedFact {
   fact: string;
   correction: string;
   yearDebunked: number;
+  mindBlowingFactor: string;
+  sourceUrl?: string;
+  sourceName?: string;
 }
 
 const countries = [
@@ -27,12 +30,14 @@ const countries = [
 
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
-    "Biology": Beaker,
-    "Chemistry": Atom,
-    "Physics": Zap,
-    "History": Clock,
-    "Geography": Globe,
+    "Science": Beaker,
     "Technology": Monitor,
+    "Physics": Zap,
+    "Medicine": Beaker,
+    "Society": Globe,
+    "Laws": BookOpen,
+    "Culture": Clock,
+    "Environment": Globe,
   };
   return iconMap[category] || BookOpen;
 };
@@ -244,6 +249,7 @@ export const FactsDebunker = () => {
                             „{fact.fact}"
                           </p>
                         </div>
+                        
                         <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                           <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
                             <BookOpen className="w-4 h-4" />
@@ -253,6 +259,40 @@ export const FactsDebunker = () => {
                             {fact.correction}
                           </p>
                         </div>
+
+                        {fact.mindBlowingFactor && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                            <h4 className="font-semibold text-amber-700 mb-2 flex items-center gap-2">
+                              <Lightbulb className="w-4 h-4" />
+                              Mind-Blowing Factor:
+                            </h4>
+                            <p className="text-sm text-amber-800">
+                              {fact.mindBlowingFactor}
+                            </p>
+                          </div>
+                        )}
+
+                        {(fact.sourceUrl || fact.sourceName) && (
+                          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                            <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                              <ExternalLink className="w-4 h-4" />
+                              Source:
+                            </h4>
+                            {fact.sourceUrl ? (
+                              <a 
+                                href={fact.sourceUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                              >
+                                {fact.sourceName || fact.sourceUrl}
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              <p className="text-sm text-slate-600">{fact.sourceName}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
