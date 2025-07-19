@@ -80,7 +80,12 @@ const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
     "Politics": Flag,
     "International Relations": Flag,
+    "Historical Politics": Flag,
+    "Ancient Worldview": Flag,
     "Science": Beaker,
+    "Historical Science": Beaker,
+    "Natural Philosophy": Beaker,
+    "Ancient Natural Beliefs": Beaker,
     "Technology": Monitor,
     "Physics": Zap,
     "Medicine": Beaker,
@@ -98,10 +103,62 @@ const getCategoryIcon = (category: string) => {
 };
 
 const getCategoryColor = (category: string) => {
-  if (category === "Politics" || category === "International Relations") {
+  if (category === "Politics" || category === "International Relations" || 
+      category === "Historical Politics" || category === "Ancient Worldview") {
     return "bg-red-500";
   }
   return "bg-destructive";
+};
+
+const getFactGenerationType = (year: number): 'modern' | 'historical' | 'ancient' => {
+  if (year >= 1900) return 'modern';
+  if (year >= 1800) return 'historical';
+  return 'ancient';
+};
+
+const getLoadingMessage = (year: number) => {
+  const factType = getFactGenerationType(year);
+  
+  switch (factType) {
+    case 'modern':
+      return "Researching Outdated Facts...";
+    case 'historical':
+      return "Researching Historical Perspectives...";
+    case 'ancient':
+      return "Researching Ancient Worldviews...";
+    default:
+      return "Researching...";
+  }
+};
+
+const getResultsTitle = (year: number) => {
+  const factType = getFactGenerationType(year);
+  
+  switch (factType) {
+    case 'modern':
+      return "What You Learned vs. What We Know Now";
+    case 'historical':
+      return "Historical Beliefs vs. Modern Understanding";
+    case 'ancient':
+      return "Ancient Worldviews vs. Modern Knowledge";
+    default:
+      return "Educational Facts";
+  }
+};
+
+const getResultsDescription = (facts: OutdatedFact[], year: number) => {
+  const factType = getFactGenerationType(year);
+  
+  switch (factType) {
+    case 'modern':
+      return `${facts.length} facts from your school days that have since been updated`;
+    case 'historical':
+      return `${facts.length} beliefs from ${year} that we now understand differently`;
+    case 'ancient':
+      return `${facts.length} worldviews from ${year} that have been transformed by modern knowledge`;
+    default:
+      return `${facts.length} interesting facts`;
+  }
 };
 
 const generateFunMessage = (year: number) => {
@@ -109,21 +166,21 @@ const generateFunMessage = (year: number) => {
   
   const messages = {
     ancient: [
-      "Respect! You've seen it all 🙏",
-      "OG scholar right here 📚",
-      "Living history, love it! 🏛️",
-      "You're basically a time traveler ⏰"
+      "Respect! You've chosen a fascinating historical era 🏛️",
+      "Ancient times - when the world was so different! ⏰",
+      "You're exploring deep history! 📚",
+      "Medieval worldviews incoming! 🕰️"
     ],
     vintage: [
-      "Old school cool! 😎",
-      "Back when things were simpler 📻",
-      "You are that old? Impressive! 🎓",
-      "Vintage vibes only 🕰️"
+      "Historical era - what a different world! 📻",
+      "Back when everything was changing 🎭",
+      "You've picked an interesting century! 🎓",
+      "Classic historical period! 🕰️"
     ],
     retro: [
-      "Retro graduate detected! 📼",
-      "When life was analog 📺",
-      "Classic era, nice! 🎸",
+      "Retro times! 📼",
+      "When life was so different 📺",
+      "Classic era, nice choice! 🎸",
       "You remember when... 💭"
     ],
     nineties: [
@@ -165,13 +222,13 @@ const generateFunMessage = (year: number) => {
   };
 
   let categoryMessages;
-  if (yearNum <= 1920) {
+  if (yearNum <= 1500) {
     categoryMessages = messages.ancient;
-  } else if (yearNum <= 1940) {
+  } else if (yearNum <= 1700) {
     categoryMessages = messages.vintage;
-  } else if (yearNum <= 1960) {
+  } else if (yearNum <= 1850) {
     categoryMessages = messages.retro;
-  } else if (yearNum <= 1980) {
+  } else if (yearNum <= 1950) {
     categoryMessages = messages.retro;
   } else if (yearNum <= 1999) {
     categoryMessages = messages.nineties;
@@ -265,7 +322,16 @@ export const FactsDebunker = () => {
       }
 
       if (!data.facts || data.facts.length === 0) {
-        setError("No outdated facts could be found for this combination. Try a different country or earlier year.");
+        const factType = getFactGenerationType(parseInt(graduationYear));
+        let errorMsg = "No facts could be found for this combination. Try a different country or year.";
+        
+        if (factType === 'historical') {
+          errorMsg = "Could not generate historical perspectives for this era. Try a different combination.";
+        } else if (factType === 'ancient') {
+          errorMsg = "Could not generate ancient worldviews for this time period. Try a different combination.";
+        }
+        
+        setError(errorMsg);
         setShowSkeletons(false);
         return;
       }
@@ -274,14 +340,27 @@ export const FactsDebunker = () => {
       setEducationProblems(data.educationProblems || []);
       setShowSkeletons(false);
       
+      const factType = getFactGenerationType(parseInt(graduationYear));
       if (data.cached) {
-        setSuccessMessage(`Found ${data.facts.length} facts (researched ${data.cacheAge} days ago)`);
+        if (factType === 'modern') {
+          setSuccessMessage(`Found ${data.facts.length} facts (researched ${data.cacheAge} days ago)`);
+        } else if (factType === 'historical') {
+          setSuccessMessage(`Found ${data.facts.length} historical perspectives (researched ${data.cacheAge} days ago)`);
+        } else {
+          setSuccessMessage(`Found ${data.facts.length} ancient worldviews (researched ${data.cacheAge} days ago)`);
+        }
       } else {
-        setSuccessMessage(`Successfully researched ${data.facts.length} educational facts!`);
+        if (factType === 'modern') {
+          setSuccessMessage(`Successfully researched ${data.facts.length} educational facts!`);
+        } else if (factType === 'historical') {
+          setSuccessMessage(`Successfully researched ${data.facts.length} historical perspectives!`);
+        } else {
+          setSuccessMessage(`Successfully researched ${data.facts.length} ancient worldviews!`);
+        }
       }
     } catch (error) {
       console.error('Error researching facts:', error);
-      setError("Could not find facts. Please try again or select a different country/year combination.");
+      setError("Could not research facts. Please try again or select a different country/year combination.");
       setShowSkeletons(false);
     } finally {
       setIsLoading(false);
@@ -433,14 +512,14 @@ export const FactsDebunker = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                {showSkeletons ? "Researching Outdated Facts..." : "What You Learned vs. What We Know Now"}
+                {showSkeletons ? getLoadingMessage(parseInt(graduationYear)) : getResultsTitle(parseInt(graduationYear))}
               </h2>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 {country} • Graduated {graduationYear}
               </Badge>
               {!showSkeletons && facts.length > 0 && (
                 <p className="text-muted-foreground mt-2">
-                  {facts.length} facts from your school days that have since been updated
+                  {getResultsDescription(facts, parseInt(graduationYear))}
                 </p>
               )}
               {quickFunFact && (
@@ -515,9 +594,11 @@ export const FactsDebunker = () => {
                     const categoryOrder = [
                       'Space/Astronomy', 'Medicine', 'Technology', 'Science', 
                       'Nutrition', 'Health', 'Environment', 'Geography',
+                      'Historical Science', 'Natural Philosophy', 'Ancient Natural Beliefs',
                       'Views on Specific Countries', 'International Conflicts',
                       'Colonial/Post-colonial Perspectives', 'Economic Systems',
-                      'Political Systems', 'Diplomatic Relations'
+                      'Political Systems', 'Diplomatic Relations',
+                      'Historical Politics', 'Ancient Worldview'
                     ];
                     
                     const indexA = categoryOrder.indexOf(a.category);
@@ -532,7 +613,8 @@ export const FactsDebunker = () => {
                   .map((fact, index) => {
                   const IconComponent = getCategoryIcon(fact.category);
                   const categoryColor = getCategoryColor(fact.category);
-                  const isPolitics = fact.category === "Politics" || fact.category === "International Relations";
+                  const isPolitics = fact.category === "Politics" || fact.category === "International Relations" || 
+                                   fact.category === "Historical Politics" || fact.category === "Ancient Worldview";
                   
                   return (
                     <AccordionItem 
@@ -551,7 +633,7 @@ export const FactsDebunker = () => {
                                  <span className="font-semibold text-sm md:text-base">{fact.category}</span>
                                  {isPolitics && (
                                    <Badge variant="destructive" className="text-xs self-start w-fit">
-                                     Controversial
+                                     {getFactGenerationType(parseInt(graduationYear)) === 'modern' ? 'Controversial' : 'Historical'}
                                    </Badge>
                                  )}
                                </div>
@@ -565,7 +647,7 @@ export const FactsDebunker = () => {
                            <div className="flex justify-between items-center">
                              <Badge variant="destructive" className={`${categoryColor} text-xs`}>
                                <AlertTriangle className="w-3 h-3 mr-1" />
-                               Debunked {fact.yearDebunked}
+                               {getFactGenerationType(parseInt(graduationYear)) === 'modern' ? 'Debunked' : 'Changed'} {fact.yearDebunked}
                              </Badge>
                            </div>
                          </div>
@@ -575,10 +657,18 @@ export const FactsDebunker = () => {
                           <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 md:p-4">
                             <h4 className="font-semibold text-destructive mb-2 flex items-start gap-2 text-sm md:text-base">
                               <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                              <span>What you were taught in {graduationYear}:</span>
+                              <span>
+                                {getFactGenerationType(parseInt(graduationYear)) === 'modern' 
+                                  ? `What you were taught in ${graduationYear}:` 
+                                  : `What people believed in ${graduationYear}:`}
+                              </span>
                             </h4>
                             <p className="text-sm italic leading-relaxed">
-                              „{fact.fact.replace(`In ${graduationYear}, students in ${country} were taught that`, '').replace(`In ${graduationYear}, ${country} students were taught that`, '')}"
+                              „{fact.fact.replace(`In ${graduationYear}, students in ${country} were taught that`, '')
+                                        .replace(`In ${graduationYear}, ${country} students were taught that`, '')
+                                        .replace(`In ${graduationYear}, educated people in ${country} commonly believed that`, '')
+                                        .replace(`In ${graduationYear}, people in ${country} commonly believed that`, '')
+                                        .replace(`In ${graduationYear}, people in ${country} believed that`, '')}"
                             </p>
                           </div>
                           

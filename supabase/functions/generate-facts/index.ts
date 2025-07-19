@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -37,11 +36,22 @@ interface EducationSystemProblem {
   impact: string;
 }
 
+// Determine the type of fact generation based on year
+function getFactGenerationType(year: number): 'modern' | 'historical' | 'ancient' {
+  if (year >= 1900) return 'modern';
+  if (year >= 1800) return 'historical';
+  return 'ancient';
+}
+
 // Generate politics/international relations facts (prioritized)
 async function generatePoliticalFacts(country: string, year: number): Promise<OutdatedFact[]> {
   const currentYear = new Date().getFullYear();
+  const factType = getFactGenerationType(year);
   
-  const prompt = `You are an expert in international relations and political education. Analyze how students in ${country} were taught about other countries and international relations in ${year} vs today in ${currentYear}.
+  let prompt = '';
+  
+  if (factType === 'modern') {
+    prompt = `You are an expert in international relations and political education. Analyze how students in ${country} were taught about other countries and international relations in ${year} vs today in ${currentYear}.
 
 Generate exactly 2-3 political/international relations facts that were commonly taught in ${country} schools around ${year} but have since been proven wrong, overly simplified, or significantly updated.
 
@@ -83,13 +93,82 @@ Return ONLY a valid JSON array with NO markdown formatting:
 ]
 
 Focus on genuine political teachings that were presented as fact in ${year} textbooks in ${country}, avoiding current political debates.`;
+  } else if (factType === 'historical') {
+    prompt = `You are a historian analyzing political beliefs and international perspectives in ${country} around ${year}. 
+
+Generate exactly 2-3 political/diplomatic beliefs that educated people in ${country} commonly held in ${year} but have since been proven wrong or significantly updated.
+
+Focus on these areas for the year ${year}:
+- **Views on neighboring countries** and international relations
+- **Colonial attitudes** and imperial perspectives of the time
+- **Economic theories** and trade beliefs
+- **Diplomatic assumptions** about alliances and conflicts
+- **Cultural superiority** beliefs common in that era
+- **Territorial disputes** and expansion justifications
+
+For each belief, provide:
+1. What educated people in ${country} generally believed about politics/diplomacy in ${year}
+2. How our understanding has evolved with historical perspective
+3. When this understanding significantly changed
+4. Why this evolution matters for understanding history
+
+Return ONLY a valid JSON array with NO markdown formatting:
+
+[
+  {
+    "category": "Historical Politics",
+    "fact": "In ${year}, educated people in ${country} commonly believed that [specific political/diplomatic belief]",
+    "correction": "Today we understand that [modern historical perspective with context - 3-4 sentences explaining how understanding evolved]",
+    "yearDebunked": [approximate year when understanding changed],
+    "mindBlowingFactor": "This evolution [explain historical significance - 2-3 sentences]",
+    "sourceUrl": "https://credible-historical-source.com",
+    "sourceName": "Historical Archive/Institution Name"
+  }
+]`;
+  } else {
+    prompt = `You are a historian analyzing worldviews and beliefs in ${country} around ${year}. 
+
+Generate exactly 2-3 political, social, or diplomatic beliefs that people in ${country} commonly held in ${year} but have since been completely transformed.
+
+Focus on these areas for the year ${year}:
+- **Views on governance** and political authority
+- **International relations** and foreign peoples
+- **Social hierarchies** and class systems
+- **Economic beliefs** about trade and wealth
+- **Territorial concepts** and geographic understanding
+- **Cultural assumptions** about other civilizations
+
+For each belief, provide:
+1. What people in ${country} generally believed in ${year}
+2. How completely our perspective has changed
+3. When this major shift occurred
+4. Why this transformation is historically significant
+
+Return ONLY a valid JSON array with NO markdown formatting:
+
+[
+  {
+    "category": "Ancient Worldview",
+    "fact": "In ${year}, people in ${country} commonly believed that [specific belief about politics/society/world]",
+    "correction": "Today we understand that [completely different modern perspective - 3-4 sentences explaining the transformation]",
+    "yearDebunked": [approximate year when major shift occurred],
+    "mindBlowingFactor": "This transformation [explain historical significance of the change - 2-3 sentences]",
+    "sourceUrl": "https://credible-historical-source.com",
+    "sourceName": "Historical Research Institution"
+  }
+]`;
+  }
 
   return await makeAIRequest(prompt, 'political-facts');
 }
 
 // Generate education system problems for the given country and year
 async function generateEducationProblems(country: string, year: number): Promise<EducationSystemProblem[]> {
-  const prompt = `List 3-5 major problems that the education system in ${country} faced specifically around ${year}.
+  const factType = getFactGenerationType(year);
+  let prompt = '';
+  
+  if (factType === 'modern') {
+    prompt = `List 3-5 major problems that the education system in ${country} faced specifically around ${year}.
 
 Focus on concrete, historical issues like:
 - Teacher shortages
@@ -108,15 +187,60 @@ Return ONLY a valid JSON array:
     "impact": "How this affected students and education quality"
   }
 ]`;
+  } else if (factType === 'historical') {
+    prompt = `List 3-5 major challenges that education or knowledge sharing faced in ${country} around ${year}.
+
+Focus on historical issues like:
+- Limited access to education
+- Religious or political restrictions on learning
+- Lack of standardized curricula
+- Economic barriers to education
+- Gender or class restrictions
+- Limited availability of books/materials
+- Geographic isolation of schools
+
+Return ONLY a valid JSON array:
+[
+  {
+    "problem": "Brief challenge title",
+    "description": "2-3 sentence description of the historical issue",
+    "impact": "How this affected learning and knowledge sharing"
+  }
+]`;
+  } else {
+    prompt = `List 3-5 major challenges that knowledge and learning faced in ${country} around ${year}.
+
+Focus on ancient/medieval issues like:
+- Extremely limited literacy
+- Knowledge restricted to religious institutions
+- Oral tradition limitations
+- Lack of written materials
+- Political instability affecting learning
+- Economic survival taking priority over education
+- Social hierarchy restrictions on knowledge
+
+Return ONLY a valid JSON array:
+[
+  {
+    "problem": "Brief challenge title",
+    "description": "2-3 sentence description of the ancient/medieval issue",
+    "impact": "How this affected knowledge preservation and sharing"
+  }
+]`;
+  }
 
   return await makeAIRequest(prompt, 'education-problems');
 }
 
-// Generate regular academic facts
+// Generate regular academic facts with dynamic prompts based on year
 async function generateOutdatedFacts(country: string, year: number): Promise<OutdatedFact[]> {
   const currentYear = new Date().getFullYear();
+  const factType = getFactGenerationType(year);
   
-  const prompt = `You are an educational historian analyzing what students in ${country} were taught in ${year} vs what we know today in ${currentYear}.
+  let prompt = '';
+  
+  if (factType === 'modern') {
+    prompt = `You are an educational historian analyzing what students in ${country} were taught in ${year} vs what we know today in ${currentYear}.
 
 Generate exactly 4-5 concrete, factual statements that were commonly taught in ${country} schools around ${year} but have since been proven wrong or significantly updated.
 
@@ -158,6 +282,73 @@ Return ONLY a valid JSON array with NO markdown formatting:
 ]
 
 Focus on facts that were genuinely taught as definitive truth in ${year} textbooks in ${country}, not theoretical concepts or ongoing debates.`;
+  } else if (factType === 'historical') {
+    prompt = `You are a historian analyzing what educated people in ${country} believed about the natural world and science around ${year}.
+
+Generate exactly 4-5 scientific, medical, or natural beliefs that educated people in ${country} commonly held in ${year} but have since been completely overturned.
+
+Focus on these categories for the year ${year}:
+- **Natural Philosophy** (early scientific theories)
+- **Medicine** (medical theories and treatments)
+- **Astronomy** (understanding of celestial bodies)
+- **Geography** (world knowledge and maps)
+- **Biology** (understanding of life and body)
+- **Physics** (theories about matter and forces)
+- **Chemistry** (early chemical theories)
+
+For each belief, provide:
+1. What educated people in ${country} generally believed in ${year}
+2. What we know now with modern scientific understanding
+3. When this belief was significantly challenged or overturned
+4. Why this change represents a major scientific revolution
+
+Return ONLY a valid JSON array with NO markdown formatting:
+
+[
+  {
+    "category": "Historical Science/Medicine/Natural Philosophy",
+    "fact": "In ${year}, educated people in ${country} believed that [specific scientific/natural belief]",
+    "correction": "Today we know that [modern scientific understanding - 3-4 sentences explaining the scientific revolution that occurred]",
+    "yearDebunked": [approximate year when belief was overturned],
+    "mindBlowingFactor": "This scientific revolution [explain significance for human knowledge - 2-3 sentences]",
+    "sourceUrl": "https://credible-historical-source.com",
+    "sourceName": "Historical Science Archive/Institution"
+  }
+]`;
+  } else {
+    prompt = `You are a historian analyzing worldviews and beliefs about the natural world in ${country} around ${year}.
+
+Generate exactly 4-5 beliefs about nature, the world, medicine, or the cosmos that people in ${country} commonly held in ${year} but have been completely transformed by modern knowledge.
+
+Focus on these areas for the year ${year}:
+- **Cosmology** (beliefs about the universe and earth)
+- **Medical theories** (understanding of disease and healing)
+- **Natural world** (beliefs about animals, plants, weather)
+- **Geography** (understanding of the world's layout)
+- **Human body** (anatomical and physiological beliefs)
+- **Elements and matter** (early theories about substances)
+- **Supernatural explanations** for natural phenomena
+
+For each belief, provide:
+1. What people in ${country} commonly believed in ${year}
+2. How completely different our modern understanding is
+3. When major shifts in understanding occurred
+4. Why this transformation is remarkable for human knowledge
+
+Return ONLY a valid JSON array with NO markdown formatting:
+
+[
+  {
+    "category": "Ancient Natural Beliefs",
+    "fact": "In ${year}, people in ${country} believed that [specific belief about nature/world/medicine]",
+    "correction": "Today we understand that [completely different modern knowledge - 3-4 sentences explaining the transformation]",
+    "yearDebunked": [approximate year when major understanding shift occurred],
+    "mindBlowingFactor": "This transformation [explain how remarkable this change in human understanding is - 2-3 sentences]",
+    "sourceUrl": "https://credible-historical-source.com",
+    "sourceName": "Historical Research Institution"
+  }
+]`;
+  }
 
   return await makeAIRequest(prompt, 'outdated-facts');
 }
@@ -405,7 +596,11 @@ function fixCommonJSONIssues(jsonText: string): string {
 
 // Generate quick fun fact about country and year
 async function generateQuickFunFact(country: string, year: number): Promise<string> {
-  const prompt = `Generate a single, interesting historical fun fact about ${country} in the year ${year}. 
+  const factType = getFactGenerationType(year);
+  let prompt = '';
+  
+  if (factType === 'modern') {
+    prompt = `Generate a single, interesting historical fun fact about ${country} in the year ${year}. 
 
 Focus on something cool that happened that year - like weather, culture, politics, economy, sports, or notable events. Make it engaging and specific to that exact year.
 
@@ -415,6 +610,29 @@ Examples:
 - "1987 marked the year when Spain joined the European Economic Community"
 
 Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
+  } else if (factType === 'historical') {
+    prompt = `Generate a single, interesting historical fun fact about ${country} around the year ${year}.
+
+Focus on something fascinating from that era - like major events, cultural developments, notable figures, technological advances, or social changes. Make it engaging and historically accurate for that time period.
+
+Examples:
+- "In 1850, Sweden experienced a major railway boom with the first major line connecting Stockholm to Gothenburg"
+- "Around 1823, Germany saw the rise of student fraternities that would shape university culture for centuries"
+- "In 1801, France under Napoleon was restructuring its entire legal system with the Napoleonic Code"
+
+Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
+  } else {
+    prompt = `Generate a single, interesting historical fun fact about ${country} around the year ${year}.
+
+Focus on something fascinating from that ancient era - like major historical events, cultural practices, notable rulers, early technologies, or social structures. Make it engaging and historically plausible for that time period.
+
+Examples:
+- "Around 1650, Sweden was emerging as a major European power under Queen Christina"
+- "In 1492, Spain completed its Reconquista and was funding Columbus's voyages to the New World"
+- "Around 1300, France was experiencing the height of Gothic cathedral construction"
+
+Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
+  }
 
   const makeOpenAIRequest = async () => {
     if (!openAIApiKey) {
@@ -569,9 +787,10 @@ serve(async (req) => {
         console.error('Education problems generation failed:', results[2].reason);
       }
 
-      // Ensure we have at least some content
+      // For historical periods, we should always generate something interesting
       if (politicalFacts.length === 0 && regularFacts.length === 0 && educationProblems.length === 0) {
-        throw new Error('Failed to generate any content');
+        console.log(`No facts generated initially, this might be a very old year (${graduationYear}). The system should have generated historical perspectives.`);
+        throw new Error('Failed to generate any historical content');
       }
 
     } catch (error) {
