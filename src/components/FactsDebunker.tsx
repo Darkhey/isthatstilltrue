@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle, ChevronDown, Flag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
 import { FactShare } from "./FactShare";
@@ -38,10 +39,22 @@ const countries = [
   { value: "Australia", label: "Australia" },
   { value: "Netherlands", label: "Netherlands" },
   { value: "Sweden", label: "Sweden" },
+  { value: "Russia", label: "Russia" },
+  { value: "Moldova", label: "Moldova" },
+  { value: "China", label: "China" },
+  { value: "Iran", label: "Iran" },
+  { value: "North Korea", label: "North Korea" },
+  { value: "Venezuela", label: "Venezuela" },
+  { value: "Cuba", label: "Cuba" },
+  { value: "Belarus", label: "Belarus" },
+  { value: "Serbia", label: "Serbia" },
+  { value: "Turkey", label: "Turkey" },
 ];
 
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
+    "Politics": Flag,
+    "International Relations": Flag,
     "Science": Beaker,
     "Technology": Monitor,
     "Physics": Zap,
@@ -59,6 +72,13 @@ const getCategoryIcon = (category: string) => {
   return iconMap[category] || BookOpen;
 };
 
+const getCategoryColor = (category: string) => {
+  if (category === "Politics" || category === "International Relations") {
+    return "bg-red-500";
+  }
+  return "bg-destructive";
+};
+
 export const FactsDebunker = () => {
   const [country, setCountry] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
@@ -69,6 +89,7 @@ export const FactsDebunker = () => {
   const [showSkeletons, setShowSkeletons] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isEducationProblemsOpen, setIsEducationProblemsOpen] = useState(false);
 
   const handleNextStep = () => {
     if (!country) {
@@ -138,6 +159,7 @@ export const FactsDebunker = () => {
     setShowSkeletons(false);
     setError(null);
     setSuccessMessage(null);
+    setIsEducationProblemsOpen(false);
   };
 
   return (
@@ -266,33 +288,47 @@ export const FactsDebunker = () => {
               )}
             </div>
 
-            {/* Education System Problems */}
+            {/* Education System Problems - Collapsible */}
             {!showSkeletons && educationProblems.length > 0 && (
               <div className="mb-8">
-                <h3 className="text-2xl font-bold mb-4 text-center">
-                  Education System Challenges in {country} around {graduationYear}
-                </h3>
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {educationProblems.map((problem, index) => (
-                    <Card key={index} className="border-orange-200 bg-orange-50/50">
-                      <CardHeader>
-                        <CardTitle className="text-orange-800 text-lg">
-                          {problem.problem}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-2">
-                        <p className="text-sm text-orange-700">
-                          {problem.description}
+                <Collapsible open={isEducationProblemsOpen} onOpenChange={setIsEducationProblemsOpen}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between p-6 h-auto">
+                      <div className="text-left">
+                        <h3 className="text-xl font-bold">
+                          Education System Challenges in {country} around {graduationYear}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Click to see what problems affected your education system
                         </p>
-                        <div className="pt-2 border-t border-orange-200">
-                          <p className="text-xs font-medium text-orange-600">
-                            <strong>Impact:</strong> {problem.impact}
-                          </p>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                      </div>
+                      <ChevronDown className={`h-5 w-5 transition-transform ${isEducationProblemsOpen ? 'rotate-180' : ''}`} />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-4">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {educationProblems.map((problem, index) => (
+                        <Card key={index} className="border-orange-200 bg-orange-50/50">
+                          <CardHeader>
+                            <CardTitle className="text-orange-800 text-lg">
+                              {problem.problem}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            <p className="text-sm text-orange-700">
+                              {problem.description}
+                            </p>
+                            <div className="pt-2 border-t border-orange-200">
+                              <p className="text-xs font-medium text-orange-600">
+                                <strong>Impact:</strong> {problem.impact}
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
             )}
             
@@ -304,6 +340,9 @@ export const FactsDebunker = () => {
               ) : (
                 facts.map((fact, index) => {
                   const IconComponent = getCategoryIcon(fact.category);
+                  const categoryColor = getCategoryColor(fact.category);
+                  const isPolitics = fact.category === "Politics" || fact.category === "International Relations";
+                  
                   return (
                     <AccordionItem 
                       key={index} 
@@ -312,14 +351,23 @@ export const FactsDebunker = () => {
                     >
                       <AccordionTrigger className="px-6 py-4 hover:no-underline">
                         <div className="flex items-center gap-4 w-full">
-                          <IconComponent className="h-6 w-6 text-primary" />
+                          <div className={`p-2 rounded-full ${isPolitics ? 'bg-red-100' : 'bg-primary/10'}`}>
+                            <IconComponent className={`h-6 w-6 ${isPolitics ? 'text-red-600' : 'text-primary'}`} />
+                          </div>
                           <div className="flex-1 text-left">
-                            <div className="font-semibold text-lg">{fact.category}</div>
+                            <div className="font-semibold text-lg flex items-center gap-2">
+                              {fact.category}
+                              {isPolitics && (
+                                <Badge variant="destructive" className="text-xs">
+                                  Controversial
+                                </Badge>
+                              )}
+                            </div>
                             <div className="text-sm text-muted-foreground truncate">
                               {fact.fact.length > 80 ? `${fact.fact.substring(0, 80)}...` : fact.fact}
                             </div>
                           </div>
-                          <Badge variant="destructive" className="ml-auto">
+                          <Badge variant="destructive" className={`ml-auto ${categoryColor}`}>
                             <AlertTriangle className="w-3 h-3 mr-1" />
                             Debunked {fact.yearDebunked}
                           </Badge>

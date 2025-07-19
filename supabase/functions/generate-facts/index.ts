@@ -37,6 +37,56 @@ interface EducationSystemProblem {
   impact: string;
 }
 
+// Generate politics/international relations facts (prioritized)
+async function generatePoliticalFacts(country: string, year: number): Promise<OutdatedFact[]> {
+  const currentYear = new Date().getFullYear();
+  
+  const prompt = `You are an expert in international relations and political education. Analyze how students in ${country} were taught about other countries and international relations in ${year} vs today in ${currentYear}.
+
+Generate exactly 2-3 political/international relations facts that were commonly taught in ${country} schools around ${year} but have since been proven wrong, overly simplified, or significantly updated.
+
+Focus on these controversial/interesting areas:
+- **Cold War Era Perspectives** (if relevant to the year)
+- **Views on specific countries** (how ${country} students were taught to view Russia, China, USA, Middle East, etc.)
+- **International conflicts** and how they were presented
+- **Economic systems** (capitalism vs socialism presentations)
+- **Colonial/Post-colonial** perspectives
+- **Diplomatic relations** that have dramatically changed
+- **Propaganda/Stereotypes** that were taught as fact
+
+For each political fact, provide:
+1. What was definitively taught about international relations in ${year}
+2. How our understanding has evolved with historical perspective
+3. When this understanding changed
+4. Why this political evolution matters
+
+EXAMPLES of the format:
+
+For USA 1985:
+- "The Soviet Union is an evil empire that threatens world peace" → "Today we understand the complex geopolitical factors, human costs, and legitimate security concerns on both sides of the Cold War"
+
+For Germany 1960:
+- "America is Germany's eternal liberator and friend" → "Today we recognize the complex post-war relationship included significant tensions, economic interests, and evolving power dynamics"
+
+Return ONLY a valid JSON array with NO markdown formatting:
+
+[
+  {
+    "category": "Politics",
+    "fact": "In ${year}, students in ${country} were taught that [specific political/international statement]",
+    "correction": "Today we understand that [nuanced political reality with historical context - 3-4 sentences explaining how political understanding evolved]",
+    "yearDebunked": [year when political understanding changed],
+    "mindBlowingFactor": "This political evolution [explain significance and what it reveals about international relations - 2-3 sentences]",
+    "sourceUrl": "https://credible-historical-source.com",
+    "sourceName": "Historical Institution/Archive Name"
+  }
+]
+
+Focus on genuine political teachings that were presented as fact in ${year} textbooks in ${country}, avoiding current political debates.`;
+
+  return await makeAIRequest(prompt, 'political-facts');
+}
+
 // Generate education system problems for the given country and year
 async function generateEducationProblems(country: string, year: number): Promise<EducationSystemProblem[]> {
   const prompt = `List 3-5 major problems that the education system in ${country} faced specifically around ${year}.
@@ -62,13 +112,13 @@ Return ONLY a valid JSON array:
   return await makeAIRequest(prompt, 'education-problems');
 }
 
-// Generate facts directly in one step with concrete examples
+// Generate regular academic facts
 async function generateOutdatedFacts(country: string, year: number): Promise<OutdatedFact[]> {
   const currentYear = new Date().getFullYear();
   
   const prompt = `You are an educational historian analyzing what students in ${country} were taught in ${year} vs what we know today in ${currentYear}.
 
-Generate exactly 6-8 concrete, factual statements that were commonly taught in ${country} schools around ${year} but have since been proven wrong or significantly updated.
+Generate exactly 4-5 concrete, factual statements that were commonly taught in ${country} schools around ${year} but have since been proven wrong or significantly updated.
 
 Focus on these categories where knowledge has genuinely changed:
 - **Science** (biology, chemistry, physics discoveries)
@@ -77,7 +127,7 @@ Focus on these categories where knowledge has genuinely changed:
 - **Space/Astronomy** (planetary status, universe understanding)
 - **Nutrition** (dietary recommendations)
 - **Environment** (climate, pollution understanding)
-- **History** (recent events, Cold War aftermath)
+- **History** (recent events, interpretations)
 - **Geography** (country names, political boundaries)
 
 For each fact, provide:
@@ -141,13 +191,13 @@ async function retryWithBackoff<T>(
 }
 
 // Helper function to make AI requests with fallback
-async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'education-problems'): Promise<any[]> {
+async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'education-problems' | 'political-facts'): Promise<any[]> {
   const makeOpenAIRequest = async () => {
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not available');
     }
 
-    console.log('Making OpenAI API request...');
+    console.log(`Making OpenAI API request for ${requestType}...`);
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -180,7 +230,7 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
       throw new Error('Gemini API key not available');
     }
     
-    console.log('Making Gemini API request...');
+    console.log(`Making Gemini API request for ${requestType}...`);
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
       method: 'POST',
       headers: {
@@ -232,12 +282,12 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
   try {
     response = await retryWithBackoff(makeOpenAIRequest, 3, 2000);
   } catch (openAIError) {
-    console.log('OpenAI failed, trying Gemini fallback:', openAIError.message);
+    console.log(`OpenAI failed for ${requestType}, trying Gemini fallback:`, openAIError.message);
     try {
       response = await retryWithBackoff(makeGeminiRequest, 3, 2000);
     } catch (geminiError) {
-      console.error('Both OpenAI and Gemini failed:', { openAIError: openAIError.message, geminiError: geminiError.message });
-      throw new Error('Both AI providers failed to generate facts');
+      console.error(`Both OpenAI and Gemini failed for ${requestType}:`, { openAIError: openAIError.message, geminiError: geminiError.message });
+      throw new Error(`Both AI providers failed to generate ${requestType}`);
     }
   }
 
@@ -245,18 +295,18 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
   let results: any[];
   try {
     const extractedText = extractJSONFromResponse(response);
-    console.log('Extracted JSON text:', extractedText);
+    console.log(`Extracted JSON text for ${requestType}:`, extractedText);
     results = JSON.parse(extractedText);
   } catch (parseError) {
-    console.error('JSON parsing error:', parseError);
-    console.error('Raw AI response:', response);
-    throw new Error('Failed to parse JSON response from AI');
+    console.error(`JSON parsing error for ${requestType}:`, parseError);
+    console.error(`Raw AI response for ${requestType}:`, response);
+    throw new Error(`Failed to parse JSON response from AI for ${requestType}`);
   }
 
   // Validate structure
   if (!Array.isArray(results)) {
-    console.error('Response is not an array:', results);
-    throw new Error('Response is not an array');
+    console.error(`Response is not an array for ${requestType}:`, results);
+    throw new Error(`Response is not an array for ${requestType}`);
   }
 
   if (results.length === 0) {
@@ -265,7 +315,7 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
   }
 
   // Validate based on request type
-  if (requestType === 'outdated-facts') {
+  if (requestType === 'outdated-facts' || requestType === 'political-facts') {
     for (let i = 0; i < results.length; i++) {
       const fact = results[i];
       if (!fact.category || !fact.fact || !fact.correction || !fact.yearDebunked || !fact.mindBlowingFactor) {
@@ -359,13 +409,17 @@ serve(async (req) => {
 
     console.log(`Generating new data for ${country} ${graduationYear}`);
 
-    // Generate both facts and education problems
-    const [facts, educationProblems] = await Promise.all([
+    // Generate political facts, regular facts, and education problems
+    const [politicalFacts, regularFacts, educationProblems] = await Promise.all([
+      generatePoliticalFacts(country, graduationYear),
       generateOutdatedFacts(country, graduationYear),
       generateEducationProblems(country, graduationYear)
     ]);
+
+    // Combine and prioritize political facts first
+    const allFacts = [...politicalFacts, ...regularFacts];
     
-    console.log(`Successfully generated ${facts.length} outdated facts and ${educationProblems.length} education problems`);
+    console.log(`Successfully generated ${politicalFacts.length} political facts, ${regularFacts.length} regular facts, and ${educationProblems.length} education problems`);
 
     // Save the generated data to cache
     try {
@@ -374,7 +428,7 @@ serve(async (req) => {
         .upsert({
           country,
           graduation_year: graduationYear,
-          facts_data: facts,
+          facts_data: allFacts,
           education_system_problems: educationProblems,
           updated_at: new Date().toISOString()
         }, {
@@ -391,7 +445,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ 
-      facts,
+      facts: allFacts,
       educationProblems,
       cached: false
     }), {
