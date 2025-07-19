@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { ChevronUp, ChevronDown } from 'lucide-react';
 
 interface TimeMachinePickerProps {
   value?: string;
@@ -31,7 +30,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
   
   const currentYear = new Date().getFullYear();
 
-  // Debounced value change
+  // Debounced value change with longer delay
   const debouncedOnValueChange = useCallback(
     (() => {
       let timeoutId: NodeJS.Timeout;
@@ -41,7 +40,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
           if (year <= currentYear) {
             onValueChange(year.toString());
           }
-        }, 100);
+        }, 300);
       };
     })(),
     [onValueChange, currentYear]
@@ -65,17 +64,15 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
         
         // Scroll to correct positions
         setTimeout(() => {
-          const firstIndex = firstDigitOptions.indexOf(first);
-          const firstElement = firstScrollRef.current?.children[firstIndex + 2] as HTMLElement; // +2 for padding items
-          if (firstElement) {
-            firstElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          if (firstScrollRef.current) {
+            const firstIndex = firstDigitOptions.indexOf(first);
+            firstScrollRef.current.scrollTop = firstIndex * 80;
           }
           
-          const lastElement = lastScrollRef.current?.children[last + 2] as HTMLElement; // +2 for padding items
-          if (lastElement) {
-            lastElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          if (lastScrollRef.current) {
+            lastScrollRef.current.scrollTop = last * 80;
           }
-        }, 50);
+        }, 100);
       }
     }
   }, [value, firstDigitOptions]);
@@ -88,30 +85,12 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
     if (!ref.current) return;
     
     const container = ref.current;
-    const itemHeight = 48; // Fixed item height
-    const containerCenter = container.scrollTop + container.clientHeight / 2;
-    const selectedIndex = Math.round((containerCenter - itemHeight) / itemHeight) - 2; // -2 for padding items
+    const itemHeight = 80;
+    const scrollTop = container.scrollTop;
+    const selectedIndex = Math.round(scrollTop / itemHeight);
     
     const clampedIndex = Math.max(0, Math.min(selectedIndex, options.length - 1));
     setter(options[clampedIndex]);
-  }, []);
-
-  const scrollToValue = useCallback((
-    ref: React.RefObject<HTMLDivElement>,
-    options: number[],
-    value: number,
-    delta: number
-  ) => {
-    const currentIndex = options.indexOf(value);
-    const newIndex = Math.max(0, Math.min(currentIndex + delta, options.length - 1));
-    const newValue = options[newIndex];
-    
-    if (ref.current) {
-      const targetElement = ref.current.children[newIndex + 2] as HTMLElement; // +2 for padding items
-      if (targetElement) {
-        targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }
-    }
   }, []);
 
   const PickerColumn: React.FC<{
@@ -122,71 +101,53 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
     formatValue?: (value: number) => string;
     label: string;
   }> = ({ options, selectedValue, onValueChange, scrollRef, formatValue = (v) => v.toString(), label }) => (
-    <div className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-3">
       <span className="text-sm font-medium text-muted-foreground">{label}</span>
       <div className="relative">
-        {/* Scroll Up Button */}
-        <button
-          onClick={() => scrollToValue(scrollRef, options, selectedValue, -1)}
-          className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10 p-1 rounded-full bg-background/80 hover:bg-background transition-colors"
+        {/* Picker container with scroll snap */}
+        <div 
+          ref={scrollRef}
+          className="w-24 h-60 overflow-y-scroll scrollbar-hide bg-background/50 border border-border rounded-xl"
+          style={{
+            scrollSnapType: 'y mandatory',
+            scrollPadding: '100px 0px'
+          }}
+          onScroll={() => handleScroll(scrollRef, options, onValueChange)}
         >
-          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-        </button>
-        
-        {/* Picker Container */}
-        <div className="relative w-20 h-36 bg-background/50 rounded-lg border border-border/50 overflow-hidden">
-          {/* Selection Indicator */}
-          <div className="absolute top-1/2 left-0 right-0 h-12 -mt-6 bg-primary/10 border-y border-primary/20 pointer-events-none z-10" />
+          {/* Top spacer */}
+          <div className="h-20" />
           
-          {/* Scrollable Items */}
-          <div
-            ref={scrollRef}
-            className="h-full overflow-y-auto scrollbar-hide scroll-smooth"
-            style={{
-              scrollSnapType: 'y mandatory',
-              scrollPadding: '48px 0',
-            }}
-            onScroll={() => handleScroll(scrollRef, options, onValueChange)}
-          >
-            {/* Top padding items */}
-            <div className="h-12" style={{ scrollSnapAlign: 'center' }} />
-            <div className="h-12" style={{ scrollSnapAlign: 'center' }} />
-            
-            {/* Actual options */}
-            {options.map((option) => (
-              <div
-                key={option}
-                className={cn(
-                  "h-12 flex items-center justify-center text-sm font-medium transition-all duration-200 cursor-pointer",
-                  option === selectedValue 
-                    ? "text-primary scale-110 font-bold" 
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                style={{ scrollSnapAlign: 'center' }}
-                onClick={() => {
-                  const targetElement = scrollRef.current?.children[options.indexOf(option) + 2] as HTMLElement;
-                  if (targetElement) {
-                    targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                  }
-                }}
-              >
-                {formatValue(option)}
-              </div>
-            ))}
-            
-            {/* Bottom padding items */}
-            <div className="h-12" style={{ scrollSnapAlign: 'center' }} />
-            <div className="h-12" style={{ scrollSnapAlign: 'center' }} />
-          </div>
+          {/* Items */}
+          {options.map((option) => (
+            <div
+              key={option}
+              className={cn(
+                "h-20 flex items-center justify-center text-2xl font-semibold transition-all duration-300 cursor-pointer select-none",
+                option === selectedValue 
+                  ? "text-primary scale-110" 
+                  : "text-muted-foreground/60 hover:text-muted-foreground"
+              )}
+              style={{ 
+                scrollSnapAlign: 'center',
+                scrollSnapStop: 'always'
+              }}
+              onClick={() => {
+                if (scrollRef.current) {
+                  const index = options.indexOf(option);
+                  scrollRef.current.scrollTop = index * 80;
+                }
+              }}
+            >
+              {formatValue(option)}
+            </div>
+          ))}
+          
+          {/* Bottom spacer */}
+          <div className="h-20" />
         </div>
         
-        {/* Scroll Down Button */}
-        <button
-          onClick={() => scrollToValue(scrollRef, options, selectedValue, 1)}
-          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 z-10 p-1 rounded-full bg-background/80 hover:bg-background transition-colors"
-        >
-          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        </button>
+        {/* Selection indicator overlay */}
+        <div className="absolute top-1/2 left-0 right-0 h-20 -mt-10 border-y-2 border-primary/20 bg-primary/5 pointer-events-none rounded-lg" />
       </div>
     </div>
   );
@@ -240,17 +201,15 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
                 
                 // Scroll to positions
                 setTimeout(() => {
-                  const firstIndex = firstDigitOptions.indexOf(first);
-                  const firstElement = firstScrollRef.current?.children[firstIndex + 2] as HTMLElement;
-                  if (firstElement) {
-                    firstElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                  if (firstScrollRef.current) {
+                    const firstIndex = firstDigitOptions.indexOf(first);
+                    firstScrollRef.current.scrollTop = firstIndex * 80;
                   }
                   
-                  const lastElement = lastScrollRef.current?.children[last + 2] as HTMLElement;
-                  if (lastElement) {
-                    lastElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                  if (lastScrollRef.current) {
+                    lastScrollRef.current.scrollTop = last * 80;
                   }
-                }, 50);
+                }, 100);
               }
             }}
             className={cn(
