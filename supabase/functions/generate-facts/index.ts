@@ -35,46 +35,46 @@ serve(async (req) => {
     }
 
     const currentYear = new Date().getFullYear();
-    const prompt = `Du bist ein Experte für Bildungswesen und wissenschaftliche Entwicklungen. Generiere GENAU 6 veraltete Fakten, die Schüler in ${country} um das Jahr ${graduationYear} gelernt haben könnten, aber heute als überholt oder ungenau gelten.
+    const prompt = `You are an expert in education systems and scientific developments. Generate EXACTLY 6 outdated facts that students in ${country} around the year ${graduationYear} might have learned, but are now considered outdated or inaccurate.
 
-Kontext:
-- Land: ${country}
-- Abschlussjahr: ${graduationYear}
-- Aktuelles Jahr: ${currentYear}
-- Berücksichtige das spezifische Bildungssystem und den Lehrplan von ${country}
+Context:
+- Country: ${country}
+- Graduation year: ${graduationYear}
+- Current year: ${currentYear}
+- Consider the specific education system and curriculum of ${country}
 
-Kategorien (verwende GENAU diese deutschen Bezeichnungen):
-1. Biologie
-2. Chemie  
-3. Physik
-4. Geschichte
-5. Geografie
-6. Technologie
+Categories (use EXACTLY these English designations):
+1. Biology
+2. Chemistry  
+3. Physics
+4. History
+5. Geography
+6. Technology
 
-Antworte AUSSCHLIESSLICH im folgenden JSON-Format ohne zusätzlichen Text:
+Respond EXCLUSIVELY in the following JSON format without additional text:
 
 [
   {
-    "category": "Biologie",
-    "fact": "Der veraltete Fakt, der damals gelehrt wurde",
-    "correction": "Die moderne, korrekte Information",
-    "yearDebunked": Jahr_der_Korrektur
+    "category": "Biology",
+    "fact": "The outdated fact that was taught back then",
+    "correction": "The modern, correct information",
+    "yearDebunked": Year_of_correction
   },
   {
-    "category": "Chemie",
-    "fact": "Der veraltete Fakt, der damals gelehrt wurde", 
-    "correction": "Die moderne, korrekte Information",
-    "yearDebunked": Jahr_der_Korrektur
+    "category": "Chemistry",
+    "fact": "The outdated fact that was taught back then", 
+    "correction": "The modern, correct information",
+    "yearDebunked": Year_of_correction
   },
   ...
 ]
 
-Wichtige Regeln:
-- GENAU 6 Fakten (eine pro Kategorie)
-- Fakten müssen für das spezifische Land und die Bildungszeit relevant sein
-- yearDebunked muss nach dem Abschlussjahr und vor dem aktuellen Jahr liegen
-- Verwende deutsche Sprache
-- Sei wissenschaftlich präzise und pädagogisch wertvoll`;
+Important rules:
+- EXACTLY 6 facts (one per category)
+- Facts must be relevant for the specific country and education period
+- yearDebunked must be after graduation year and before current year
+- Use English language
+- Be scientifically precise and educationally valuable`;
 
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
       method: 'POST',

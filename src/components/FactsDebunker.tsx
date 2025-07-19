@@ -17,22 +17,22 @@ interface OutdatedFact {
 }
 
 const countries = [
-  { value: "Deutschland", label: "Deutschland" },
+  { value: "Germany", label: "Germany" },
   { value: "USA", label: "USA" },
-  { value: "Österreich", label: "Österreich" },
-  { value: "Schweiz", label: "Schweiz" },
-  { value: "Frankreich", label: "Frankreich" },
-  { value: "Großbritannien", label: "Großbritannien" },
+  { value: "Austria", label: "Austria" },
+  { value: "Switzerland", label: "Switzerland" },
+  { value: "France", label: "France" },
+  { value: "United Kingdom", label: "United Kingdom" },
 ];
 
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
-    "Biologie": Beaker,
-    "Chemie": Atom,
-    "Physik": Zap,
-    "Geschichte": Clock,
-    "Geografie": Globe,
-    "Technologie": Monitor,
+    "Biology": Beaker,
+    "Chemistry": Atom,
+    "Physics": Zap,
+    "History": Clock,
+    "Geography": Globe,
+    "Technology": Monitor,
   };
   return iconMap[category] || BookOpen;
 };
@@ -48,8 +48,8 @@ export const FactsDebunker = () => {
   const handleNextStep = () => {
     if (!country) {
       toast({
-        title: "Land auswählen",
-        description: "Bitte wählen Sie Ihr Land aus.",
+        title: "Select Country",
+        description: "Please select your country.",
         variant: "destructive",
       });
       return;
@@ -60,8 +60,8 @@ export const FactsDebunker = () => {
   const generateFacts = async () => {
     if (!graduationYear || parseInt(graduationYear) < 1950 || parseInt(graduationYear) > new Date().getFullYear()) {
       toast({
-        title: "Ungültiges Jahr",
-        description: "Bitte geben Sie ein gültiges Abschlussjahr zwischen 1950 und dem aktuellen Jahr ein.",
+        title: "Invalid Year",
+        description: "Please enter a valid graduation year between 1950 and current year.",
         variant: "destructive",
       });
       return;
@@ -84,14 +84,14 @@ export const FactsDebunker = () => {
       setFacts(data.facts || []);
       
       toast({
-        title: "Fakten generiert!",
-        description: `${data.facts?.length || 0} veraltete Fakten aus Ihrer Schulzeit gefunden.`,
+        title: "Facts Generated!",
+        description: `Found ${data.facts?.length || 0} outdated facts from your school days.`,
       });
     } catch (error) {
       console.error('Error generating facts:', error);
       toast({
-        title: "Fehler",
-        description: "Fakten konnten nicht generiert werden. Bitte versuchen Sie es erneut.",
+        title: "Error",
+        description: "Could not generate facts. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -113,12 +113,12 @@ export const FactsDebunker = () => {
           <div className="flex items-center justify-center mb-6">
             <BookOpen className="h-16 w-16 text-primary mr-4" />
             <h1 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              Schulwissen Entlarver
+              School Facts Debunker
             </h1>
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Entdecken Sie, welche „Fakten" Sie in der Schule gelernt haben, die inzwischen widerlegt wurden. 
-            KI-gestützte Analyse Ihres Bildungssystems und Abschlussjahres!
+            Discover what "facts" you learned in school that have since been proven wrong. 
+            AI-powered analysis based on your education system and graduation year!
           </p>
         </div>
 
@@ -126,15 +126,15 @@ export const FactsDebunker = () => {
           {step === 1 ? (
             <>
               <CardHeader>
-                <CardTitle className="text-center">Schritt 1: Land auswählen</CardTitle>
+                <CardTitle className="text-center">Step 1: Select Country</CardTitle>
                 <CardDescription className="text-center">
-                  Wählen Sie Ihr Land für länderspezifische Lehrplaninhalte
+                  Choose your country for curriculum-specific content
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Select value={country} onValueChange={setCountry}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Land auswählen..." />
+                    <SelectValue placeholder="Select country..." />
                   </SelectTrigger>
                   <SelectContent>
                     {countries.map((c) => (
@@ -148,22 +148,22 @@ export const FactsDebunker = () => {
                   onClick={handleNextStep}
                   className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
                 >
-                  Weiter
+                  Next
                 </Button>
               </CardContent>
             </>
           ) : (
             <>
               <CardHeader>
-                <CardTitle className="text-center">Schritt 2: Abschlussjahr eingeben</CardTitle>
+                <CardTitle className="text-center">Step 2: Enter Graduation Year</CardTitle>
                 <CardDescription className="text-center">
-                  {country} • Wir finden veraltete Fakten aus Ihrer Schulzeit
+                  {country} • We'll find outdated facts from your school days
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Input
                   type="number"
-                  placeholder="z.B. 2010"
+                  placeholder="e.g. 2010"
                   value={graduationYear}
                   onChange={(e) => setGraduationYear(e.target.value)}
                   min="1950"
@@ -176,7 +176,7 @@ export const FactsDebunker = () => {
                     variant="outline"
                     className="flex-1"
                   >
-                    Zurück
+                    Back
                   </Button>
                   <Button 
                     onClick={generateFacts}
@@ -186,10 +186,10 @@ export const FactsDebunker = () => {
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generiere...
+                        Generating...
                       </>
                     ) : (
-                      "Fakten generieren!"
+                      "Generate Facts!"
                     )}
                   </Button>
                 </div>
@@ -202,10 +202,10 @@ export const FactsDebunker = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
-                Veraltete Fakten aus Ihrer Schulzeit
+                Outdated Facts from Your School Days
               </h2>
               <Badge variant="secondary" className="text-lg px-4 py-2">
-                {country} • Abschluss {graduationYear}
+                {country} • Graduated {graduationYear}
               </Badge>
             </div>
             
@@ -238,7 +238,7 @@ export const FactsDebunker = () => {
                         <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
                           <h4 className="font-semibold text-destructive mb-2 flex items-center gap-2">
                             <AlertTriangle className="w-4 h-4" />
-                            Was Sie damals lernten:
+                            What you were taught:
                           </h4>
                           <p className="text-sm italic">
                             „{fact.fact}"
@@ -247,7 +247,7 @@ export const FactsDebunker = () => {
                         <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                           <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
                             <BookOpen className="w-4 h-4" />
-                            Was wir heute wissen:
+                            What we know now:
                           </h4>
                           <p className="text-sm">
                             {fact.correction}
@@ -266,7 +266,7 @@ export const FactsDebunker = () => {
                 variant="outline"
                 className="px-8"
               >
-                Neue Suche starten
+                Start New Search
               </Button>
             </div>
           </div>
