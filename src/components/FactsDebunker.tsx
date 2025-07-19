@@ -9,6 +9,7 @@ import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Moni
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
+import { FactShare } from "./FactShare";
 
 interface OutdatedFact {
   category: string;
@@ -305,9 +306,15 @@ export const FactsDebunker = () => {
                               ) : (
                                 <p className="text-sm text-slate-600">{fact.sourceName}</p>
                               )}
-                            </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
+
+                        <FactShare 
+                          fact={fact} 
+                          country={country} 
+                          graduationYear={graduationYear} 
+                        />
+                      </div>
                       </AccordionContent>
                     </AccordionItem>
                   );
