@@ -165,14 +165,14 @@ export const FactsDebunker = () => {
   return (
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center mb-6">
-            <GraduationCap className="h-16 w-16 text-primary mr-4" />
-            <h1 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+        <div className="text-center mb-8 md:mb-12">
+          <div className="flex flex-col items-center justify-center mb-4 md:mb-6 md:flex-row">
+            <GraduationCap className="h-12 w-12 md:h-16 md:w-16 text-primary mb-2 md:mb-0 md:mr-4" />
+            <h1 className="text-2xl md:text-3xl lg:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent text-center">
               School Facts Debunker
             </h1>
           </div>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             Discover what you learned in school that has since been proven wrong. 
             Find out how knowledge has evolved since you graduated.
           </p>
@@ -293,33 +293,33 @@ export const FactsDebunker = () => {
               <div className="mb-8">
                 <Collapsible open={isEducationProblemsOpen} onOpenChange={setIsEducationProblemsOpen}>
                   <CollapsibleTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between p-6 h-auto">
-                      <div className="text-left">
-                        <h3 className="text-xl font-bold">
+                    <Button variant="outline" className="w-full justify-between p-4 md:p-6 h-auto min-h-[80px] md:min-h-[60px]">
+                      <div className="text-left flex-1 min-w-0 pr-4">
+                        <h3 className="text-base md:text-xl font-bold leading-tight">
                           Education System Challenges in {country} around {graduationYear}
                         </h3>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
                           Click to see what problems affected your education system
                         </p>
                       </div>
-                      <ChevronDown className={`h-5 w-5 transition-transform ${isEducationProblemsOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${isEducationProblemsOpen ? 'rotate-180' : ''}`} />
                     </Button>
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-4">
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                       {educationProblems.map((problem, index) => (
                         <Card key={index} className="border-orange-200 bg-orange-50/50">
-                          <CardHeader>
-                            <CardTitle className="text-orange-800 text-lg">
+                          <CardHeader className="pb-3">
+                            <CardTitle className="text-orange-800 text-base md:text-lg leading-tight">
                               {problem.problem}
                             </CardTitle>
                           </CardHeader>
-                          <CardContent className="space-y-2">
-                            <p className="text-sm text-orange-700">
+                          <CardContent className="space-y-3 pt-0">
+                            <p className="text-sm text-orange-700 leading-relaxed">
                               {problem.description}
                             </p>
                             <div className="pt-2 border-t border-orange-200">
-                              <p className="text-xs font-medium text-orange-600">
+                              <p className="text-xs font-medium text-orange-600 leading-relaxed">
                                 <strong>Impact:</strong> {problem.impact}
                               </p>
                             </div>
@@ -349,48 +349,55 @@ export const FactsDebunker = () => {
                       value={`item-${index}`}
                       className="border rounded-lg shadow-sm hover:shadow-md transition-shadow animate-fade-in"
                     >
-                      <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                        <div className="flex items-center gap-4 w-full">
-                          <div className={`p-2 rounded-full ${isPolitics ? 'bg-red-100' : 'bg-primary/10'}`}>
-                            <IconComponent className={`h-6 w-6 ${isPolitics ? 'text-red-600' : 'text-primary'}`} />
-                          </div>
-                          <div className="flex-1 text-left">
-                            <div className="font-semibold text-lg flex items-center gap-2">
-                              {fact.category}
-                              {isPolitics && (
-                                <Badge variant="destructive" className="text-xs">
-                                  Controversial
-                                </Badge>
-                              )}
+                      <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline min-h-[80px] md:min-h-[60px]">
+                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 w-full">
+                          <div className="flex items-center gap-3 md:gap-4">
+                            <div className={`p-2 rounded-full ${isPolitics ? 'bg-red-100' : 'bg-primary/10'} shrink-0`}>
+                              <IconComponent className={`h-5 w-5 md:h-6 md:w-6 ${isPolitics ? 'text-red-600' : 'text-primary'}`} />
                             </div>
-                            <div className="text-sm text-muted-foreground truncate">
-                              {fact.fact.length > 80 ? `${fact.fact.substring(0, 80)}...` : fact.fact}
+                            <div className="flex-1 text-left min-w-0">
+                              <div className="font-semibold text-base md:text-lg flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
+                                <span>{fact.category}</span>
+                                {isPolitics && (
+                                  <Badge variant="destructive" className="text-xs self-start md:self-auto">
+                                    Controversial
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs md:text-sm text-muted-foreground line-clamp-2 md:truncate mt-1">
+                                <span className="md:hidden">
+                                  {fact.fact.length > 60 ? `${fact.fact.substring(0, 60)}...` : fact.fact}
+                                </span>
+                                <span className="hidden md:inline">
+                                  {fact.fact.length > 80 ? `${fact.fact.substring(0, 80)}...` : fact.fact}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                          <Badge variant="destructive" className={`ml-auto ${categoryColor}`}>
+                          <Badge variant="destructive" className={`${categoryColor} self-start md:self-auto shrink-0 mt-2 md:mt-0`}>
                             <AlertTriangle className="w-3 h-3 mr-1" />
-                            Debunked {fact.yearDebunked}
+                            <span className="text-xs">Debunked {fact.yearDebunked}</span>
                           </Badge>
                         </div>
                       </AccordionTrigger>
-                      <AccordionContent className="px-6 pb-6">
+                      <AccordionContent className="px-4 md:px-6 pb-4 md:pb-6">
                         <div className="space-y-4">
-                          <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
-                            <h4 className="font-semibold text-destructive mb-2 flex items-center gap-2">
-                              <AlertTriangle className="w-4 h-4" />
-                              What you were taught in {graduationYear}:
+                          <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 md:p-4">
+                            <h4 className="font-semibold text-destructive mb-2 flex items-start gap-2 text-sm md:text-base">
+                              <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                              <span>What you were taught in {graduationYear}:</span>
                             </h4>
-                            <p className="text-sm italic">
+                            <p className="text-sm italic leading-relaxed">
                               „{fact.fact.replace(`In ${graduationYear}, students in ${country} were taught that`, '').replace(`In ${graduationYear}, ${country} students were taught that`, '')}"
                             </p>
                           </div>
                           
-                          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                            <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
-                              <BookOpen className="w-4 h-4" />
-                              What we know now:
+                          <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 md:p-4">
+                            <h4 className="font-semibold text-primary mb-2 flex items-start gap-2 text-sm md:text-base">
+                              <BookOpen className="w-4 h-4 shrink-0 mt-0.5" />
+                              <span>What we know now:</span>
                             </h4>
-                            <p className="text-sm">
+                            <p className="text-sm leading-relaxed">
                               {fact.correction}
                             </p>
                           </div>

@@ -100,75 +100,91 @@ Check out what other "facts" from your school days are total BS: https://isthats
   };
 
   return (
-    <div className="flex flex-wrap gap-2 pt-4 border-t border-border/20">
-      <p className="text-sm text-muted-foreground mb-2 w-full">Share this mind-blowing fact:</p>
+    <div className="pt-4 border-t border-border/20">
+      <p className="text-sm text-muted-foreground mb-3">Share this mind-blowing fact:</p>
       
-      <div className="flex flex-wrap gap-2">
-        {/* Twitter/X */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleTwitterShare}
-          className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors"
-        >
-          <MessageCircle className="h-4 w-4" />
-          <span className="hidden sm:inline">X/Twitter</span>
-        </Button>
-
-        {/* Facebook */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleFacebookShare}
-          className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors"
-        >
-          <Facebook className="h-4 w-4" />
-          <span className="hidden sm:inline">Facebook</span>
-        </Button>
-
-        {/* LinkedIn */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleLinkedInShare}
-          className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors"
-        >
-          <Linkedin className="h-4 w-4" />
-          <span className="hidden sm:inline">LinkedIn</span>
-        </Button>
-
-        {/* Reddit */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRedditShare}
-          className="flex items-center gap-2 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 transition-colors"
-        >
-          <MessageCircle className="h-4 w-4" />
-          <span className="hidden sm:inline">Reddit</span>
-        </Button>
-
-        {/* Copy Link */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCopyLink}
-          className="flex items-center gap-2 hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-colors"
-        >
-          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-          <span className="hidden sm:inline">{copied ? "Copied!" : "Copy"}</span>
-        </Button>
-
-        {/* Native Share (mobile) */}
+      {/* Mobile-first native share button */}
+      <div className="block md:hidden mb-3">
         <Button
           variant="outline"
           size="sm"
           onClick={handleWebShare}
-          className="flex items-center gap-2 hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-colors"
+          className="w-full justify-center gap-2 min-h-[44px] hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-colors"
         >
           <Share2 className="h-4 w-4" />
-          <span className="hidden sm:inline">Share</span>
+          Share this fact
         </Button>
+      </div>
+      
+      {/* Desktop share buttons */}
+      <div className="hidden md:block">
+        <div className="flex flex-wrap gap-2">
+          {/* Twitter/X */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleTwitterShare}
+            className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>X/Twitter</span>
+          </Button>
+
+          {/* Facebook */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleFacebookShare}
+            className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors"
+          >
+            <Facebook className="h-4 w-4" />
+            <span>Facebook</span>
+          </Button>
+
+          {/* LinkedIn */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleLinkedInShare}
+            className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors"
+          >
+            <Linkedin className="h-4 w-4" />
+            <span>LinkedIn</span>
+          </Button>
+
+          {/* Reddit */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRedditShare}
+            className="flex items-center gap-2 hover:bg-orange-50 hover:border-orange-200 hover:text-orange-600 transition-colors"
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>Reddit</span>
+          </Button>
+
+          {/* Copy Link */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopyLink}
+            className="flex items-center gap-2 hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-colors"
+          >
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            <span>{copied ? "Copied!" : "Copy"}</span>
+          </Button>
+
+          {/* Native Share fallback */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleWebShare}
+            className="flex items-center gap-2 hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-colors"
+          >
+            <Share2 className="h-4 w-4" />
+            <span>Share</span>
+          </Button>
+        </div>
       </div>
     </div>
   );
