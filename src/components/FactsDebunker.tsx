@@ -12,6 +12,7 @@ import { FactSkeleton } from "./FactSkeleton";
 import { FactShare } from "./FactShare";
 import { ReportFactDialog } from "./ReportFactDialog";
 import { AnimatedHeadline } from "./AnimatedHeadline";
+import { TimeMachinePicker } from "./TimeMachinePicker";
 
 interface OutdatedFact {
   category: string;
@@ -453,21 +454,11 @@ export const FactsDebunker = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Select value={graduationYear} onValueChange={handleYearChange}>
-                  <SelectTrigger className="text-center text-lg">
-                    <SelectValue placeholder="Select graduation year..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-40">
-                    {Array.from({ length: new Date().getFullYear() - 1900 + 1 }, (_, i) => {
-                      const year = 1900 + i;
-                      return (
-                        <SelectItem key={year} value={year.toString()}>
-                          {year}
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
+                <TimeMachinePicker
+                  value={graduationYear}
+                  onValueChange={handleYearChange}
+                  placeholder="Select graduation year..."
+                />
                 {funMessage && (
                   <div className="flex items-center gap-2 text-primary text-sm bg-primary/10 p-3 rounded-md">
                     <Lightbulb className="h-4 w-4" />
