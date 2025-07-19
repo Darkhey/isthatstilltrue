@@ -176,6 +176,7 @@ export const FactsDebunker = () => {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isEducationProblemsOpen, setIsEducationProblemsOpen] = useState(false);
   const [funMessage, setFunMessage] = useState<string | null>(null);
+  const [quickFunFact, setQuickFunFact] = useState<string | null>(null);
 
   const handleNextStep = () => {
     if (!country) {
@@ -227,6 +228,7 @@ export const FactsDebunker = () => {
 
       setFacts(data.facts);
       setEducationProblems(data.educationProblems || []);
+      setQuickFunFact(data.quickFunFact || null);
       setShowSkeletons(false);
       
       if (data.cached) {
@@ -254,6 +256,7 @@ export const FactsDebunker = () => {
     setSuccessMessage(null);
     setIsEducationProblemsOpen(false);
     setFunMessage(null);
+    setQuickFunFact(null);
   };
 
   return (
@@ -391,6 +394,21 @@ export const FactsDebunker = () => {
                 <p className="text-muted-foreground mt-2">
                   {facts.length} facts from your school days that have since been updated
                 </p>
+              )}
+              {quickFunFact && !showSkeletons && (
+                <div className="mt-4 max-w-2xl mx-auto">
+                  <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <Lightbulb className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-primary mb-1">Historical Fun Fact</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {quickFunFact}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
 

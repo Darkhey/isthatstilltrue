@@ -391,6 +391,95 @@ function fixCommonJSONIssues(jsonText: string): string {
   return jsonText;
 }
 
+// Generate quick fun fact about country and year
+async function generateQuickFunFact(country: string, year: number): Promise<string> {
+  const prompt = `Generate a single, interesting historical fun fact about ${country} in the year ${year}. 
+
+Focus on something cool that happened that year - like weather, culture, politics, economy, sports, or notable events. Make it engaging and specific to that exact year.
+
+Examples:
+- "1980 was the hottest summer on record in Moldova, with temperatures reaching 42°C"
+- "In 1995, Germany introduced its first commercial internet service provider"
+- "1987 marked the year when Spain joined the European Economic Community"
+
+Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
+
+  const makeOpenAIRequest = async () => {
+    if (!openAIApiKey) {
+      throw new Error('OpenAI API key not available');
+    }
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are a historian specializing in interesting historical facts. Return only the requested fun fact, nothing else.' },
+          { role: 'user', content: prompt }
+        ],
+        temperature: 0.8,
+        max_tokens: 150
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content.trim();
+  };
+
+  const makeGeminiRequest = async () => {
+    if (!geminiApiKey) {
+      throw new Error('Gemini API key not available');
+    }
+    
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.8,
+          maxOutputTokens: 150,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.candidates[0].content.parts[0].text.trim();
+  };
+
+  // Try OpenAI first, fall back to Gemini
+  try {
+    return await makeOpenAIRequest();
+  } catch (openAIError) {
+    console.log('OpenAI failed for fun fact, trying Gemini:', openAIError.message);
+    try {
+      return await makeGeminiRequest();
+    } catch (geminiError) {
+      console.error('Both AI providers failed for fun fact');
+      // Return a generic fun fact as fallback
+      return `${year} was an interesting year in ${country}'s history!`;
+    }
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -401,7 +490,11 @@ serve(async (req) => {
     
     console.log(`Processing request for country: ${country}, graduation year: ${graduationYear}`);
 
-    // Check for cached data first
+    // Generate quick fun fact first
+    const quickFunFact = await generateQuickFunFact(country, graduationYear);
+    console.log(`Generated quick fun fact: ${quickFunFact}`);
+
+    // Check for cached data
     const { data: cachedData, error: cacheError } = await supabase
       .from('cached_facts')
       .select('facts_data, education_system_problems, created_at')
@@ -421,6 +514,7 @@ serve(async (req) => {
       if (cacheAge < sixMonthsInMs) {
         console.log(`Returning cached data for ${country} ${graduationYear} (cached ${Math.round(cacheAge / (24 * 60 * 60 * 1000))} days ago)`);
         return new Response(JSON.stringify({ 
+          quickFunFact,
           facts: cachedData.facts_data,
           educationProblems: cachedData.education_system_problems,
           cached: true,
@@ -469,6 +563,7 @@ serve(async (req) => {
     }
 
     return new Response(JSON.stringify({ 
+      quickFunFact,
       facts: allFacts,
       educationProblems,
       cached: false
