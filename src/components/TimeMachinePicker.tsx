@@ -56,8 +56,8 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
       const years = getYearsForCentury(cent);
       const yearIndex = years.indexOf(yearValue);
       setRotation({
-        century: centIndex * -120,
-        year: yearIndex * -8 // Smaller rotation for many years
+        century: centIndex * -60,
+        year: yearIndex * -20
       });
     }
   }, [value]);
@@ -80,7 +80,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
       const newRotation = startRotation.century + rotationDelta;
       setRotation(prev => ({ ...prev, century: newRotation }));
       
-      const index = Math.round(-newRotation / 120) % centuries.length;
+      const index = Math.round(-newRotation / 60) % centuries.length;
       const normalizedIndex = ((index % centuries.length) + centuries.length) % centuries.length;
       const newCentury = centuries[normalizedIndex];
       if (newCentury !== century) {
@@ -92,7 +92,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
       const newRotation = startRotation.year + rotationDelta;
       setRotation(prev => ({ ...prev, year: newRotation }));
       
-      const index = Math.round(-newRotation / 8) % availableYears.length;
+      const index = Math.round(-newRotation / 20) % availableYears.length;
       const normalizedIndex = ((index % availableYears.length) + availableYears.length) % availableYears.length;
       setSelectedYear(availableYears[normalizedIndex]);
     }
@@ -106,8 +106,8 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
     const centIndex = centuries.indexOf(century);
     const yearIndex = availableYears.indexOf(selectedYear);
     setRotation({
-      century: centIndex * -120,
-      year: yearIndex * -8
+      century: centIndex * -60,
+      year: yearIndex * -20
     });
   };
 
@@ -176,7 +176,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
                   isSelected={cent === century}
                   index={index}
                   rotation={0}
-                  itemSize={120}
+                  itemSize={60}
                 >
                   {cent}th
                 </DrumItem>
@@ -210,7 +210,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
                   isSelected={year === selectedYear}
                   index={index}
                   rotation={0}
-                  itemSize={8}
+                  itemSize={20}
                 >
                   {year}
                 </DrumItem>
@@ -234,8 +234,8 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
               const years = getYearsForCentury(cent);
               const yearIndex = years.indexOf(year);
               setRotation({
-                century: centIndex * -120,
-                year: yearIndex * -8
+                century: centIndex * -60,
+                year: yearIndex * -20
               });
             }}
             className={cn(
