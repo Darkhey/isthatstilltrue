@@ -21,16 +21,6 @@ interface GenerateFactsRequest {
   graduationYear: number;
 }
 
-interface HistoricalFact {
-  subject: string;
-  whatWasTaught: string;
-  currentUnderstanding: string;
-  yearDebunked: number;
-  significance: string;
-  sourceUrl?: string;
-  sourceName?: string;
-}
-
 interface OutdatedFact {
   category: string;
   fact: string;
@@ -39,6 +29,56 @@ interface OutdatedFact {
   mindBlowingFactor: string;
   sourceUrl?: string;
   sourceName?: string;
+}
+
+// Generate facts directly in one step with concrete examples
+async function generateOutdatedFacts(country: string, year: number): Promise<OutdatedFact[]> {
+  const currentYear = new Date().getFullYear();
+  
+  const prompt = `You are an educational historian analyzing what students in ${country} were taught in ${year} vs what we know today in ${currentYear}.
+
+Generate exactly 6-8 concrete, factual statements that were commonly taught in ${country} schools around ${year} but have since been proven wrong or significantly updated.
+
+Focus on these categories where knowledge has genuinely changed:
+- **Science** (biology, chemistry, physics discoveries)
+- **Technology** (predictions, computer capabilities)  
+- **Medicine** (health advice, medical understanding)
+- **Space/Astronomy** (planetary status, universe understanding)
+- **Nutrition** (dietary recommendations)
+- **Environment** (climate, pollution understanding)
+- **History** (recent events, Cold War aftermath)
+- **Geography** (country names, political boundaries)
+
+For each fact, provide:
+1. What was definitively taught as truth in ${year}
+2. What we definitively know now with specific evidence
+3. When this understanding changed (approximate year)
+4. Why this change matters
+
+EXAMPLES of the format you should follow:
+
+For USA 1995:
+- "Pluto is the ninth planet in our solar system" → "Pluto was reclassified as a dwarf planet in 2006 by the International Astronomical Union"
+- "Low-fat diets are the healthiest choice" → "Healthy fats are essential; ultra-processed foods and added sugars are the main dietary concerns"
+- "The Internet is a research tool with limited daily relevance" → "The Internet became central to all communication, commerce, and daily life"
+
+Return ONLY a valid JSON array with NO markdown formatting:
+
+[
+  {
+    "category": "Science/Technology/Medicine/etc",
+    "fact": "In ${year}, students in ${country} were taught that [specific concrete statement]",
+    "correction": "Today we know that [specific updated knowledge with evidence, timeline, and scientific consensus - 3-4 sentences explaining how understanding evolved]",
+    "yearDebunked": [year when understanding changed],
+    "mindBlowingFactor": "This change [explain significance and what it reveals about scientific progress - 2-3 sentences]",
+    "sourceUrl": "https://credible-scientific-source.com",
+    "sourceName": "Scientific Institution/Study Name"
+  }
+]
+
+Focus on facts that were genuinely taught as definitive truth in ${year} textbooks in ${country}, not theoretical concepts or ongoing debates.`;
+
+  return await makeAIRequest(prompt);
 }
 
 // Retry function with exponential backoff
@@ -69,104 +109,8 @@ async function retryWithBackoff<T>(
   throw new Error('Max retries exceeded');
 }
 
-// Step 1: Generate historical curriculum
-async function generateHistoricalCurriculum(country: string, year: number): Promise<string> {
-  const prompt = `You are an educational historian with access to historical school curricula from ${country}.
-
-Your task is to simulate what a typical student in ${country} in the year ${year} would have learned in school across major subjects.
-
-Focus on facts and concepts that were commonly taught and accepted as truth at the time, using the exact terminology and assumptions typical of that era.
-
-Generate exactly 8 statements organized by subject areas. Each statement should represent what was genuinely taught in ${country} schools around ${year}.
-
-Subject areas to cover:
-1. Science (Biology, Chemistry, Physics)
-2. Technology (Computing, Engineering predictions)
-3. Medicine (Health education, medical facts)
-4. Society (Social studies, demographics)
-5. Laws (Civics, government)
-6. Environment (Environmental science, climate)
-7. Physics (Physics models and theories)
-8. Culture (Literature, arts, global perspectives)
-
-For each statement, use language authentic to the ${year} era textbooks and teaching materials common in ${country}.
-
-Return ONLY a JSON array in this exact format:
-[
-  {
-    "subject": "Science",
-    "statement": "In ${year}, students in ${country} were taught that [exact teaching from that era]",
-    "context": "This was based on [reasoning/evidence available at the time]"
-  }
-]`;
-
-  return await makeAIRequest(prompt);
-}
-
-// Step 2: Evaluate with modern knowledge
-async function evaluateWithModernKnowledge(historicalStatements: string, country: string, year: number): Promise<OutdatedFact[]> {
-  const currentYear = new Date().getFullYear();
-  
-  const prompt = `You are a science communicator analyzing historical curriculum. You have been given statements that were actually taught in ${country} schools around ${year}.
-
-Your task is to evaluate each statement against current scientific understanding as of ${currentYear} and determine which ones are now outdated or disproven.
-
-For each statement that is now considered outdated or incorrect, create a detailed analysis in the specified format.
-
-Historical curriculum from ${year}:
-${historicalStatements}
-
-For each outdated statement, provide:
-- A playful, educational tone acknowledging how knowledge has evolved
-- Detailed current scientific consensus with specific evidence and breakthroughs
-- The approximate year when this understanding changed
-- Why this change is significant for our understanding
-- Credible sources when possible
-
-Return ONLY a valid JSON array of outdated facts (skip any that are still accurate):
-
-[
-  {
-    "category": "[Subject area]",
-    "fact": "In ${year}, ${country} students were confidently taught that [exact historical teaching]",
-    "correction": "Today we know that [detailed current understanding with specific evidence, studies, timeline of how understanding evolved - 4-6 sentences]",
-    "yearDebunked": [year when understanding changed],
-    "mindBlowingFactor": "It's amazing how [3-4 sentences about significance of this change and what it reveals about scientific progress]",
-    "sourceUrl": "https://credible-source.com",
-    "sourceName": "Research Institution/Study Name"
-  }
-]`;
-
-  const response = await makeAIRequest(prompt);
-  
-  // Parse and validate the response
-  let facts: OutdatedFact[];
-  try {
-    const extractedText = extractJSONFromResponse(response);
-    facts = JSON.parse(extractedText);
-  } catch (parseError) {
-    console.error('JSON parsing error:', parseError);
-    throw new Error('Failed to parse JSON response from AI');
-  }
-
-  // Validate fact structure
-  if (!Array.isArray(facts)) {
-    throw new Error('Response is not an array');
-  }
-
-  for (let i = 0; i < facts.length; i++) {
-    const fact = facts[i];
-    if (!fact.category || !fact.fact || !fact.correction || !fact.yearDebunked || !fact.mindBlowingFactor) {
-      console.error(`Fact ${i} is missing required fields:`, fact);
-      throw new Error(`Fact ${i} is missing required fields`);
-    }
-  }
-
-  return facts;
-}
-
 // Helper function to make AI requests with fallback
-async function makeAIRequest(prompt: string): Promise<string> {
+async function makeAIRequest(prompt: string): Promise<OutdatedFact[]> {
   const makeOpenAIRequest = async () => {
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not available');
@@ -253,22 +197,60 @@ async function makeAIRequest(prompt: string): Promise<string> {
   };
 
   // Try OpenAI first, fall back to Gemini
+  let response: string;
   try {
-    return await retryWithBackoff(makeOpenAIRequest, 3, 2000);
+    response = await retryWithBackoff(makeOpenAIRequest, 3, 2000);
   } catch (openAIError) {
     console.log('OpenAI failed, trying Gemini fallback:', openAIError.message);
     try {
-      return await retryWithBackoff(makeGeminiRequest, 3, 2000);
+      response = await retryWithBackoff(makeGeminiRequest, 3, 2000);
     } catch (geminiError) {
       console.error('Both OpenAI and Gemini failed:', { openAIError: openAIError.message, geminiError: geminiError.message });
       throw new Error('Both AI providers failed to generate facts');
     }
   }
+
+  // Parse and validate the response
+  let facts: OutdatedFact[];
+  try {
+    const extractedText = extractJSONFromResponse(response);
+    console.log('Extracted JSON text:', extractedText);
+    facts = JSON.parse(extractedText);
+  } catch (parseError) {
+    console.error('JSON parsing error:', parseError);
+    console.error('Raw AI response:', response);
+    throw new Error('Failed to parse JSON response from AI');
+  }
+
+  // Validate fact structure
+  if (!Array.isArray(facts)) {
+    console.error('Response is not an array:', facts);
+    throw new Error('Response is not an array');
+  }
+
+  if (facts.length === 0) {
+    console.error('No facts generated');
+    throw new Error('No facts were generated');
+  }
+
+  for (let i = 0; i < facts.length; i++) {
+    const fact = facts[i];
+    if (!fact.category || !fact.fact || !fact.correction || !fact.yearDebunked || !fact.mindBlowingFactor) {
+      console.error(`Fact ${i} is missing required fields:`, fact);
+      throw new Error(`Fact ${i} is missing required fields`);
+    }
+  }
+
+  console.log(`Successfully validated ${facts.length} facts`);
+  return facts;
 }
 
 // Helper function to extract JSON from AI response
 function extractJSONFromResponse(generatedText: string): string {
   let extractedText = generatedText.trim();
+  
+  // Remove any markdown code blocks first
+  extractedText = extractedText.replace(/```json\s*/, '').replace(/```\s*$/, '');
   
   // Method 1: Direct array extraction
   let arrayMatch = extractedText.match(/\[[\s\S]*\]/);
@@ -276,19 +258,20 @@ function extractJSONFromResponse(generatedText: string): string {
     return arrayMatch[0];
   }
   
-  // Method 2: Extract from code blocks
-  const codeBlockMatch = extractedText.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
-  if (codeBlockMatch) {
-    return codeBlockMatch[1];
-  }
-  
-  // Method 3: Find array boundaries manually
+  // Method 2: Find array boundaries manually
   const startIndex = extractedText.indexOf('[');
   const lastIndex = extractedText.lastIndexOf(']');
   if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
     return extractedText.substring(startIndex, lastIndex + 1);
   }
   
+  // Method 3: Try to find JSON-like content
+  const jsonMatch = extractedText.match(/(\[[\s\S]*?\])/);
+  if (jsonMatch) {
+    return jsonMatch[1];
+  }
+  
+  console.error('Could not extract JSON from response:', extractedText);
   throw new Error('Could not extract valid JSON from AI response');
 }
 
@@ -331,16 +314,10 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Generating new facts using two-step process for ${country} ${graduationYear}`);
+    console.log(`Generating new facts for ${country} ${graduationYear}`);
 
-    // Step 1: Generate historical curriculum
-    console.log('Step 1: Generating historical curriculum...');
-    const historicalCurriculum = await generateHistoricalCurriculum(country, graduationYear);
-    console.log('Historical curriculum generated successfully');
-
-    // Step 2: Evaluate with modern knowledge
-    console.log('Step 2: Evaluating with modern knowledge...');
-    const facts = await evaluateWithModernKnowledge(historicalCurriculum, country, graduationYear);
+    // Generate facts with the new simplified approach
+    const facts = await generateOutdatedFacts(country, graduationYear);
     console.log(`Successfully generated ${facts.length} outdated facts`);
 
     // Save the generated facts to cache

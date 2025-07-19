@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
 import { FactShare } from "./FactShare";
@@ -45,6 +44,11 @@ const getCategoryIcon = (category: string) => {
     "Laws": BookOpen,
     "Culture": Clock,
     "Environment": Globe,
+    "Space": Atom,
+    "Astronomy": Atom,
+    "Nutrition": Beaker,
+    "History": BookOpen,
+    "Geography": Globe,
   };
   return iconMap[category] || BookOpen;
 };
@@ -56,36 +60,32 @@ export const FactsDebunker = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [showSkeletons, setShowSkeletons] = useState(false);
-  const { toast } = useToast();
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleNextStep = () => {
     if (!country) {
-      toast({
-        title: "Select Country",
-        description: "Please select your country.",
-        variant: "destructive",
-      });
+      setError("Please select your country.");
       return;
     }
+    setError(null);
     setStep(2);
   };
 
   const generateFacts = async () => {
     if (!graduationYear || parseInt(graduationYear) < 1950 || parseInt(graduationYear) > new Date().getFullYear()) {
-      toast({
-        title: "Invalid Year",
-        description: "Please enter a valid graduation year between 1950 and current year.",
-        variant: "destructive",
-      });
+      setError("Please enter a valid graduation year between 1950 and current year.");
       return;
     }
 
     setIsLoading(true);
     setShowSkeletons(true);
     setFacts([]);
+    setError(null);
+    setSuccessMessage(null);
     
     try {
-      console.log(`Starting two-step fact generation for ${country} ${graduationYear}`);
+      console.log(`Generating facts for ${country} ${graduationYear}`);
       
       const { data, error } = await supabase.functions.invoke('generate-facts', {
         body: {
@@ -98,27 +98,23 @@ export const FactsDebunker = () => {
         throw error;
       }
 
-      setFacts(data.facts || []);
+      if (!data.facts || data.facts.length === 0) {
+        setError("No outdated facts could be generated for this combination. Try a different country or earlier year.");
+        setShowSkeletons(false);
+        return;
+      }
+
+      setFacts(data.facts);
       setShowSkeletons(false);
       
       if (data.cached) {
-        toast({
-          title: "Facts Retrieved!",
-          description: `Found ${data.facts?.length || 0} cached facts from ${data.cacheAge} days ago.`,
-        });
+        setSuccessMessage(`Found ${data.facts.length} facts (cached from ${data.cacheAge} days ago)`);
       } else {
-        toast({
-          title: "Facts Generated!",
-          description: `Generated ${data.facts?.length || 0} facts using our new two-step historical analysis.`,
-        });
+        setSuccessMessage(`Successfully generated ${data.facts.length} educational facts!`);
       }
     } catch (error) {
       console.error('Error generating facts:', error);
-      toast({
-        title: "Error",
-        description: "Could not generate facts. Please try again.",
-        variant: "destructive",
-      });
+      setError("Could not generate facts. Please try again or select a different country/year combination.");
       setShowSkeletons(false);
     } finally {
       setIsLoading(false);
@@ -131,6 +127,8 @@ export const FactsDebunker = () => {
     setGraduationYear("");
     setFacts([]);
     setShowSkeletons(false);
+    setError(null);
+    setSuccessMessage(null);
   };
 
   return (
@@ -145,8 +143,7 @@ export const FactsDebunker = () => {
           </div>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Discover what you learned in school that has since been proven wrong. 
-            Our advanced two-step analysis first recreates your historical curriculum, 
-            then evaluates it with modern knowledge.
+            Find out how knowledge has evolved since you graduated.
           </p>
         </div>
 
@@ -172,6 +169,12 @@ export const FactsDebunker = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {error && (
+                  <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
+                    <AlertCircle className="h-4 w-4" />
+                    {error}
+                  </div>
+                )}
                 <Button 
                   onClick={handleNextStep}
                   className="w-full bg-gradient-primary hover:opacity-90 transition-opacity"
@@ -198,6 +201,18 @@ export const FactsDebunker = () => {
                   max={new Date().getFullYear()}
                   className="text-center text-lg"
                 />
+                {error && (
+                  <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
+                    <AlertCircle className="h-4 w-4" />
+                    {error}
+                  </div>
+                )}
+                {successMessage && (
+                  <div className="flex items-center gap-2 text-green-700 text-sm bg-green-50 p-3 rounded-md">
+                    <Lightbulb className="h-4 w-4" />
+                    {successMessage}
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <Button 
                     onClick={resetForm}
@@ -214,7 +229,7 @@ export const FactsDebunker = () => {
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing curriculum...
+                        Analyzing...
                       </>
                     ) : (
                       "Analyze My Education!"
@@ -230,21 +245,21 @@ export const FactsDebunker = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
-                {showSkeletons ? "Analyzing Historical Curriculum..." : "What You Learned vs. What We Know Now"}
+                {showSkeletons ? "Finding Outdated Facts..." : "What You Learned vs. What We Know Now"}
               </h2>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 {country} • Graduated {graduationYear}
               </Badge>
               {!showSkeletons && facts.length > 0 && (
                 <p className="text-muted-foreground mt-2">
-                  Two-step analysis: First we recreated your historical curriculum, then evaluated it with modern knowledge
+                  {facts.length} facts from your school days that have since been updated
                 </p>
               )}
             </div>
             
             <Accordion type="multiple" className="space-y-4">
               {showSkeletons ? (
-                Array.from({ length: 8 }, (_, index) => (
+                Array.from({ length: 6 }, (_, index) => (
                   <FactSkeleton key={`skeleton-${index}`} index={index} />
                 ))
               ) : (
@@ -279,7 +294,7 @@ export const FactsDebunker = () => {
                               What you were taught in {graduationYear}:
                             </h4>
                             <p className="text-sm italic">
-                              „{fact.fact.replace(`In ${graduationYear}, ${country} students were`, 'You were')}"
+                              „{fact.fact.replace(`In ${graduationYear}, students in ${country} were taught that`, '').replace(`In ${graduationYear}, ${country} students were taught that`, '')}"
                             </p>
                           </div>
                           
