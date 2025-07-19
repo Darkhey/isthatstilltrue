@@ -10,6 +10,7 @@ import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Moni
 import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
 import { FactShare } from "./FactShare";
+import { ReportFactDialog } from "./ReportFactDialog";
 
 interface OutdatedFact {
   category: string;
@@ -260,6 +261,8 @@ export const FactsDebunker = () => {
   const [isEducationProblemsOpen, setIsEducationProblemsOpen] = useState(false);
   const [funMessage, setFunMessage] = useState<string | null>(null);
   const [quickFunFact, setQuickFunFact] = useState<string | null>(null);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [selectedFactForReport, setSelectedFactForReport] = useState<OutdatedFact | null>(null);
 
   const handleNextStep = () => {
     if (!country) {
@@ -379,6 +382,13 @@ export const FactsDebunker = () => {
     setIsEducationProblemsOpen(false);
     setFunMessage(null);
     setQuickFunFact(null);
+    setReportDialogOpen(false);
+    setSelectedFactForReport(null);
+  };
+
+  const handleReportFact = (fact: OutdatedFact) => {
+    setSelectedFactForReport(fact);
+    setReportDialogOpen(true);
   };
 
   return (
@@ -721,6 +731,15 @@ export const FactsDebunker = () => {
                             country={country} 
                             graduationYear={graduationYear} 
                           />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleReportFact(fact)}
+                            className="flex items-center gap-2 text-muted-foreground hover:text-destructive"
+                          >
+                            <Flag className="h-4 w-4" />
+                            Report
+                          </Button>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
@@ -741,6 +760,16 @@ export const FactsDebunker = () => {
               </div>
             )}
           </div>
+        )}
+
+        {selectedFactForReport && (
+          <ReportFactDialog
+            open={reportDialogOpen}
+            onOpenChange={setReportDialogOpen}
+            fact={selectedFactForReport}
+            country={country}
+            graduationYear={parseInt(graduationYear)}
+          />
         )}
       </div>
     </div>

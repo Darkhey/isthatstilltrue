@@ -44,6 +44,75 @@ export type Database = {
         }
         Relationships: []
       }
+      fact_quality_stats: {
+        Row: {
+          auto_replaced_at: string | null
+          country: string
+          created_at: string | null
+          fact_hash: string
+          graduation_year: number
+          replacement_reason: string | null
+          total_reports: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          auto_replaced_at?: string | null
+          country: string
+          created_at?: string | null
+          fact_hash: string
+          graduation_year: number
+          replacement_reason?: string | null
+          total_reports?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          auto_replaced_at?: string | null
+          country?: string
+          created_at?: string | null
+          fact_hash?: string
+          graduation_year?: number
+          replacement_reason?: string | null
+          total_reports?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      fact_reports: {
+        Row: {
+          country: string
+          fact_content: string
+          fact_hash: string
+          graduation_year: number
+          id: string
+          report_reason: string
+          reported_at: string | null
+          status: string | null
+          user_fingerprint: string | null
+        }
+        Insert: {
+          country: string
+          fact_content: string
+          fact_hash: string
+          graduation_year: number
+          id?: string
+          report_reason: string
+          reported_at?: string | null
+          status?: string | null
+          user_fingerprint?: string | null
+        }
+        Update: {
+          country?: string
+          fact_content?: string
+          fact_hash?: string
+          graduation_year?: number
+          id?: string
+          report_reason?: string
+          reported_at?: string | null
+          status?: string | null
+          user_fingerprint?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

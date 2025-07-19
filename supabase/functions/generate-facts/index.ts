@@ -16,6 +16,57 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Generate fact hash for tracking and quality control
+function generateFactHash(fact: OutdatedFact): string {
+  const factString = `${fact.category}|${fact.fact}|${fact.correction}`;
+  return btoa(factString).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
+}
+
+// Filter out facts that have been reported too many times
+async function filterReportedFacts(facts: OutdatedFact[], country: string, graduationYear: number): Promise<OutdatedFact[]> {
+  const { data: qualityStats } = await supabase
+    .from('fact_quality_stats')
+    .select('fact_hash, total_reports')
+    .eq('country', country)
+    .eq('graduation_year', graduationYear)
+    .gte('total_reports', 5);
+  
+  const reportedHashes = new Set((qualityStats || []).map(stat => stat.fact_hash));
+  
+  return facts.filter(fact => {
+    const factHash = generateFactHash(fact);
+    return !reportedHashes.has(factHash);
+  });
+}
+
+// Update quality stats for facts
+async function updateFactQualityStats(facts: OutdatedFact[], country: string, graduationYear: number): Promise<void> {
+  for (const fact of facts) {
+    const factHash = generateFactHash(fact);
+    
+    const { data: reports } = await supabase
+      .from('fact_reports')
+      .select('id')
+      .eq('fact_hash', factHash);
+    
+    const reportCount = reports?.length || 0;
+    
+    await supabase
+      .from('fact_quality_stats')
+      .upsert({
+        fact_hash: factHash,
+        country,
+        graduation_year: graduationYear,
+        total_reports: reportCount,
+        updated_at: new Date().toISOString(),
+        ...(reportCount >= 5 && {
+          auto_replaced_at: new Date().toISOString(),
+          replacement_reason: `Auto-replaced due to ${reportCount} reports`
+        })
+      }, { onConflict: 'fact_hash' });
+  }
+}
+
 interface GenerateFactsRequest {
   country: string;
   graduationYear: number;
