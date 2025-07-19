@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           country: string
           created_at: string
+          education_system_problems: Json | null
           facts_data: Json
           graduation_year: number
           id: string
@@ -26,6 +27,7 @@ export type Database = {
         Insert: {
           country: string
           created_at?: string
+          education_system_problems?: Json | null
           facts_data: Json
           graduation_year: number
           id?: string
@@ -34,6 +36,7 @@ export type Database = {
         Update: {
           country?: string
           created_at?: string
+          education_system_problems?: Json | null
           facts_data?: Json
           graduation_year?: number
           id?: string

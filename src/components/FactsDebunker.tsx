@@ -21,6 +21,12 @@ interface OutdatedFact {
   sourceName?: string;
 }
 
+interface EducationSystemProblem {
+  problem: string;
+  description: string;
+  impact: string;
+}
+
 const countries = [
   { value: "Germany", label: "Germany" },
   { value: "USA", label: "USA" },
@@ -57,6 +63,7 @@ export const FactsDebunker = () => {
   const [country, setCountry] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
   const [facts, setFacts] = useState<OutdatedFact[]>([]);
+  const [educationProblems, setEducationProblems] = useState<EducationSystemProblem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [showSkeletons, setShowSkeletons] = useState(false);
@@ -105,6 +112,7 @@ export const FactsDebunker = () => {
       }
 
       setFacts(data.facts);
+      setEducationProblems(data.educationProblems || []);
       setShowSkeletons(false);
       
       if (data.cached) {
@@ -126,6 +134,7 @@ export const FactsDebunker = () => {
     setCountry("");
     setGraduationYear("");
     setFacts([]);
+    setEducationProblems([]);
     setShowSkeletons(false);
     setError(null);
     setSuccessMessage(null);
@@ -256,6 +265,36 @@ export const FactsDebunker = () => {
                 </p>
               )}
             </div>
+
+            {/* Education System Problems */}
+            {!showSkeletons && educationProblems.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold mb-4 text-center">
+                  Education System Challenges in {country} around {graduationYear}
+                </h3>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {educationProblems.map((problem, index) => (
+                    <Card key={index} className="border-orange-200 bg-orange-50/50">
+                      <CardHeader>
+                        <CardTitle className="text-orange-800 text-lg">
+                          {problem.problem}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <p className="text-sm text-orange-700">
+                          {problem.description}
+                        </p>
+                        <div className="pt-2 border-t border-orange-200">
+                          <p className="text-xs font-medium text-orange-600">
+                            <strong>Impact:</strong> {problem.impact}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
             
             <Accordion type="multiple" className="space-y-4">
               {showSkeletons ? (

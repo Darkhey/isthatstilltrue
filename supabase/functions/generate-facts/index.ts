@@ -31,6 +31,37 @@ interface OutdatedFact {
   sourceName?: string;
 }
 
+interface EducationSystemProblem {
+  problem: string;
+  description: string;
+  impact: string;
+}
+
+// Generate education system problems for the given country and year
+async function generateEducationProblems(country: string, year: number): Promise<EducationSystemProblem[]> {
+  const prompt = `List 3-5 major problems that the education system in ${country} faced specifically around ${year}.
+
+Focus on concrete, historical issues like:
+- Teacher shortages
+- Funding problems
+- Outdated curricula
+- Technology gaps
+- Infrastructure issues
+- Policy problems
+- Social/political challenges
+
+Return ONLY a valid JSON array:
+[
+  {
+    "problem": "Brief problem title",
+    "description": "2-3 sentence description of the specific issue",
+    "impact": "How this affected students and education quality"
+  }
+]`;
+
+  return await makeAIRequest(prompt, 'education-problems');
+}
+
 // Generate facts directly in one step with concrete examples
 async function generateOutdatedFacts(country: string, year: number): Promise<OutdatedFact[]> {
   const currentYear = new Date().getFullYear();
@@ -78,7 +109,7 @@ Return ONLY a valid JSON array with NO markdown formatting:
 
 Focus on facts that were genuinely taught as definitive truth in ${year} textbooks in ${country}, not theoretical concepts or ongoing debates.`;
 
-  return await makeAIRequest(prompt);
+  return await makeAIRequest(prompt, 'outdated-facts');
 }
 
 // Retry function with exponential backoff
@@ -110,7 +141,7 @@ async function retryWithBackoff<T>(
 }
 
 // Helper function to make AI requests with fallback
-async function makeAIRequest(prompt: string): Promise<OutdatedFact[]> {
+async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'education-problems'): Promise<any[]> {
   const makeOpenAIRequest = async () => {
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not available');
@@ -211,38 +242,49 @@ async function makeAIRequest(prompt: string): Promise<OutdatedFact[]> {
   }
 
   // Parse and validate the response
-  let facts: OutdatedFact[];
+  let results: any[];
   try {
     const extractedText = extractJSONFromResponse(response);
     console.log('Extracted JSON text:', extractedText);
-    facts = JSON.parse(extractedText);
+    results = JSON.parse(extractedText);
   } catch (parseError) {
     console.error('JSON parsing error:', parseError);
     console.error('Raw AI response:', response);
     throw new Error('Failed to parse JSON response from AI');
   }
 
-  // Validate fact structure
-  if (!Array.isArray(facts)) {
-    console.error('Response is not an array:', facts);
+  // Validate structure
+  if (!Array.isArray(results)) {
+    console.error('Response is not an array:', results);
     throw new Error('Response is not an array');
   }
 
-  if (facts.length === 0) {
-    console.error('No facts generated');
-    throw new Error('No facts were generated');
+  if (results.length === 0) {
+    console.error(`No ${requestType} generated`);
+    throw new Error(`No ${requestType} were generated`);
   }
 
-  for (let i = 0; i < facts.length; i++) {
-    const fact = facts[i];
-    if (!fact.category || !fact.fact || !fact.correction || !fact.yearDebunked || !fact.mindBlowingFactor) {
-      console.error(`Fact ${i} is missing required fields:`, fact);
-      throw new Error(`Fact ${i} is missing required fields`);
+  // Validate based on request type
+  if (requestType === 'outdated-facts') {
+    for (let i = 0; i < results.length; i++) {
+      const fact = results[i];
+      if (!fact.category || !fact.fact || !fact.correction || !fact.yearDebunked || !fact.mindBlowingFactor) {
+        console.error(`Fact ${i} is missing required fields:`, fact);
+        throw new Error(`Fact ${i} is missing required fields`);
+      }
+    }
+  } else if (requestType === 'education-problems') {
+    for (let i = 0; i < results.length; i++) {
+      const problem = results[i];
+      if (!problem.problem || !problem.description || !problem.impact) {
+        console.error(`Education problem ${i} is missing required fields:`, problem);
+        throw new Error(`Education problem ${i} is missing required fields`);
+      }
     }
   }
 
-  console.log(`Successfully validated ${facts.length} facts`);
-  return facts;
+  console.log(`Successfully validated ${results.length} ${requestType}`);
+  return results;
 }
 
 // Helper function to extract JSON from AI response
@@ -285,10 +327,10 @@ serve(async (req) => {
     
     console.log(`Processing request for country: ${country}, graduation year: ${graduationYear}`);
 
-    // Check for cached facts first
+    // Check for cached data first
     const { data: cachedData, error: cacheError } = await supabase
       .from('cached_facts')
-      .select('facts_data, created_at')
+      .select('facts_data, education_system_problems, created_at')
       .eq('country', country)
       .eq('graduation_year', graduationYear)
       .single();
@@ -297,15 +339,16 @@ serve(async (req) => {
       console.error('Cache lookup error:', cacheError);
     }
 
-    // Return cached facts if they exist and are recent (within 6 months)
-    if (cachedData) {
+    // Return cached data if it exists and is recent (within 6 months)
+    if (cachedData && cachedData.facts_data && cachedData.education_system_problems) {
       const cacheAge = Date.now() - new Date(cachedData.created_at).getTime();
       const sixMonthsInMs = 6 * 30 * 24 * 60 * 60 * 1000;
       
       if (cacheAge < sixMonthsInMs) {
-        console.log(`Returning cached facts for ${country} ${graduationYear} (cached ${Math.round(cacheAge / (24 * 60 * 60 * 1000))} days ago)`);
+        console.log(`Returning cached data for ${country} ${graduationYear} (cached ${Math.round(cacheAge / (24 * 60 * 60 * 1000))} days ago)`);
         return new Response(JSON.stringify({ 
           facts: cachedData.facts_data,
+          educationProblems: cachedData.education_system_problems,
           cached: true,
           cacheAge: Math.round(cacheAge / (24 * 60 * 60 * 1000))
         }), {
@@ -314,13 +357,17 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Generating new facts for ${country} ${graduationYear}`);
+    console.log(`Generating new data for ${country} ${graduationYear}`);
 
-    // Generate facts with the new simplified approach
-    const facts = await generateOutdatedFacts(country, graduationYear);
-    console.log(`Successfully generated ${facts.length} outdated facts`);
+    // Generate both facts and education problems
+    const [facts, educationProblems] = await Promise.all([
+      generateOutdatedFacts(country, graduationYear),
+      generateEducationProblems(country, graduationYear)
+    ]);
+    
+    console.log(`Successfully generated ${facts.length} outdated facts and ${educationProblems.length} education problems`);
 
-    // Save the generated facts to cache
+    // Save the generated data to cache
     try {
       const { error: insertError } = await supabase
         .from('cached_facts')
@@ -328,15 +375,16 @@ serve(async (req) => {
           country,
           graduation_year: graduationYear,
           facts_data: facts,
+          education_system_problems: educationProblems,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'country,graduation_year'
         });
 
       if (insertError) {
-        console.error('Failed to cache facts:', insertError);
+        console.error('Failed to cache data:', insertError);
       } else {
-        console.log(`Successfully cached facts for ${country} ${graduationYear}`);
+        console.log(`Successfully cached data for ${country} ${graduationYear}`);
       }
     } catch (cacheError) {
       console.error('Cache insertion error:', cacheError);
@@ -344,6 +392,7 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ 
       facts,
+      educationProblems,
       cached: false
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
