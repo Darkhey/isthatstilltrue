@@ -434,16 +434,16 @@ export const FactsDebunker = () => {
               <div className="mb-8">
                 <Collapsible open={isEducationProblemsOpen} onOpenChange={setIsEducationProblemsOpen}>
                   <CollapsibleTrigger asChild>
-                     <Button variant="outline" className="w-full justify-between p-3 md:p-4 h-auto">
-                       <div className="text-left flex-1 min-w-0 pr-3">
-                         <h3 className="text-sm md:text-lg font-bold leading-tight">
+                     <Button variant="outline" className="w-full justify-between p-4 md:p-6 h-auto border-2 hover:shadow-md transition-all">
+                       <div className="text-left flex-1 min-w-0 pr-4">
+                         <h3 className="text-lg md:text-xl font-bold leading-tight text-foreground">
                            Education System Challenges in {country} around {graduationYear}
                          </h3>
-                         <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
-                           Click to see what problems affected your education system
+                         <p className="text-sm md:text-base text-muted-foreground mt-2 leading-relaxed">
+                           Click to see what problems affected your education system during that era
                          </p>
                        </div>
-                       <ChevronDown className={`h-4 w-4 md:h-5 md:w-5 shrink-0 transition-transform ${isEducationProblemsOpen ? 'rotate-180' : ''}`} />
+                       <ChevronDown className={`h-5 w-5 md:h-6 md:w-6 shrink-0 transition-transform duration-200 ${isEducationProblemsOpen ? 'rotate-180' : ''}`} />
                      </Button>
                    </CollapsibleTrigger>
                    <CollapsibleContent className="mt-4">

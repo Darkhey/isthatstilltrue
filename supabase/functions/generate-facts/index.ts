@@ -374,33 +374,31 @@ function extractJSONFromResponse(generatedText: string): string {
 
 // Helper function to fix common JSON formatting issues
 function fixCommonJSONIssues(jsonText: string): string {
-  // Remove any leading/trailing whitespace
+  // Remove any surrounding whitespace and code blocks
   jsonText = jsonText.trim();
+  jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+  jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
   
-  // Fix unescaped quotes in string values by properly escaping them
-  // This is a more robust approach for handling quotes in JSON strings
-  jsonText = jsonText.replace(/"([^"]*(?:\\.[^"]*)*)"(\s*:\s*)"([^"]*(?:\\.[^"]*)*)"([^"]*(?:\\.[^"]*)*)/g, (match, key, colon, value, rest) => {
-    // Only escape unescaped quotes in the value part
-    const escapedValue = value.replace(/\\"/g, '___ESCAPED_QUOTE___')
-                             .replace(/"/g, '\\"')
-                             .replace(/___ESCAPED_QUOTE___/g, '\\"');
-    return `"${key}"${colon}"${escapedValue}"${rest}`;
-  });
+  // Handle escaped single quotes that are breaking JSON
+  jsonText = jsonText.replace(/\\'/g, "'");
   
-  // Fix specific issue with apostrophes in contractions
-  jsonText = jsonText.replace(/([a-zA-Z])'([a-zA-Z])/g, '$1\\\'$2');
+  // Fix unescaped quotes within string values - more conservative approach
+  // Only fix obvious cases where quotes appear within values
+  jsonText = jsonText.replace(/: "([^"]*)"([^,}\]]*)"([^"]*)",/g, ': "$1\\"$2\\"$3",');
+  jsonText = jsonText.replace(/: "([^"]*)"([^,}\]]*)"([^"]*)"$/gm, ': "$1\\"$2\\"$3"');
+  
+  // Fix unescaped single quotes in JSON strings (common in contractions)
+  jsonText = jsonText.replace(/"([^"]*?)([a-zA-Z])'([a-zA-Z])([^"]*?)"/g, '"$1$2\\\'$3$4"');
   
   // Fix trailing commas before closing brackets or braces
   jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
   
-  // Fix missing commas between objects
+  // Fix missing commas between objects/arrays
   jsonText = jsonText.replace(/}(\s*){/g, '},\n{');
+  jsonText = jsonText.replace(/](\s*)\[/g, '],\n[');
   
-  // Fix missing commas between array elements
-  jsonText = jsonText.replace(/}(\s*\n\s*){/g, '},\n{');
-  
-  // Fix newlines within strings that break JSON
-  jsonText = jsonText.replace(/"([^"]*)\n([^"]*)"(\s*:)/g, '"$1 $2"$3');
+  // Fix newlines within JSON strings that break parsing
+  jsonText = jsonText.replace(/"([^"]*)\n([^"]*)"(\s*[,}:\]])/g, '"$1 $2"$3');
   
   return jsonText;
 }
