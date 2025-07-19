@@ -79,47 +79,86 @@ const getCategoryColor = (category: string) => {
 };
 
 const generateFunMessage = (year: number) => {
-  const currentYear = new Date().getFullYear();
-  const age = currentYear - parseInt(year.toString());
+  const yearNum = parseInt(year.toString());
   
   const messages = {
     ancient: [
-      "Wow, you're a living piece of history! 📚",
-      "Ancient wisdom incoming! 🏛️",
-      "You've seen the world change completely! 🌍",
-      "Living legend detected! 👑"
+      "Respect! You've seen it all 🙏",
+      "OG scholar right here 📚",
+      "Living history, love it! 🏛️",
+      "You're basically a time traveler ⏰"
     ],
     vintage: [
+      "Old school cool! 😎",
+      "Back when things were simpler 📻",
       "You are that old? Impressive! 🎓",
-      "Vintage knowledge unlocked! 📖",
-      "Classic education era! 🏫",
-      "Old school wisdom! 💭"
+      "Vintage vibes only 🕰️"
     ],
-    classic: [
-      "Classic graduation year! 🎒",
-      "Retro education vibes! ✨",
-      "Time traveler spotted! ⏰",
-      "Seasoned scholar! 🧠"
+    retro: [
+      "Retro graduate detected! 📼",
+      "When life was analog 📺",
+      "Classic era, nice! 🎸",
+      "You remember when... 💭"
     ],
-    experienced: [
-      "Lots of life experience! 🌟",
-      "Well-seasoned graduate! 🎯",
-      "Experienced learner! 📚",
-      "Wisdom gained over time! 🔍"
+    nineties: [
+      "90s kid! Peak nostalgia 📱",
+      "Dial-up internet survivor 💻",
+      "When MTV still played music 🎵",
+      "You had a Nokia brick phone 📞"
+    ],
+    earlyTwoThousands: [
+      "Y2K survivor! 💾",
+      "MySpace era graduate 🌐",
+      "iPod generation 🎧",
+      "When flip phones were cool 📱"
+    ],
+    recession: [
+      "2008 recession graduate... tough times! 📉",
+      "You graduated into chaos, respect 💪",
+      "Financial crisis couldn't stop you! 🚀",
+      "Economy was rough but you made it 🎯"
+    ],
+    modern: [
+      "You probably still can't afford a house 🏠",
+      "Student loans are forever, right? 💸",
+      "Graduated into the gig economy 📱",
+      "Adulting is harder than expected 😅"
+    ],
+    pandemic: [
+      "Zoom graduation, been there! 💻",
+      "Masks and hand sanitizer era 😷",
+      "You graduated during apocalypse mode 🦠",
+      "Remote everything graduate! 🏠"
+    ],
+    fresh: [
+      "Fresh grad! Job market is... interesting 📊",
+      "Entry level: 5+ years experience required 😂",
+      "You need 10 years experience for your first job 💼",
+      "Welcome to inflation nation! 💰"
     ]
   };
 
   let categoryMessages;
-  if (age > 100) {
+  if (yearNum <= 1920) {
     categoryMessages = messages.ancient;
-  } else if (age > 80) {
+  } else if (yearNum <= 1940) {
     categoryMessages = messages.vintage;
-  } else if (age > 60) {
-    categoryMessages = messages.classic;
-  } else if (age > 40) {
-    categoryMessages = messages.experienced;
+  } else if (yearNum <= 1960) {
+    categoryMessages = messages.retro;
+  } else if (yearNum <= 1980) {
+    categoryMessages = messages.retro;
+  } else if (yearNum <= 1999) {
+    categoryMessages = messages.nineties;
+  } else if (yearNum <= 2007) {
+    categoryMessages = messages.earlyTwoThousands;
+  } else if (yearNum <= 2012) {
+    categoryMessages = messages.recession;
+  } else if (yearNum <= 2019) {
+    categoryMessages = messages.modern;
+  } else if (yearNum <= 2022) {
+    categoryMessages = messages.pandemic;
   } else {
-    return null; // No message for younger ages
+    categoryMessages = messages.fresh;
   }
 
   return categoryMessages[Math.floor(Math.random() * categoryMessages.length)];
