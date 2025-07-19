@@ -50,6 +50,32 @@ const countries = [
   { value: "Turkey", label: "Turkey" },
 ];
 
+const getLocalGreeting = (country: string) => {
+  const greetings: Record<string, string> = {
+    "Germany": "Hallo",
+    "Austria": "Servus",
+    "Switzerland": "Grüezi",
+    "France": "Bonjour",
+    "United Kingdom": "Hello",
+    "USA": "Hello", 
+    "Canada": "Hello",
+    "Australia": "G'day",
+    "Netherlands": "Hallo",
+    "Sweden": "Hej",
+    "Russia": "Привет",
+    "Moldova": "Salut",
+    "China": "你好",
+    "Iran": "سلام",
+    "North Korea": "안녕하세요",
+    "Venezuela": "Hola",
+    "Cuba": "Hola",
+    "Belarus": "Прывітанне",
+    "Serbia": "Здраво",
+    "Turkey": "Merhaba",
+  };
+  return greetings[country] || "Hello";
+};
+
 const getCategoryIcon = (category: string) => {
   const iconMap: Record<string, any> = {
     "Politics": Flag,
@@ -335,6 +361,11 @@ export const FactsDebunker = () => {
                 <CardDescription className="text-center">
                   {country} • We'll analyze your school curriculum from that era
                 </CardDescription>
+                <div className="text-center mt-3">
+                  <span className="text-2xl font-bold text-primary">
+                    {getLocalGreeting(country)}!
+                  </span>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 <Select value={graduationYear} onValueChange={handleYearChange}>
