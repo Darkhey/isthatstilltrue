@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { FactSkeleton } from "./FactSkeleton";
 
 interface OutdatedFact {
   category: string;
@@ -48,6 +49,7 @@ export const FactsDebunker = () => {
   const [facts, setFacts] = useState<OutdatedFact[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [showSkeletons, setShowSkeletons] = useState(false);
   const { toast } = useToast();
 
   const handleNextStep = () => {
@@ -73,6 +75,8 @@ export const FactsDebunker = () => {
     }
 
     setIsLoading(true);
+    setShowSkeletons(true);
+    setFacts([]); // Clear any existing facts
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-facts', {
@@ -87,18 +91,20 @@ export const FactsDebunker = () => {
       }
 
       setFacts(data.facts || []);
+      setShowSkeletons(false);
       
       toast({
-        title: "Facts Generated!",
-        description: `Found ${data.facts?.length || 0} outdated facts from your school days.`,
+        title: "Truth Revealed!",
+        description: `Exposed ${data.facts?.length || 0} lies from your school days.`,
       });
     } catch (error) {
       console.error('Error generating facts:', error);
       toast({
         title: "Error",
-        description: "Could not generate facts. Please try again.",
+        description: "Could not expose the lies. Please try again.",
         variant: "destructive",
       });
+      setShowSkeletons(false);
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +115,7 @@ export const FactsDebunker = () => {
     setCountry("");
     setGraduationYear("");
     setFacts([]);
+    setShowSkeletons(false);
   };
 
   return (
@@ -191,10 +198,10 @@ export const FactsDebunker = () => {
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
+                        Exposing lies...
                       </>
                     ) : (
-                      "Generate Facts!"
+                      "Reveal The Truth!"
                     )}
                   </Button>
                 </div>
@@ -203,11 +210,11 @@ export const FactsDebunker = () => {
           )}
         </Card>
 
-        {facts.length > 0 && (
+        {(showSkeletons || facts.length > 0) && (
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
-                Outdated Facts from Your School Days
+                {showSkeletons ? "Exposing The Lies..." : "Exposed Lies from Your School Days"}
               </h2>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 {country} • Graduated {graduationYear}
@@ -215,100 +222,110 @@ export const FactsDebunker = () => {
             </div>
             
             <Accordion type="multiple" className="space-y-4">
-              {facts.map((fact, index) => {
-                const IconComponent = getCategoryIcon(fact.category);
-                return (
-                  <AccordionItem 
-                    key={index} 
-                    value={`item-${index}`}
-                    className="border rounded-lg shadow-sm hover:shadow-md transition-shadow"
-                  >
-                    <AccordionTrigger className="px-6 py-4 hover:no-underline">
-                      <div className="flex items-center gap-4 w-full">
-                        <IconComponent className="h-6 w-6 text-primary" />
-                        <div className="flex-1 text-left">
-                          <div className="font-semibold text-lg">{fact.category}</div>
-                          <div className="text-sm text-muted-foreground truncate">
-                            {fact.fact.length > 60 ? `${fact.fact.substring(0, 60)}...` : fact.fact}
+              {showSkeletons ? (
+                // Show 8 skeleton items while loading
+                Array.from({ length: 8 }, (_, index) => (
+                  <FactSkeleton key={`skeleton-${index}`} index={index} />
+                ))
+              ) : (
+                // Show actual facts when loaded
+                facts.map((fact, index) => {
+                  const IconComponent = getCategoryIcon(fact.category);
+                  return (
+                    <AccordionItem 
+                      key={index} 
+                      value={`item-${index}`}
+                      className="border rounded-lg shadow-sm hover:shadow-md transition-shadow animate-fade-in"
+                    >
+                      <AccordionTrigger className="px-6 py-4 hover:no-underline">
+                        <div className="flex items-center gap-4 w-full">
+                          <IconComponent className="h-6 w-6 text-primary" />
+                          <div className="flex-1 text-left">
+                            <div className="font-semibold text-lg">{fact.category}</div>
+                            <div className="text-sm text-muted-foreground truncate">
+                              {fact.fact.length > 60 ? `${fact.fact.substring(0, 60)}...` : fact.fact}
+                            </div>
                           </div>
+                          <Badge variant="destructive" className="ml-auto">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            {fact.yearDebunked}
+                          </Badge>
                         </div>
-                        <Badge variant="destructive" className="ml-auto">
-                          <AlertTriangle className="w-3 h-3 mr-1" />
-                          {fact.yearDebunked}
-                        </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="px-6 pb-6">
-                      <div className="space-y-4">
-                        <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
-                          <h4 className="font-semibold text-destructive mb-2 flex items-center gap-2">
-                            <AlertTriangle className="w-4 h-4" />
-                            What you were taught:
-                          </h4>
-                          <p className="text-sm italic">
-                            „{fact.fact}"
-                          </p>
-                        </div>
-                        
-                        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                          <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
-                            <BookOpen className="w-4 h-4" />
-                            What we know now:
-                          </h4>
-                          <p className="text-sm">
-                            {fact.correction}
-                          </p>
-                        </div>
-
-                        {fact.mindBlowingFactor && (
-                          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                            <h4 className="font-semibold text-amber-700 mb-2 flex items-center gap-2">
-                              <Lightbulb className="w-4 h-4" />
-                              Mind-Blowing Factor:
+                      </AccordionTrigger>
+                      <AccordionContent className="px-6 pb-6">
+                        <div className="space-y-4">
+                          <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
+                            <h4 className="font-semibold text-destructive mb-2 flex items-center gap-2">
+                              <AlertTriangle className="w-4 h-4" />
+                              What you were taught:
                             </h4>
-                            <p className="text-sm text-amber-800">
-                              {fact.mindBlowingFactor}
+                            <p className="text-sm italic">
+                              „{fact.fact}"
                             </p>
                           </div>
-                        )}
-
-                        {(fact.sourceUrl || fact.sourceName) && (
-                          <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                            <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
-                              <ExternalLink className="w-4 h-4" />
-                              Source:
+                          
+                          <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                            <h4 className="font-semibold text-primary mb-2 flex items-center gap-2">
+                              <BookOpen className="w-4 h-4" />
+                              What we know now:
                             </h4>
-                            {fact.sourceUrl ? (
-                              <a 
-                                href={fact.sourceUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline inline-flex items-center gap-1"
-                              >
-                                {fact.sourceName || fact.sourceUrl}
-                                <ExternalLink className="w-3 h-3" />
-                              </a>
-                            ) : (
-                              <p className="text-sm text-slate-600">{fact.sourceName}</p>
-                            )}
+                            <p className="text-sm">
+                              {fact.correction}
+                            </p>
                           </div>
-                        )}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                );
-              })}
+
+                          {fact.mindBlowingFactor && (
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                              <h4 className="font-semibold text-amber-700 mb-2 flex items-center gap-2">
+                                <Lightbulb className="w-4 h-4" />
+                                Mind-Blowing Factor:
+                              </h4>
+                              <p className="text-sm text-amber-800">
+                                {fact.mindBlowingFactor}
+                              </p>
+                            </div>
+                          )}
+
+                          {(fact.sourceUrl || fact.sourceName) && (
+                            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                              <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                                <ExternalLink className="w-4 h-4" />
+                                Source:
+                              </h4>
+                              {fact.sourceUrl ? (
+                                <a 
+                                  href={fact.sourceUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                                >
+                                  {fact.sourceName || fact.sourceUrl}
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              ) : (
+                                <p className="text-sm text-slate-600">{fact.sourceName}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })
+              )}
             </Accordion>
             
-            <div className="text-center mt-8">
-              <Button 
-                onClick={resetForm}
-                variant="outline"
-                className="px-8"
-              >
-                Start New Search
-              </Button>
-            </div>
+            {!showSkeletons && (
+              <div className="text-center mt-8">
+                <Button 
+                  onClick={resetForm}
+                  variant="outline"
+                  className="px-8"
+                >
+                  Start New Search
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>
