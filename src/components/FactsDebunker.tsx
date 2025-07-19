@@ -228,8 +228,8 @@ export const FactsDebunker = () => {
                     <SelectValue placeholder="Select graduation year..." />
                   </SelectTrigger>
                   <SelectContent className="max-h-40">
-                    {Array.from({ length: new Date().getFullYear() - 1950 + 1 }, (_, i) => {
-                      const year = new Date().getFullYear() - i;
+                    {Array.from({ length: new Date().getFullYear() - 1900 + 1 }, (_, i) => {
+                      const year = 1900 + i;
                       return (
                         <SelectItem key={year} value={year.toString()}>
                           {year}
@@ -344,7 +344,27 @@ export const FactsDebunker = () => {
                   <FactSkeleton key={`skeleton-${index}`} index={index} />
                 ))
               ) : (
-                facts.map((fact, index) => {
+                facts
+                  .sort((a, b) => {
+                    // Define category order: scientific first, then political
+                    const categoryOrder = [
+                      'Space/Astronomy', 'Medicine', 'Technology', 'Science', 
+                      'Nutrition', 'Health', 'Environment', 'Geography',
+                      'Views on Specific Countries', 'International Conflicts',
+                      'Colonial/Post-colonial Perspectives', 'Economic Systems',
+                      'Political Systems', 'Diplomatic Relations'
+                    ];
+                    
+                    const indexA = categoryOrder.indexOf(a.category);
+                    const indexB = categoryOrder.indexOf(b.category);
+                    
+                    if (indexA === -1 && indexB === -1) return a.category.localeCompare(b.category);
+                    if (indexA === -1) return 1;
+                    if (indexB === -1) return -1;
+                    
+                    return indexA - indexB;
+                  })
+                  .map((fact, index) => {
                   const IconComponent = getCategoryIcon(fact.category);
                   const categoryColor = getCategoryColor(fact.category);
                   const isPolitics = fact.category === "Politics" || fact.category === "International Relations";
