@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -91,11 +92,92 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'typewriter-cursor': {
+					'0%, 50%': { 
+						opacity: '1',
+						transform: 'scaleY(1)'
+					},
+					'51%, 100%': { 
+						opacity: '0',
+						transform: 'scaleY(0.8)'
+					}
+				},
+				'char-appear': {
+					'0%': { 
+						opacity: '0', 
+						transform: 'translateY(10px) scale(0.8)' 
+					},
+					'100%': { 
+						opacity: '1', 
+						transform: 'translateY(0) scale(1)' 
+					}
+				},
+				'text-glow': {
+					'0%, 100%': { 
+						textShadow: '0 0 10px hsl(var(--primary) / 0.3)' 
+					},
+					'50%': { 
+						textShadow: '0 0 20px hsl(var(--primary) / 0.6), 0 0 30px hsl(var(--primary) / 0.4)' 
+					}
+				},
+				'gradient-shift': {
+					'0%': {
+						backgroundPosition: '0% 50%'
+					},
+					'50%': {
+						backgroundPosition: '100% 50%'
+					},
+					'100%': {
+						backgroundPosition: '0% 50%'
+					}
+				},
+				'float-icon': {
+					'0%, 100%': {
+						transform: 'translateY(0px) rotate(0deg)'
+					},
+					'33%': {
+						transform: 'translateY(-10px) rotate(5deg)'
+					},
+					'66%': {
+						transform: 'translateY(5px) rotate(-3deg)'
+					}
+				},
+				'bounce-gentle': {
+					'0%, 100%': {
+						transform: 'translateY(0)'
+					},
+					'50%': {
+						transform: 'translateY(-5px)'
+					}
+				},
+				'particle-float': {
+					'0%': {
+						transform: 'translateY(100px) translateX(-10px) rotate(0deg)',
+						opacity: '0'
+					},
+					'10%': {
+						opacity: '0.6'
+					},
+					'90%': {
+						opacity: '0.6'
+					},
+					'100%': {
+						transform: 'translateY(-100px) translateX(10px) rotate(360deg)',
+						opacity: '0'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'typewriter-cursor': 'typewriter-cursor 1s ease-in-out infinite',
+				'char-appear': 'char-appear 0.3s ease-out forwards',
+				'text-glow': 'text-glow 2s ease-in-out infinite',
+				'gradient-shift': 'gradient-shift 3s ease-in-out infinite',
+				'float-icon': 'float-icon 4s ease-in-out infinite',
+				'bounce-gentle': 'bounce-gentle 2s ease-in-out infinite',
+				'particle-float': 'particle-float 8s linear infinite'
 			}
 		}
 	},

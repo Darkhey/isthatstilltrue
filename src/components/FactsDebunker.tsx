@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
 import { FactShare } from "./FactShare";
 import { ReportFactDialog } from "./ReportFactDialog";
+import { AnimatedHeadline } from "./AnimatedHeadline";
 
 interface OutdatedFact {
   category: string;
@@ -395,13 +396,8 @@ export const FactsDebunker = () => {
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-8 md:mb-12">
-          <div className="flex flex-col items-center justify-center mb-4 md:mb-6 md:flex-row">
-            <GraduationCap className="h-12 w-12 md:h-16 md:w-16 text-primary mb-2 md:mb-0 md:mr-4" />
-            <h1 className="text-2xl md:text-3xl lg:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent text-center">
-              School Facts Debunker
-            </h1>
-          </div>
-          <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
+          <AnimatedHeadline />
+          <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-4 mt-4">
             Discover what you learned in school that has since been proven wrong. 
             Find out how knowledge has evolved since you graduated.
           </p>
