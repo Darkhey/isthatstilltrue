@@ -69,52 +69,51 @@ serve(async (req) => {
     }
 
     const currentYear = new Date().getFullYear();
-    const prompt = `You are a sarcastic historian who loves to mock outdated beliefs. Generate EXACTLY 8 mind-blowing facts about what people WRONGLY believed in ${country} around ${graduationYear} vs what we know now in ${currentYear}.
+    const prompt = `You are a educational historian specializing in curriculum analysis. Generate EXACTLY 8 specific examples of outdated school content from ${country} in ${graduationYear}.
 
-TONE: Be playful and mocking, but educational. Use phrases like:
-- "In ${graduationYear}, people would actually think that..."
-- "Feeling stupid for learning that bullshit?"
-- "Your teachers were so wrong about this..."
-- "Imagine being that naive..."
+FOCUS ON ACTUAL SCHOOL CURRICULUM:
+- What was specifically taught in ${country} textbooks around ${graduationYear}
+- Official curriculum standards and common teaching materials from that era
+- Specific scientific "facts" that students memorized for tests
+- Standard explanations given in classrooms of that time period
 
-CATEGORIES (use exactly these):
-1. Science
-2. Technology  
-3. Medicine
-4. Society
-5. Laws
-6. Environment
-7. Physics
-8. Culture
+TONE: Educational but with playful mockery. Use phrases like:
+- "In ${graduationYear}, students in ${country} were actually taught that..."
+- "Your ${graduationYear} textbooks confidently stated that..."
+- "Teachers in ${country} around ${graduationYear} would seriously tell their classes that..."
+- "Feeling stupid for memorizing that bullshit in school?"
+- "Your teachers were so confidently wrong about this..."
 
-FOCUS ON:
-- Rapidly changing fields that would shock people from ${graduationYear}
-- Things that seemed "settled science" but were completely wrong
-- Social norms that now seem absurd
-- Laws that have dramatically changed
-- Technology misconceptions
-- Medical practices that are now considered dangerous
+SPECIFIC CATEGORIES (use exactly these):
+1. Science - Biology/Chemistry textbook content
+2. Technology - Computer science and tech predictions
+3. Medicine - Health education and medical "facts"
+4. Society - Social studies curriculum  
+5. Laws - Civics/government class content
+6. Environment - Environmental science teachings
+7. Physics - Physics textbook explanations
+8. Culture - Literature/arts curriculum assumptions
 
 For each fact:
-- Start the "fact" with mocking language about ${graduationYear}
-- Make the "correction" detailed and specific
-- Include "mindBlowingFactor" with sarcastic commentary
-- Add real source URLs when possible
+- Reference specific teaching methods or common textbook explanations from that era
+- Include what students would have written on tests or homework
+- Contrast with detailed current understanding
+- Add sources when possible (research institutions, updated textbooks, etc.)
 
-Response format (JSON only):
+CRITICAL: Return ONLY valid JSON array. No markdown, no code blocks, no extra text.
+
+JSON format:
 [
   {
     "category": "Science",
-    "fact": "In ${graduationYear}, people in ${country} would actually think that [outdated belief with mocking tone]",
-    "correction": "Today we know that [detailed current understanding with specific facts and numbers]",
-    "yearDebunked": [year between ${graduationYear} and ${currentYear}],
-    "mindBlowingFactor": "Feeling stupid for learning that bullshit? [sarcastic explanation of why this change is shocking]",
+    "fact": "In ${graduationYear}, students in ${country} were actually taught that [specific textbook claim with mocking tone]",
+    "correction": "Today we know that [detailed current understanding with specific facts]",
+    "yearDebunked": [specific year between ${graduationYear} and ${currentYear}],
+    "mindBlowingFactor": "Feeling stupid for memorizing that bullshit in school? [explain why this change is shocking]",
     "sourceUrl": "https://credible-source.com",
-    "sourceName": "Scientific Journal/Institution Name"
+    "sourceName": "Institution/Study Name"
   }
-]
-
-Generate exactly 8 facts, one per category. Make them genuinely surprising and educational while maintaining the playful, mocking tone.`;
+]`;
 
     const makeGeminiRequest = async () => {
       console.log('Making Gemini API request...');

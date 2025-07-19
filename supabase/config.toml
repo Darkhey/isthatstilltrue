@@ -1,1 +1,4 @@
 project_id = "hydphinynbbuflawpprs"
+
+[functions.generate-facts]
+verify_jwt = false
