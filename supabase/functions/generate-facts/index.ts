@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,6 +9,11 @@ const corsHeaders = {
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+
+// Initialize Supabase client for caching
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 interface GenerateFactsRequest {
   country: string;
@@ -62,7 +68,40 @@ serve(async (req) => {
   try {
     const { country, graduationYear }: GenerateFactsRequest = await req.json();
     
-    console.log(`Generating facts for country: ${country}, graduation year: ${graduationYear}`);
+    console.log(`Checking cache for country: ${country}, graduation year: ${graduationYear}`);
+
+    // Check for cached facts first
+    const { data: cachedData, error: cacheError } = await supabase
+      .from('cached_facts')
+      .select('facts_data, created_at')
+      .eq('country', country)
+      .eq('graduation_year', graduationYear)
+      .single();
+
+    if (cacheError && cacheError.code !== 'PGRST116') { // PGRST116 = no rows found
+      console.error('Cache lookup error:', cacheError);
+    }
+
+    // Return cached facts if they exist and are recent (within 6 months)
+    if (cachedData) {
+      const cacheAge = Date.now() - new Date(cachedData.created_at).getTime();
+      const sixMonthsInMs = 6 * 30 * 24 * 60 * 60 * 1000; // 6 months in milliseconds
+      
+      if (cacheAge < sixMonthsInMs) {
+        console.log(`Returning cached facts for ${country} ${graduationYear} (cached ${Math.round(cacheAge / (24 * 60 * 60 * 1000))} days ago)`);
+        return new Response(JSON.stringify({ 
+          facts: cachedData.facts_data,
+          cached: true,
+          cacheAge: Math.round(cacheAge / (24 * 60 * 60 * 1000))
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else {
+        console.log(`Cache expired for ${country} ${graduationYear}, generating new facts`);
+      }
+    } else {
+      console.log(`No cached facts found for ${country} ${graduationYear}, generating new facts`);
+    }
 
     const currentYear = new Date().getFullYear();
     const prompt = `You are an educational historian with access to historical curriculum archives. Research and provide EXACTLY 8 detailed examples of outdated content that was actually taught in ${country} schools around ${graduationYear}.
@@ -305,7 +344,34 @@ JSON format:
 
     console.log(`Successfully generated ${facts.length} facts`);
 
-    return new Response(JSON.stringify({ facts }), {
+    // Save the generated facts to cache for future use
+    try {
+      const { error: insertError } = await supabase
+        .from('cached_facts')
+        .upsert({
+          country,
+          graduation_year: graduationYear,
+          facts_data: facts,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'country,graduation_year'
+        });
+
+      if (insertError) {
+        console.error('Failed to cache facts:', insertError);
+        // Don't fail the request if caching fails
+      } else {
+        console.log(`Successfully cached facts for ${country} ${graduationYear}`);
+      }
+    } catch (cacheError) {
+      console.error('Cache insertion error:', cacheError);
+      // Don't fail the request if caching fails
+    }
+
+    return new Response(JSON.stringify({ 
+      facts,
+      cached: false
+    }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
 

@@ -94,10 +94,18 @@ export const FactsDebunker = () => {
       setFacts(data.facts || []);
       setShowSkeletons(false);
       
-      toast({
-        title: "Knowledge Updated!",
-        description: `Found ${data.facts?.length || 0} outdated facts from your school days.`,
-      });
+      // Show different toast message based on whether facts were cached
+      if (data.cached) {
+        toast({
+          title: "Facts Retrieved!",
+          description: `Found ${data.facts?.length || 0} cached facts from ${data.cacheAge} days ago.`,
+        });
+      } else {
+        toast({
+          title: "New Facts Generated!",
+          description: `Generated ${data.facts?.length || 0} fresh outdated facts from your school days.`,
+        });
+      }
     } catch (error) {
       console.error('Error generating facts:', error);
       toast({
