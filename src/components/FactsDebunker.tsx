@@ -223,15 +223,21 @@ export const FactsDebunker = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Input
-                  type="number"
-                  placeholder="e.g. 2010"
-                  value={graduationYear}
-                  onChange={(e) => setGraduationYear(e.target.value)}
-                  min="1950"
-                  max={new Date().getFullYear()}
-                  className="text-center text-lg"
-                />
+                <Select value={graduationYear} onValueChange={setGraduationYear}>
+                  <SelectTrigger className="text-center text-lg">
+                    <SelectValue placeholder="Select graduation year..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-40">
+                    {Array.from({ length: new Date().getFullYear() - 1950 + 1 }, (_, i) => {
+                      const year = new Date().getFullYear() - i;
+                      return (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
                 {error && (
                   <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
                     <AlertCircle className="h-4 w-4" />

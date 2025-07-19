@@ -84,7 +84,7 @@ Check out what other "facts" from your school days are total BS: https://isthats
   };
 
   const handleWebShare = async () => {
-    if (navigator.share) {
+    if (navigator.share && typeof navigator.share === 'function') {
       try {
         await navigator.share({
           title: `Is That Still True? - ${fact.category} Facts Debunked`,
@@ -92,7 +92,9 @@ Check out what other "facts" from your school days are total BS: https://isthats
           url: shareUrl,
         });
       } catch (error) {
-        console.log('Web share cancelled or failed');
+        console.log('Web share cancelled or failed:', error);
+        // Fallback to copy on any error
+        handleCopyLink();
       }
     } else {
       handleCopyLink();
