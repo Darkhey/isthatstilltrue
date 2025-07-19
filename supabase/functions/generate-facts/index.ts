@@ -178,29 +178,52 @@ Generate exactly 8 facts, one per category. Make them genuinely surprising and e
     const generatedText = data.candidates[0].content.parts[0].text;
     console.log('Generated text:', generatedText);
 
-    // Extract JSON from the response with better error handling
-    let jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+    // Advanced JSON extraction with multiple fallback methods
+    let extractedText = generatedText.trim();
     
-    if (!jsonMatch) {
-      // Try to find JSON in code blocks
-      jsonMatch = generatedText.match(/```json\s*(\[[\s\S]*?\])\s*```/);
-      if (jsonMatch) {
-        jsonMatch[0] = jsonMatch[1];
+    // Method 1: Direct array extraction
+    let arrayMatch = extractedText.match(/\[[\s\S]*\]/);
+    if (arrayMatch) {
+      extractedText = arrayMatch[0];
+    } else {
+      // Method 2: Extract from code blocks
+      const codeBlockMatch = extractedText.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+      if (codeBlockMatch) {
+        extractedText = codeBlockMatch[1];
+      } else {
+        // Method 3: Find array boundaries manually
+        const startIndex = extractedText.indexOf('[');
+        const lastIndex = extractedText.lastIndexOf(']');
+        if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
+          extractedText = extractedText.substring(startIndex, lastIndex + 1);
+        } else {
+          console.error('Could not extract JSON from response:', generatedText.substring(0, 500) + '...');
+          throw new Error('Could not extract valid JSON from Gemini response');
+        }
       }
-    }
-    
-    if (!jsonMatch) {
-      console.error('Could not extract JSON from response:', generatedText);
-      throw new Error('Could not extract valid JSON from Gemini response');
     }
 
     let facts: OutdatedFact[];
     try {
-      facts = JSON.parse(jsonMatch[0]);
+      facts = JSON.parse(extractedText);
     } catch (parseError) {
       console.error('JSON parsing error:', parseError);
-      console.error('Attempted to parse:', jsonMatch[0]);
-      throw new Error('Failed to parse JSON response from Gemini');
+      console.error('Attempted to parse:', extractedText.substring(0, 1000) + '...');
+      
+      // Last resort: try to fix common JSON issues and parse again
+      let fixedText = extractedText
+        .replace(/'/g, '"')  // Replace single quotes
+        .replace(/,(\s*[}\]])/g, '$1')  // Remove trailing commas
+        .replace(/([^"\\])\n/g, '$1\\n')  // Escape unescaped newlines
+        .replace(/\t/g, '\\t');  // Escape tabs
+      
+      try {
+        facts = JSON.parse(fixedText);
+        console.log('Successfully parsed after fixing JSON issues');
+      } catch (secondError) {
+        console.error('Second parsing attempt failed:', secondError);
+        throw new Error('Failed to parse JSON response from Gemini');
+      }
     }
 
     // Validate that we have exactly 8 facts

@@ -123,7 +123,7 @@ export const FactsDebunker = () => {
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Discover what "facts" you learned in school that have since been proven wrong. 
-            AI-powered analysis based on your education system and graduation year!
+            Comprehensive analysis based on your education system and graduation year!
           </p>
         </div>
 
