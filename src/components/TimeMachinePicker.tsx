@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -12,57 +13,55 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
   onValueChange,
   placeholder = "Select graduation year..."
 }) => {
-  const [century, setCentury] = useState<number>(20);
-  const [selectedYear, setSelectedYear] = useState<number>(1995);
-  const [isDragging, setIsDragging] = useState<{ drum: 'century' | 'year' | null }>({ drum: null });
+  const [firstTwoDigits, setFirstTwoDigits] = useState<number>(19);
+  const [lastTwoDigits, setLastTwoDigits] = useState<number>(95);
+  const [isDragging, setIsDragging] = useState<{ drum: 'first' | 'last' | null }>({ drum: null });
   const [startY, setStartY] = useState(0);
-  const [startRotation, setStartRotation] = useState({ century: 0, year: 0 });
-  const [rotation, setRotation] = useState({ century: 0, year: 0 });
+  const [startRotation, setStartRotation] = useState({ first: 0, last: 0 });
+  const [rotation, setRotation] = useState({ first: 0, last: 0 });
   
-  const centuryRef = useRef<HTMLDivElement>(null);
-  const yearRef = useRef<HTMLDivElement>(null);
+  const firstRef = useRef<HTMLDivElement>(null);
+  const lastRef = useRef<HTMLDivElement>(null);
 
   // Available options
-  const centuries = [19, 20, 21];
-  const getYearsForCentury = (cent: number) => {
-    const currentYear = new Date().getFullYear();
-    const startYear = cent * 100;
-    const endYear = Math.min((cent + 1) * 100 - 1, currentYear);
-    
-    const years = [];
-    for (let y = startYear; y <= endYear; y++) {
-      years.push(y);
-    }
-    return years;
-  };
+  const firstDigitOptions = [16, 17, 18, 19, 20, 21];
+  const lastDigitOptions = Array.from({ length: 100 }, (_, i) => i); // 0-99
 
-  const availableYears = getYearsForCentury(century);
+  // Calculate the full year
+  const fullYear = parseInt(`${firstTwoDigits}${lastTwoDigits.toString().padStart(2, '0')}`);
+  const currentYear = new Date().getFullYear();
 
-  // Update value when year changes
+  // Update value when digits change
   useEffect(() => {
-    onValueChange(selectedYear.toString());
-  }, [selectedYear, onValueChange]);
+    const year = parseInt(`${firstTwoDigits}${lastTwoDigits.toString().padStart(2, '0')}`);
+    if (year <= currentYear) {
+      onValueChange(year.toString());
+    }
+  }, [firstTwoDigits, lastTwoDigits, onValueChange, currentYear]);
 
   // Initialize from existing value
   useEffect(() => {
     if (value) {
       const yearValue = parseInt(value);
-      const cent = Math.floor(yearValue / 100);
-      setCentury(cent);
-      setSelectedYear(yearValue);
+      const first = Math.floor(yearValue / 100);
+      const last = yearValue % 100;
       
-      // Set rotations
-      const centIndex = centuries.indexOf(cent);
-      const years = getYearsForCentury(cent);
-      const yearIndex = years.indexOf(yearValue);
-      setRotation({
-        century: centIndex * -60,
-        year: yearIndex * -20
-      });
+      if (firstDigitOptions.includes(first)) {
+        setFirstTwoDigits(first);
+        setLastTwoDigits(last);
+        
+        // Set rotations
+        const firstIndex = firstDigitOptions.indexOf(first);
+        const lastIndex = last;
+        setRotation({
+          first: firstIndex * -80,
+          last: lastIndex * -15
+        });
+      }
     }
   }, [value]);
 
-  const handlePointerDown = (e: React.PointerEvent, drum: 'century' | 'year') => {
+  const handlePointerDown = (e: React.PointerEvent, drum: 'first' | 'last') => {
     e.preventDefault();
     setIsDragging({ drum });
     setStartY(e.clientY);
@@ -76,25 +75,23 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
     const deltaY = e.clientY - startY;
     const rotationDelta = deltaY * 0.5;
     
-    if (isDragging.drum === 'century') {
-      const newRotation = startRotation.century + rotationDelta;
-      setRotation(prev => ({ ...prev, century: newRotation }));
+    if (isDragging.drum === 'first') {
+      const newRotation = startRotation.first + rotationDelta;
+      setRotation(prev => ({ ...prev, first: newRotation }));
       
-      const index = Math.round(-newRotation / 60) % centuries.length;
-      const normalizedIndex = ((index % centuries.length) + centuries.length) % centuries.length;
-      const newCentury = centuries[normalizedIndex];
-      if (newCentury !== century) {
-        setCentury(newCentury);
-        const newYears = getYearsForCentury(newCentury);
-        setSelectedYear(newYears[Math.floor(newYears.length / 2)]);
+      const index = Math.round(-newRotation / 80) % firstDigitOptions.length;
+      const normalizedIndex = ((index % firstDigitOptions.length) + firstDigitOptions.length) % firstDigitOptions.length;
+      const newFirst = firstDigitOptions[normalizedIndex];
+      if (newFirst !== firstTwoDigits) {
+        setFirstTwoDigits(newFirst);
       }
     } else {
-      const newRotation = startRotation.year + rotationDelta;
-      setRotation(prev => ({ ...prev, year: newRotation }));
+      const newRotation = startRotation.last + rotationDelta;
+      setRotation(prev => ({ ...prev, last: newRotation }));
       
-      const index = Math.round(-newRotation / 20) % availableYears.length;
-      const normalizedIndex = ((index % availableYears.length) + availableYears.length) % availableYears.length;
-      setSelectedYear(availableYears[normalizedIndex]);
+      const index = Math.round(-newRotation / 15) % lastDigitOptions.length;
+      const normalizedIndex = ((index % lastDigitOptions.length) + lastDigitOptions.length) % lastDigitOptions.length;
+      setLastTwoDigits(lastDigitOptions[normalizedIndex]);
     }
   };
 
@@ -103,11 +100,11 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
     (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     
     // Snap to final positions
-    const centIndex = centuries.indexOf(century);
-    const yearIndex = availableYears.indexOf(selectedYear);
+    const firstIndex = firstDigitOptions.indexOf(firstTwoDigits);
+    const lastIndex = lastTwoDigits;
     setRotation({
-      century: centIndex * -60,
-      year: yearIndex * -20
+      first: firstIndex * -80,
+      last: lastIndex * -15
     });
   };
 
@@ -146,73 +143,78 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
         <h3 className="text-lg font-semibold mb-2">Time Machine Year Selector</h3>
         <p className="text-sm text-muted-foreground">Drag the drums to select your graduation year</p>
         <div className="mt-2 text-2xl font-bold text-primary">
-          {selectedYear}
+          {fullYear}
         </div>
+        {fullYear > currentYear && (
+          <p className="text-xs text-destructive mt-1">
+            Year cannot be in the future
+          </p>
+        )}
       </div>
       
       <div className="flex gap-8 items-center">
-        {/* Century Drum */}
+        {/* First Two Digits Drum */}
         <div className="flex flex-col items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Century</span>
+          <span className="text-sm font-medium text-muted-foreground">First Digits</span>
           <div 
             className="relative w-20 h-32 cursor-grab active:cursor-grabbing touch-none"
             style={{ perspective: '400px' }}
-            onPointerDown={(e) => handlePointerDown(e, 'century')}
+            onPointerDown={(e) => handlePointerDown(e, 'first')}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            ref={centuryRef}
+            ref={firstRef}
           >
             <div
               className="relative w-full h-full"
               style={{
                 transformStyle: 'preserve-3d',
-                transform: `rotateX(${rotation.century}deg)`,
-                transition: isDragging.drum === 'century' ? 'none' : 'transform 0.3s ease-out'
+                transform: `rotateX(${rotation.first}deg)`,
+                transition: isDragging.drum === 'first' ? 'none' : 'transform 0.3s ease-out'
               }}
             >
-              {centuries.map((cent, index) => (
+              {firstDigitOptions.map((digit, index) => (
                 <DrumItem
-                  key={cent}
-                  isSelected={cent === century}
+                  key={digit}
+                  isSelected={digit === firstTwoDigits}
                   index={index}
                   rotation={0}
-                  itemSize={60}
+                  itemSize={80}
                 >
-                  {cent}th
+                  {digit}
                 </DrumItem>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Year Drum */}
+        {/* Last Two Digits Drum */}
         <div className="flex flex-col items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Year</span>
+          <span className="text-sm font-medium text-muted-foreground">Last Digits</span>
           <div 
             className="relative w-20 h-32 cursor-grab active:cursor-grabbing touch-none overflow-hidden"
             style={{ perspective: '400px' }}
-            onPointerDown={(e) => handlePointerDown(e, 'year')}
+            onPointerDown={(e) => handlePointerDown(e, 'last')}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
-            ref={yearRef}
+            ref={lastRef}
           >
             <div
               className="relative w-full h-full"
               style={{
                 transformStyle: 'preserve-3d',
-                transform: `rotateX(${rotation.year}deg)`,
-                transition: isDragging.drum === 'year' ? 'none' : 'transform 0.3s ease-out'
+                transform: `rotateX(${rotation.last}deg)`,
+                transition: isDragging.drum === 'last' ? 'none' : 'transform 0.3s ease-out'
               }}
             >
-              {availableYears.map((year, index) => (
+              {lastDigitOptions.map((digit, index) => (
                 <DrumItem
-                  key={year}
-                  isSelected={year === selectedYear}
+                  key={digit}
+                  isSelected={digit === lastTwoDigits}
                   index={index}
                   rotation={0}
-                  itemSize={20}
+                  itemSize={15}
                 >
-                  {year}
+                  {digit.toString().padStart(2, '0')}
                 </DrumItem>
               ))}
             </div>
@@ -226,21 +228,24 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
           <button
             key={year}
             onClick={() => {
-              const cent = Math.floor(year / 100);
-              setCentury(cent);
-              setSelectedYear(year);
+              const first = Math.floor(year / 100);
+              const last = year % 100;
               
-              const centIndex = centuries.indexOf(cent);
-              const years = getYearsForCentury(cent);
-              const yearIndex = years.indexOf(year);
-              setRotation({
-                century: centIndex * -60,
-                year: yearIndex * -20
-              });
+              if (firstDigitOptions.includes(first)) {
+                setFirstTwoDigits(first);
+                setLastTwoDigits(last);
+                
+                const firstIndex = firstDigitOptions.indexOf(first);
+                const lastIndex = last;
+                setRotation({
+                  first: firstIndex * -80,
+                  last: lastIndex * -15
+                });
+              }
             }}
             className={cn(
               "px-3 py-1 text-xs rounded-full border transition-all",
-              selectedYear === year
+              fullYear === year
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background/60 text-muted-foreground border-border hover:bg-background hover:text-foreground"
             )}
