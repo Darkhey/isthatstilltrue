@@ -46,13 +46,13 @@ async function generatePoliticalFacts(country: string, year: number): Promise<Ou
 Generate exactly 2-3 political/international relations facts that were commonly taught in ${country} schools around ${year} but have since been proven wrong, overly simplified, or significantly updated.
 
 Focus on these controversial/interesting areas:
-- **Cold War Era Perspectives** (if relevant to the year)
 - **Views on specific countries** (how ${country} students were taught to view Russia, China, USA, Middle East, etc.)
 - **International conflicts** and how they were presented
 - **Economic systems** (capitalism vs socialism presentations)
 - **Colonial/Post-colonial** perspectives
 - **Diplomatic relations** that have dramatically changed
-- **Propaganda/Stereotypes** that were taught as fact
+- **Cultural stereotypes** that were taught as fact
+- **Historical interpretations** that have since evolved
 
 For each political fact, provide:
 1. What was definitively taught about international relations in ${year}
@@ -63,10 +63,10 @@ For each political fact, provide:
 EXAMPLES of the format:
 
 For USA 1985:
-- "The Soviet Union is an evil empire that threatens world peace" → "Today we understand the complex geopolitical factors, human costs, and legitimate security concerns on both sides of the Cold War"
+- "Japan's economic model is fundamentally different and poses a threat to American capitalism" → "Today we understand that Japan's economic practices represented a different but valid approach to market economics, contributing to global economic diversity"
 
 For Germany 1960:
-- "America is Germany's eternal liberator and friend" → "Today we recognize the complex post-war relationship included significant tensions, economic interests, and evolving power dynamics"
+- "Africa is a continent that needs European guidance for development" → "Today we recognize the complex legacy of colonialism and the indigenous knowledge, governance systems, and economic structures that existed before and alongside European contact"
 
 Return ONLY a valid JSON array with NO markdown formatting:
 

@@ -127,7 +127,7 @@ export const FactsDebunker = () => {
       }
 
       if (!data.facts || data.facts.length === 0) {
-        setError("No outdated facts could be generated for this combination. Try a different country or earlier year.");
+        setError("No outdated facts could be found for this combination. Try a different country or earlier year.");
         setShowSkeletons(false);
         return;
       }
@@ -137,13 +137,13 @@ export const FactsDebunker = () => {
       setShowSkeletons(false);
       
       if (data.cached) {
-        setSuccessMessage(`Found ${data.facts.length} facts (cached from ${data.cacheAge} days ago)`);
+        setSuccessMessage(`Found ${data.facts.length} facts (researched ${data.cacheAge} days ago)`);
       } else {
-        setSuccessMessage(`Successfully generated ${data.facts.length} educational facts!`);
+        setSuccessMessage(`Successfully researched ${data.facts.length} educational facts!`);
       }
     } catch (error) {
-      console.error('Error generating facts:', error);
-      setError("Could not generate facts. Please try again or select a different country/year combination.");
+      console.error('Error researching facts:', error);
+      setError("Could not find facts. Please try again or select a different country/year combination.");
       setShowSkeletons(false);
     } finally {
       setIsLoading(false);
@@ -255,16 +255,16 @@ export const FactsDebunker = () => {
                   <Button 
                     onClick={generateFacts}
                     disabled={isLoading}
-                    className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Analyzing...
-                      </>
-                    ) : (
-                      "Analyze My Education!"
-                    )}
+                     className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
+                   >
+                     {isLoading ? (
+                       <>
+                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                         Researching...
+                       </>
+                     ) : (
+                       "Research My Education!"
+                     )}
                   </Button>
                 </div>
               </CardContent>
@@ -275,8 +275,8 @@ export const FactsDebunker = () => {
         {(showSkeletons || facts.length > 0) && (
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold mb-4">
-                {showSkeletons ? "Finding Outdated Facts..." : "What You Learned vs. What We Know Now"}
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                {showSkeletons ? "Researching Outdated Facts..." : "What You Learned vs. What We Know Now"}
               </h2>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 {country} • Graduated {graduationYear}
@@ -293,38 +293,38 @@ export const FactsDebunker = () => {
               <div className="mb-8">
                 <Collapsible open={isEducationProblemsOpen} onOpenChange={setIsEducationProblemsOpen}>
                   <CollapsibleTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between p-4 md:p-6 h-auto min-h-[80px] md:min-h-[60px]">
-                      <div className="text-left flex-1 min-w-0 pr-4">
-                        <h3 className="text-base md:text-xl font-bold leading-tight">
-                          Education System Challenges in {country} around {graduationYear}
-                        </h3>
-                        <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
-                          Click to see what problems affected your education system
-                        </p>
-                      </div>
-                      <ChevronDown className={`h-5 w-5 shrink-0 transition-transform ${isEducationProblemsOpen ? 'rotate-180' : ''}`} />
-                    </Button>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="mt-4">
-                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                     <Button variant="outline" className="w-full justify-between p-3 md:p-4 h-auto">
+                       <div className="text-left flex-1 min-w-0 pr-3">
+                         <h3 className="text-sm md:text-lg font-bold leading-tight">
+                           Education System Challenges in {country} around {graduationYear}
+                         </h3>
+                         <p className="text-xs md:text-sm text-muted-foreground mt-1 leading-relaxed">
+                           Click to see what problems affected your education system
+                         </p>
+                       </div>
+                       <ChevronDown className={`h-4 w-4 md:h-5 md:w-5 shrink-0 transition-transform ${isEducationProblemsOpen ? 'rotate-180' : ''}`} />
+                     </Button>
+                   </CollapsibleTrigger>
+                   <CollapsibleContent className="mt-4">
+                     <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
                       {educationProblems.map((problem, index) => (
-                        <Card key={index} className="border-orange-200 bg-orange-50/50">
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-orange-800 text-base md:text-lg leading-tight">
-                              {problem.problem}
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-3 pt-0">
-                            <p className="text-sm text-orange-700 leading-relaxed">
-                              {problem.description}
-                            </p>
-                            <div className="pt-2 border-t border-orange-200">
-                              <p className="text-xs font-medium text-orange-600 leading-relaxed">
-                                <strong>Impact:</strong> {problem.impact}
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
+                         <Card key={index} className="border-orange-200 bg-orange-50/50">
+                           <CardHeader className="pb-2 md:pb-3">
+                             <CardTitle className="text-orange-800 text-sm md:text-base leading-tight">
+                               {problem.problem}
+                             </CardTitle>
+                           </CardHeader>
+                           <CardContent className="space-y-2 md:space-y-3 pt-0">
+                             <p className="text-xs md:text-sm text-orange-700 leading-relaxed">
+                               {problem.description}
+                             </p>
+                             <div className="pt-2 border-t border-orange-200">
+                               <p className="text-xs font-medium text-orange-600 leading-relaxed">
+                                 <strong>Impact:</strong> {problem.impact}
+                               </p>
+                             </div>
+                           </CardContent>
+                         </Card>
                       ))}
                     </div>
                   </CollapsibleContent>
@@ -349,37 +349,36 @@ export const FactsDebunker = () => {
                       value={`item-${index}`}
                       className="border rounded-lg shadow-sm hover:shadow-md transition-shadow animate-fade-in"
                     >
-                      <AccordionTrigger className="px-4 md:px-6 py-4 hover:no-underline min-h-[80px] md:min-h-[60px]">
-                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 w-full">
-                          <div className="flex items-center gap-3 md:gap-4">
-                            <div className={`p-2 rounded-full ${isPolitics ? 'bg-red-100' : 'bg-primary/10'} shrink-0`}>
-                              <IconComponent className={`h-5 w-5 md:h-6 md:w-6 ${isPolitics ? 'text-red-600' : 'text-primary'}`} />
-                            </div>
-                            <div className="flex-1 text-left min-w-0">
-                              <div className="font-semibold text-base md:text-lg flex flex-col md:flex-row md:items-center gap-1 md:gap-2">
-                                <span>{fact.category}</span>
-                                {isPolitics && (
-                                  <Badge variant="destructive" className="text-xs self-start md:self-auto">
-                                    Controversial
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="text-xs md:text-sm text-muted-foreground line-clamp-2 md:truncate mt-1">
-                                <span className="md:hidden">
-                                  {fact.fact.length > 60 ? `${fact.fact.substring(0, 60)}...` : fact.fact}
-                                </span>
-                                <span className="hidden md:inline">
-                                  {fact.fact.length > 80 ? `${fact.fact.substring(0, 80)}...` : fact.fact}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                          <Badge variant="destructive" className={`${categoryColor} self-start md:self-auto shrink-0 mt-2 md:mt-0`}>
-                            <AlertTriangle className="w-3 h-3 mr-1" />
-                            <span className="text-xs">Debunked {fact.yearDebunked}</span>
-                          </Badge>
-                        </div>
-                      </AccordionTrigger>
+                       <AccordionTrigger className="px-3 md:px-6 py-3 md:py-4 hover:no-underline">
+                         <div className="flex flex-col gap-3 w-full text-left">
+                           <div className="flex items-start gap-3">
+                             <div className={`p-2 rounded-full ${isPolitics ? 'bg-red-100' : 'bg-primary/10'} shrink-0`}>
+                               <IconComponent className={`h-4 w-4 md:h-5 md:w-5 ${isPolitics ? 'text-red-600' : 'text-primary'}`} />
+                             </div>
+                             <div className="flex-1 min-w-0">
+                               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                                 <span className="font-semibold text-sm md:text-base">{fact.category}</span>
+                                 {isPolitics && (
+                                   <Badge variant="destructive" className="text-xs self-start w-fit">
+                                     Controversial
+                                   </Badge>
+                                 )}
+                               </div>
+                               <div className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+                                 <span className="line-clamp-2">
+                                   {fact.fact.length > 100 ? `${fact.fact.substring(0, 100)}...` : fact.fact}
+                                 </span>
+                               </div>
+                             </div>
+                           </div>
+                           <div className="flex justify-between items-center">
+                             <Badge variant="destructive" className={`${categoryColor} text-xs`}>
+                               <AlertTriangle className="w-3 h-3 mr-1" />
+                               Debunked {fact.yearDebunked}
+                             </Badge>
+                           </div>
+                         </div>
+                       </AccordionTrigger>
                       <AccordionContent className="px-4 md:px-6 pb-4 md:pb-6">
                         <div className="space-y-4">
                           <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-3 md:p-4">
