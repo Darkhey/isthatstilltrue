@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -64,97 +65,74 @@ Focus on these controversial/interesting areas:
 - **Cultural stereotypes** that were taught as fact
 - **Historical interpretations** that have since evolved
 
-For each political fact, provide:
-1. What was definitively taught about international relations in ${year}
-2. How our understanding has evolved with historical perspective
-3. When this understanding changed
-4. Why this political evolution matters
-
-EXAMPLES of the format:
-
-For USA 1985:
-- "Japan's economic model is fundamentally different and poses a threat to American capitalism" → "Today we understand that Japan's economic practices represented a different but valid approach to market economics, contributing to global economic diversity"
-
-For Germany 1960:
-- "Africa is a continent that needs European guidance for development" → "Today we recognize the complex legacy of colonialism and the indigenous knowledge, governance systems, and economic structures that existed before and alongside European contact"
+CRITICAL JSON FORMATTING RULES:
+- Use double quotes for ALL strings
+- Escape quotes inside strings with backslash: \\"
+- No trailing commas
+- No line breaks inside string values
+- Test your JSON before responding
 
 Return ONLY a valid JSON array with NO markdown formatting:
 
 [
   {
     "category": "Politics",
-    "fact": "In ${year}, students in ${country} were taught that [specific political/international statement]",
-    "correction": "Today we understand that [nuanced political reality with historical context - 3-4 sentences explaining how political understanding evolved]",
-    "yearDebunked": [year when political understanding changed],
-    "mindBlowingFactor": "This political evolution [explain significance and what it reveals about international relations - 2-3 sentences]",
-    "sourceUrl": "https://credible-historical-source.com",
-    "sourceName": "Historical Institution/Archive Name"
+    "fact": "In ${year}, students in ${country} were taught that [specific political statement - keep under 150 characters]",
+    "correction": "Today we understand that [nuanced political reality - 2-3 sentences max]",
+    "yearDebunked": [year when understanding changed],
+    "mindBlowingFactor": "This evolution [significance - 2 sentences max]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Institution Name"
   }
 ]
 
-Focus on genuine political teachings that were presented as fact in ${year} textbooks in ${country}, avoiding current political debates.`;
+Focus on genuine political teachings from ${year} textbooks in ${country}.`;
   } else if (factType === 'historical') {
-    prompt = `You are a historian analyzing political beliefs and international perspectives in ${country} around ${year}. 
+    prompt = `You are a historian analyzing political beliefs in ${country} around ${year}. 
 
-Generate exactly 2-3 political/diplomatic beliefs that educated people in ${country} commonly held in ${year} but have since been proven wrong or significantly updated.
+Generate exactly 2-3 political/diplomatic beliefs that educated people in ${country} commonly held in ${year} but have since been proven wrong.
 
-Focus on these areas for the year ${year}:
-- **Views on neighboring countries** and international relations
-- **Colonial attitudes** and imperial perspectives of the time
-- **Economic theories** and trade beliefs
-- **Diplomatic assumptions** about alliances and conflicts
-- **Cultural superiority** beliefs common in that era
-- **Territorial disputes** and expansion justifications
+CRITICAL JSON FORMATTING RULES:
+- Use double quotes for ALL strings
+- Escape quotes inside strings with \\"
+- No trailing commas
+- Keep strings concise
 
-For each belief, provide:
-1. What educated people in ${country} generally believed about politics/diplomacy in ${year}
-2. How our understanding has evolved with historical perspective
-3. When this understanding significantly changed
-4. Why this evolution matters for understanding history
-
-Return ONLY a valid JSON array with NO markdown formatting:
+Return ONLY a valid JSON array:
 
 [
   {
     "category": "Historical Politics",
-    "fact": "In ${year}, educated people in ${country} commonly believed that [specific political/diplomatic belief]",
-    "correction": "Today we understand that [modern historical perspective with context - 3-4 sentences explaining how understanding evolved]",
-    "yearDebunked": [approximate year when understanding changed],
-    "mindBlowingFactor": "This evolution [explain historical significance - 2-3 sentences]",
-    "sourceUrl": "https://credible-historical-source.com",
-    "sourceName": "Historical Archive/Institution Name"
+    "fact": "In ${year}, educated people in ${country} commonly believed that [specific belief - under 150 chars]",
+    "correction": "Today we understand that [modern perspective - 2-3 sentences]",
+    "yearDebunked": [year when understanding changed],
+    "mindBlowingFactor": "This evolution [significance - 2 sentences]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Historical Institution"
   }
 ]`;
   } else {
-    prompt = `You are a historian analyzing worldviews and beliefs in ${country} around ${year}. 
+    prompt = `You are a historian analyzing worldviews in ${country} around ${year}. 
 
-Generate exactly 2-3 political, social, or diplomatic beliefs that people in ${country} commonly held in ${year} but have since been completely transformed.
+Generate exactly 2-3 beliefs about politics/society that people in ${country} commonly held in ${year} but have been transformed.
 
-Focus on these areas for the year ${year}:
-- **Views on governance** and political authority
-- **International relations** and foreign peoples
-- **Social hierarchies** and class systems
-- **Economic beliefs** about trade and wealth
-- **Territorial concepts** and geographic understanding
-- **Cultural assumptions** about other civilizations
+CRITICAL JSON FORMATTING RULES:
+- Use double quotes for ALL strings
+- Escape quotes inside strings with \\"
+- No trailing commas
+- Keep strings under 200 characters each
 
-For each belief, provide:
-1. What people in ${country} generally believed in ${year}
-2. How completely our perspective has changed
-3. When this major shift occurred
-4. Why this transformation is historically significant
-
-Return ONLY a valid JSON array with NO markdown formatting:
+Return ONLY a valid JSON array:
 
 [
   {
     "category": "Ancient Worldview",
-    "fact": "In ${year}, people in ${country} commonly believed that [specific belief about politics/society/world]",
-    "correction": "Today we understand that [completely different modern perspective - 3-4 sentences explaining the transformation]",
-    "yearDebunked": [approximate year when major shift occurred],
-    "mindBlowingFactor": "This transformation [explain historical significance of the change - 2-3 sentences]",
-    "sourceUrl": "https://credible-historical-source.com",
-    "sourceName": "Historical Research Institution"
+    "fact": "In ${year}, people in ${country} commonly believed that [specific belief - under 150 chars]",
+    "correction": "Today we understand that [modern perspective - 2-3 sentences]",
+    "yearDebunked": [year when shift occurred],
+    "mindBlowingFactor": "This transformation [significance - 2 sentences]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Historical Institution"
   }
 ]`;
   }
@@ -168,63 +146,51 @@ async function generateEducationProblems(country: string, year: number): Promise
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `List 3-5 major problems that the education system in ${country} faced specifically around ${year}.
+    prompt = `List 3-5 major problems that the education system in ${country} faced around ${year}.
 
-Focus on concrete, historical issues like:
-- Teacher shortages
-- Funding problems
-- Outdated curricula
-- Technology gaps
-- Infrastructure issues
-- Policy problems
-- Social/political challenges
+CRITICAL JSON FORMATTING:
+- Use double quotes only
+- No trailing commas
+- Keep descriptions under 200 characters
 
 Return ONLY a valid JSON array:
 [
   {
-    "problem": "Brief problem title",
-    "description": "2-3 sentence description of the specific issue",
-    "impact": "How this affected students and education quality"
+    "problem": "Brief title",
+    "description": "2-3 sentence description",
+    "impact": "How this affected education quality"
   }
 ]`;
   } else if (factType === 'historical') {
-    prompt = `List 3-5 major challenges that education or knowledge sharing faced in ${country} around ${year}.
+    prompt = `List 3-5 challenges that education faced in ${country} around ${year}.
 
-Focus on historical issues like:
-- Limited access to education
-- Religious or political restrictions on learning
-- Lack of standardized curricula
-- Economic barriers to education
-- Gender or class restrictions
-- Limited availability of books/materials
-- Geographic isolation of schools
+CRITICAL JSON FORMATTING:
+- Use double quotes only
+- Escape any quotes with \\"
+- No trailing commas
 
 Return ONLY a valid JSON array:
 [
   {
     "problem": "Brief challenge title",
-    "description": "2-3 sentence description of the historical issue",
-    "impact": "How this affected learning and knowledge sharing"
+    "description": "2-3 sentence description",
+    "impact": "How this affected learning"
   }
 ]`;
   } else {
-    prompt = `List 3-5 major challenges that knowledge and learning faced in ${country} around ${year}.
+    prompt = `List 3-5 challenges that knowledge and learning faced in ${country} around ${year}.
 
-Focus on ancient/medieval issues like:
-- Extremely limited literacy
-- Knowledge restricted to religious institutions
-- Oral tradition limitations
-- Lack of written materials
-- Political instability affecting learning
-- Economic survival taking priority over education
-- Social hierarchy restrictions on knowledge
+CRITICAL JSON FORMATTING:
+- Use double quotes only
+- Escape quotes with \\"
+- No trailing commas
 
 Return ONLY a valid JSON array:
 [
   {
     "problem": "Brief challenge title",
-    "description": "2-3 sentence description of the ancient/medieval issue",
-    "impact": "How this affected knowledge preservation and sharing"
+    "description": "2-3 sentence description",
+    "impact": "How this affected knowledge sharing"
   }
 ]`;
   }
@@ -240,112 +206,104 @@ async function generateOutdatedFacts(country: string, year: number): Promise<Out
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `You are an educational historian analyzing what students in ${country} were taught in ${year} vs what we know today in ${currentYear}.
+    prompt = `You are an educational historian analyzing what students in ${country} were taught in ${year} vs what we know today.
 
-Generate exactly 4-5 concrete, factual statements that were commonly taught in ${country} schools around ${year} but have since been proven wrong or significantly updated.
+Generate exactly 4-5 concrete scientific/medical facts that were taught in ${country} schools around ${year} but have since been proven wrong.
 
-Focus on these categories where knowledge has genuinely changed:
+Focus on these categories:
 - **Science** (biology, chemistry, physics discoveries)
-- **Technology** (predictions, computer capabilities)  
-- **Medicine** (health advice, medical understanding)
+- **Medicine** (health advice, medical understanding)  
 - **Space/Astronomy** (planetary status, universe understanding)
+- **Technology** (predictions, capabilities)
 - **Nutrition** (dietary recommendations)
 - **Environment** (climate, pollution understanding)
-- **History** (recent events, interpretations)
-- **Geography** (country names, political boundaries)
 
-For each fact, provide:
-1. What was definitively taught as truth in ${year}
-2. What we definitively know now with specific evidence
-3. When this understanding changed (approximate year)
-4. Why this change matters
+CRITICAL JSON FORMATTING RULES:
+- Use ONLY double quotes for strings
+- Escape any quotes inside strings with \\"
+- NO trailing commas anywhere
+- NO line breaks inside string values
+- Keep each string under 300 characters
+- Test your JSON is valid before responding
 
-EXAMPLES of the format you should follow:
+Example format (follow exactly):
+{
+  "category": "Science",
+  "fact": "In ${year}, students in ${country} were taught that atoms are indivisible",
+  "correction": "Today we know atoms contain protons, neutrons, and electrons. This understanding changed after Thomson discovered the electron in 1897.",
+  "yearDebunked": 1932,
+  "mindBlowingFactor": "This discovery led to modern electronics and nuclear physics.",
+  "sourceUrl": "https://www.example.com",
+  "sourceName": "Scientific Institution"
+}
 
-For USA 1995:
-- "Pluto is the ninth planet in our solar system" → "Pluto was reclassified as a dwarf planet in 2006 by the International Astronomical Union"
-- "Low-fat diets are the healthiest choice" → "Healthy fats are essential; ultra-processed foods and added sugars are the main dietary concerns"
-- "The Internet is a research tool with limited daily relevance" → "The Internet became central to all communication, commerce, and daily life"
-
-Return ONLY a valid JSON array with NO markdown formatting:
+Return ONLY a valid JSON array with NO markdown:
 
 [
-  {
-    "category": "Science/Technology/Medicine/etc",
-    "fact": "In ${year}, students in ${country} were taught that [specific concrete statement]",
-    "correction": "Today we know that [specific updated knowledge with evidence, timeline, and scientific consensus - 3-4 sentences explaining how understanding evolved]",
-    "yearDebunked": [year when understanding changed],
-    "mindBlowingFactor": "This change [explain significance and what it reveals about scientific progress - 2-3 sentences]",
-    "sourceUrl": "https://credible-scientific-source.com",
-    "sourceName": "Scientific Institution/Study Name"
-  }
-]
-
-Focus on facts that were genuinely taught as definitive truth in ${year} textbooks in ${country}, not theoretical concepts or ongoing debates.`;
+  // Generate 4-5 facts following the exact format above
+]`;
   } else if (factType === 'historical') {
-    prompt = `You are a historian analyzing what educated people in ${country} believed about the natural world and science around ${year}.
+    prompt = `You are a historian analyzing scientific beliefs in ${country} around ${year}.
 
-Generate exactly 4-5 scientific, medical, or natural beliefs that educated people in ${country} commonly held in ${year} but have since been completely overturned.
+Generate exactly 4-5 scientific/natural beliefs that educated people in ${country} commonly held in ${year} but have been overturned.
 
-Focus on these categories for the year ${year}:
+Focus on:
 - **Natural Philosophy** (early scientific theories)
 - **Medicine** (medical theories and treatments)
 - **Astronomy** (understanding of celestial bodies)
-- **Geography** (world knowledge and maps)
-- **Biology** (understanding of life and body)
-- **Physics** (theories about matter and forces)
-- **Chemistry** (early chemical theories)
+- **Geography** (world knowledge)
+- **Biology** (understanding of life)
 
-For each belief, provide:
-1. What educated people in ${country} generally believed in ${year}
-2. What we know now with modern scientific understanding
-3. When this belief was significantly challenged or overturned
-4. Why this change represents a major scientific revolution
+CRITICAL JSON FORMATTING RULES:
+- Use ONLY double quotes
+- Escape quotes inside strings with \\"
+- NO trailing commas
+- Keep strings under 300 characters
+- NO line breaks in strings
 
-Return ONLY a valid JSON array with NO markdown formatting:
+Return ONLY a valid JSON array:
 
 [
   {
-    "category": "Historical Science/Medicine/Natural Philosophy",
-    "fact": "In ${year}, educated people in ${country} believed that [specific scientific/natural belief]",
-    "correction": "Today we know that [modern scientific understanding - 3-4 sentences explaining the scientific revolution that occurred]",
-    "yearDebunked": [approximate year when belief was overturned],
-    "mindBlowingFactor": "This scientific revolution [explain significance for human knowledge - 2-3 sentences]",
-    "sourceUrl": "https://credible-historical-source.com",
-    "sourceName": "Historical Science Archive/Institution"
+    "category": "Historical Science",
+    "fact": "In ${year}, educated people in ${country} believed that [scientific belief - under 150 chars]",
+    "correction": "Today we know that [modern understanding - 2-3 sentences max]",
+    "yearDebunked": [year when overturned],
+    "mindBlowingFactor": "This revolution [significance - 2 sentences max]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Historical Institution"
   }
 ]`;
   } else {
-    prompt = `You are a historian analyzing worldviews and beliefs about the natural world in ${country} around ${year}.
+    prompt = `You are a historian analyzing beliefs about nature in ${country} around ${year}.
 
-Generate exactly 4-5 beliefs about nature, the world, medicine, or the cosmos that people in ${country} commonly held in ${year} but have been completely transformed by modern knowledge.
+Generate exactly 4-5 beliefs about the natural world that people in ${country} commonly held in ${year} but have been transformed.
 
-Focus on these areas for the year ${year}:
-- **Cosmology** (beliefs about the universe and earth)
-- **Medical theories** (understanding of disease and healing)
-- **Natural world** (beliefs about animals, plants, weather)
-- **Geography** (understanding of the world's layout)
-- **Human body** (anatomical and physiological beliefs)
-- **Elements and matter** (early theories about substances)
-- **Supernatural explanations** for natural phenomena
+Focus on:
+- **Cosmology** (beliefs about universe and earth)
+- **Medical theories** (disease and healing)
+- **Natural world** (animals, plants, weather)
+- **Geography** (world layout)
+- **Elements** (theories about matter)
 
-For each belief, provide:
-1. What people in ${country} commonly believed in ${year}
-2. How completely different our modern understanding is
-3. When major shifts in understanding occurred
-4. Why this transformation is remarkable for human knowledge
+CRITICAL JSON FORMATTING RULES:
+- Use ONLY double quotes
+- Escape quotes with \\"
+- NO trailing commas
+- Keep strings concise
+- NO line breaks in strings
 
-Return ONLY a valid JSON array with NO markdown formatting:
+Return ONLY a valid JSON array:
 
 [
   {
     "category": "Ancient Natural Beliefs",
-    "fact": "In ${year}, people in ${country} believed that [specific belief about nature/world/medicine]",
-    "correction": "Today we understand that [completely different modern knowledge - 3-4 sentences explaining the transformation]",
-    "yearDebunked": [approximate year when major understanding shift occurred],
-    "mindBlowingFactor": "This transformation [explain how remarkable this change in human understanding is - 2-3 sentences]",
-    "sourceUrl": "https://credible-historical-source.com",
-    "sourceName": "Historical Research Institution"
+    "fact": "In ${year}, people in ${country} believed that [belief - under 150 chars]",
+    "correction": "Today we understand that [modern knowledge - 2-3 sentences]",
+    "yearDebunked": [year when understanding shifted],
+    "mindBlowingFactor": "This transformation [significance - 2 sentences]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Historical Institution"
   }
 ]`;
   }
@@ -398,7 +356,10 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: [
-          { role: 'system', content: 'You are an educational historian. Return only valid JSON arrays with no markdown formatting.' },
+          { 
+            role: 'system', 
+            content: 'You are an educational historian. You MUST return ONLY valid JSON arrays with NO markdown formatting. Use double quotes only. Escape internal quotes with backslash. NO trailing commas. Test JSON validity before responding.' 
+          },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
@@ -430,7 +391,7 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: prompt
+            text: prompt + "\n\nIMPORTANT: Return ONLY valid JSON. Use double quotes. Escape internal quotes with \\. NO trailing commas."
           }]
         }],
         generationConfig: {
@@ -468,30 +429,52 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
     return data.candidates[0].content.parts[0].text;
   };
 
-  // Try OpenAI first, fall back to Gemini
+  // Try OpenAI first, fall back to Gemini, with retry mechanism for JSON parsing
   let response: string;
-  try {
-    response = await retryWithBackoff(makeOpenAIRequest, 3, 2000);
-  } catch (openAIError) {
-    console.log(`OpenAI failed for ${requestType}, trying Gemini fallback:`, openAIError.message);
+  let attempts = 0;
+  const maxAttempts = 3;
+
+  while (attempts < maxAttempts) {
     try {
-      response = await retryWithBackoff(makeGeminiRequest, 3, 2000);
-    } catch (geminiError) {
-      console.error(`Both OpenAI and Gemini failed for ${requestType}:`, { openAIError: openAIError.message, geminiError: geminiError.message });
-      throw new Error(`Both AI providers failed to generate ${requestType}`);
+      response = await retryWithBackoff(makeOpenAIRequest, 2, 1000);
+      break;
+    } catch (openAIError) {
+      console.log(`OpenAI failed for ${requestType} (attempt ${attempts + 1}), trying Gemini fallback:`, openAIError.message);
+      try {
+        response = await retryWithBackoff(makeGeminiRequest, 2, 1000);
+        break;
+      } catch (geminiError) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          console.error(`Both OpenAI and Gemini failed for ${requestType} after ${maxAttempts} attempts`);
+          throw new Error(`Both AI providers failed to generate ${requestType} after multiple attempts`);
+        }
+        console.log(`Both providers failed for ${requestType}, retrying attempt ${attempts + 1}...`);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
     }
   }
 
-  // Parse and validate the response
+  // Parse and validate the response with enhanced error handling
   let results: any[];
   try {
-    const extractedText = extractJSONFromResponse(response);
+    const extractedText = extractJSONFromResponse(response!);
     console.log(`Extracted JSON text for ${requestType}:`, extractedText);
     results = JSON.parse(extractedText);
   } catch (parseError) {
     console.error(`JSON parsing error for ${requestType}:`, parseError);
-    console.error(`Raw AI response for ${requestType}:`, response);
-    throw new Error(`Failed to parse JSON response from AI for ${requestType}`);
+    console.error(`Raw AI response for ${requestType}:`, response!);
+    
+    // Try alternative parsing methods
+    try {
+      const cleanedText = aggressiveJSONCleaning(response!);
+      console.log(`Trying aggressive cleaning for ${requestType}:`, cleanedText);
+      results = JSON.parse(cleanedText);
+      console.log(`Aggressive cleaning succeeded for ${requestType}`);
+    } catch (secondParseError) {
+      console.error(`Even aggressive cleaning failed for ${requestType}:`, secondParseError);
+      throw new Error(`Failed to parse JSON response from AI for ${requestType} after multiple attempts`);
+    }
   }
 
   // Validate structure
@@ -563,23 +546,14 @@ function extractJSONFromResponse(generatedText: string): string {
   throw new Error('Could not extract valid JSON from AI response');
 }
 
-// Helper function to fix common JSON formatting issues
+// Enhanced JSON cleaning function
 function fixCommonJSONIssues(jsonText: string): string {
+  console.log('Original JSON text length:', jsonText.length);
+  
   // Remove any surrounding whitespace and code blocks
   jsonText = jsonText.trim();
   jsonText = jsonText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
   jsonText = jsonText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-  
-  // Handle escaped single quotes that are breaking JSON
-  jsonText = jsonText.replace(/\\'/g, "'");
-  
-  // Fix unescaped quotes within string values - more conservative approach
-  // Only fix obvious cases where quotes appear within values
-  jsonText = jsonText.replace(/: "([^"]*)"([^,}\]]*)"([^"]*)",/g, ': "$1\\"$2\\"$3",');
-  jsonText = jsonText.replace(/: "([^"]*)"([^,}\]]*)"([^"]*)"$/gm, ': "$1\\"$2\\"$3"');
-  
-  // Fix unescaped single quotes in JSON strings (common in contractions)
-  jsonText = jsonText.replace(/"([^"]*?)([a-zA-Z])'([a-zA-Z])([^"]*?)"/g, '"$1$2\\\'$3$4"');
   
   // Fix trailing commas before closing brackets or braces
   jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
@@ -591,7 +565,40 @@ function fixCommonJSONIssues(jsonText: string): string {
   // Fix newlines within JSON strings that break parsing
   jsonText = jsonText.replace(/"([^"]*)\n([^"]*)"(\s*[,}:\]])/g, '"$1 $2"$3');
   
+  // Fix multiple spaces in strings
+  jsonText = jsonText.replace(/"([^"]*?)\s{2,}([^"]*?)"/g, '"$1 $2"');
+  
+  console.log('Cleaned JSON text length:', jsonText.length);
   return jsonText;
+}
+
+// Aggressive JSON cleaning as fallback
+function aggressiveJSONCleaning(response: string): string {
+  console.log('Attempting aggressive JSON cleaning...');
+  
+  let text = response.trim();
+  
+  // Remove everything before first [ and after last ]
+  const firstBracket = text.indexOf('[');
+  const lastBracket = text.lastIndexOf(']');
+  
+  if (firstBracket === -1 || lastBracket === -1) {
+    throw new Error('No valid JSON array structure found');
+  }
+  
+  text = text.substring(firstBracket, lastBracket + 1);
+  
+  // More aggressive cleaning
+  text = text.replace(/```json|```/g, '');
+  text = text.replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
+  text = text.replace(/([{,]\s*)(\w+):/g, '$1"$2":'); // Quote unquoted keys
+  text = text.replace(/:\s*'([^']*)'/g, ': "$1"'); // Convert single quotes to double
+  text = text.replace(/\\'/g, "'"); // Fix escaped single quotes
+  text = text.replace(/\n/g, ' '); // Remove all newlines
+  text = text.replace(/\s+/g, ' '); // Normalize whitespace
+  
+  console.log('Aggressively cleaned text:', text.substring(0, 200) + '...');
+  return text;
 }
 
 // Generate quick fun fact about country and year
@@ -604,32 +611,17 @@ async function generateQuickFunFact(country: string, year: number): Promise<stri
 
 Focus on something cool that happened that year - like weather, culture, politics, economy, sports, or notable events. Make it engaging and specific to that exact year.
 
-Examples:
-- "1980 was the hottest summer on record in Moldova, with temperatures reaching 42°C"
-- "In 1995, Germany introduced its first commercial internet service provider"
-- "1987 marked the year when Spain joined the European Economic Community"
-
 Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
   } else if (factType === 'historical') {
     prompt = `Generate a single, interesting historical fun fact about ${country} around the year ${year}.
 
 Focus on something fascinating from that era - like major events, cultural developments, notable figures, technological advances, or social changes. Make it engaging and historically accurate for that time period.
 
-Examples:
-- "In 1850, Sweden experienced a major railway boom with the first major line connecting Stockholm to Gothenburg"
-- "Around 1823, Germany saw the rise of student fraternities that would shape university culture for centuries"
-- "In 1801, France under Napoleon was restructuring its entire legal system with the Napoleonic Code"
-
 Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
   } else {
     prompt = `Generate a single, interesting historical fun fact about ${country} around the year ${year}.
 
 Focus on something fascinating from that ancient era - like major historical events, cultural practices, notable rulers, early technologies, or social structures. Make it engaging and historically plausible for that time period.
-
-Examples:
-- "Around 1650, Sweden was emerging as a major European power under Queen Christina"
-- "In 1492, Spain completed its Reconquista and was funding Columbus's voyages to the New World"
-- "Around 1300, France was experiencing the height of Gothic cathedral construction"
 
 Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
   }
@@ -763,34 +755,40 @@ serve(async (req) => {
     let educationProblems: any[] = [];
 
     try {
+      // Try to generate regular facts first (science, etc.) as they are prioritized in display
+      console.log('Starting fact generation - prioritizing scientific facts...');
+      
       const results = await Promise.allSettled([
+        generateOutdatedFacts(country, graduationYear), // Scientific facts first
         generatePoliticalFacts(country, graduationYear),
-        generateOutdatedFacts(country, graduationYear),
         generateEducationProblems(country, graduationYear)
       ]);
 
       if (results[0].status === 'fulfilled') {
-        politicalFacts = results[0].value;
+        regularFacts = results[0].value;
+        console.log(`Successfully generated ${regularFacts.length} scientific/regular facts`);
       } else {
-        console.error('Political facts generation failed:', results[0].reason);
+        console.error('Scientific facts generation failed:', results[0].reason);
       }
 
       if (results[1].status === 'fulfilled') {
-        regularFacts = results[1].value;
+        politicalFacts = results[1].value;
+        console.log(`Successfully generated ${politicalFacts.length} political facts`);
       } else {
-        console.error('Regular facts generation failed:', results[1].reason);
+        console.error('Political facts generation failed:', results[1].reason);
       }
 
       if (results[2].status === 'fulfilled') {
         educationProblems = results[2].value;
+        console.log(`Successfully generated ${educationProblems.length} education problems`);
       } else {
         console.error('Education problems generation failed:', results[2].reason);
       }
 
-      // For historical periods, we should always generate something interesting
-      if (politicalFacts.length === 0 && regularFacts.length === 0 && educationProblems.length === 0) {
-        console.log(`No facts generated initially, this might be a very old year (${graduationYear}). The system should have generated historical perspectives.`);
-        throw new Error('Failed to generate any historical content');
+      // Ensure we have some content
+      if (regularFacts.length === 0 && politicalFacts.length === 0 && educationProblems.length === 0) {
+        console.log(`No facts generated for ${country} ${graduationYear}. This might be a very specific combination.`);
+        throw new Error('Failed to generate any content for this combination');
       }
 
     } catch (error) {
@@ -798,10 +796,11 @@ serve(async (req) => {
       throw error;
     }
 
-    // Combine and prioritize political facts first
-    const allFacts = [...politicalFacts, ...regularFacts];
+    // Combine facts - prioritize scientific facts first
+    const allFacts = [...regularFacts, ...politicalFacts];
     
-    console.log(`Successfully generated ${politicalFacts.length} political facts, ${regularFacts.length} regular facts, and ${educationProblems.length} education problems`);
+    console.log(`Final result: ${regularFacts.length} scientific facts, ${politicalFacts.length} political facts, ${educationProblems.length} education problems`);
+    console.log('Scientific fact categories:', regularFacts.map(f => f.category));
 
     // Save the generated data to cache only if we have content
     if (allFacts.length > 0 || educationProblems.length > 0) {
