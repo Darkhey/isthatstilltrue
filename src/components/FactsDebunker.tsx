@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb } from "lucide-react";
+import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
@@ -28,6 +29,10 @@ const countries = [
   { value: "Switzerland", label: "Switzerland" },
   { value: "France", label: "France" },
   { value: "United Kingdom", label: "United Kingdom" },
+  { value: "Canada", label: "Canada" },
+  { value: "Australia", label: "Australia" },
+  { value: "Netherlands", label: "Netherlands" },
+  { value: "Sweden", label: "Sweden" },
 ];
 
 const getCategoryIcon = (category: string) => {
@@ -77,9 +82,11 @@ export const FactsDebunker = () => {
 
     setIsLoading(true);
     setShowSkeletons(true);
-    setFacts([]); // Clear any existing facts
+    setFacts([]);
     
     try {
+      console.log(`Starting two-step fact generation for ${country} ${graduationYear}`);
+      
       const { data, error } = await supabase.functions.invoke('generate-facts', {
         body: {
           country,
@@ -94,7 +101,6 @@ export const FactsDebunker = () => {
       setFacts(data.facts || []);
       setShowSkeletons(false);
       
-      // Show different toast message based on whether facts were cached
       if (data.cached) {
         toast({
           title: "Facts Retrieved!",
@@ -102,15 +108,15 @@ export const FactsDebunker = () => {
         });
       } else {
         toast({
-          title: "New Facts Generated!",
-          description: `Generated ${data.facts?.length || 0} fresh outdated facts from your school days.`,
+          title: "Facts Generated!",
+          description: `Generated ${data.facts?.length || 0} facts using our new two-step historical analysis.`,
         });
       }
     } catch (error) {
       console.error('Error generating facts:', error);
       toast({
         title: "Error",
-        description: "Could not find outdated facts. Please try again.",
+        description: "Could not generate facts. Please try again.",
         variant: "destructive",
       });
       setShowSkeletons(false);
@@ -132,14 +138,15 @@ export const FactsDebunker = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-6">
-            <BookOpen className="h-16 w-16 text-primary mr-4" />
+            <GraduationCap className="h-16 w-16 text-primary mr-4" />
             <h1 className="text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent">
               School Facts Debunker
             </h1>
           </div>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Discover what "facts" you learned in school that have since been proven wrong. 
-            Comprehensive analysis based on your education system and graduation year!
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            Discover what you learned in school that has since been proven wrong. 
+            Our advanced two-step analysis first recreates your historical curriculum, 
+            then evaluates it with modern knowledge.
           </p>
         </div>
 
@@ -149,7 +156,7 @@ export const FactsDebunker = () => {
               <CardHeader>
                 <CardTitle className="text-center">Step 1: Select Country</CardTitle>
                 <CardDescription className="text-center">
-                  Choose your country for curriculum-specific content
+                  Choose your country for curriculum-specific analysis
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -178,7 +185,7 @@ export const FactsDebunker = () => {
               <CardHeader>
                 <CardTitle className="text-center">Step 2: Enter Graduation Year</CardTitle>
                 <CardDescription className="text-center">
-                  {country} • We'll find outdated facts from your school days
+                  {country} • We'll analyze your school curriculum from that era
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -207,10 +214,10 @@ export const FactsDebunker = () => {
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Finding outdated facts...
+                        Analyzing curriculum...
                       </>
                     ) : (
-                      "Reveal The Truth!"
+                      "Analyze My Education!"
                     )}
                   </Button>
                 </div>
@@ -223,21 +230,24 @@ export const FactsDebunker = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
-                {showSkeletons ? "Finding Outdated Facts..." : "Outdated Facts from Your School Days"}
+                {showSkeletons ? "Analyzing Historical Curriculum..." : "What You Learned vs. What We Know Now"}
               </h2>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 {country} • Graduated {graduationYear}
               </Badge>
+              {!showSkeletons && facts.length > 0 && (
+                <p className="text-muted-foreground mt-2">
+                  Two-step analysis: First we recreated your historical curriculum, then evaluated it with modern knowledge
+                </p>
+              )}
             </div>
             
             <Accordion type="multiple" className="space-y-4">
               {showSkeletons ? (
-                // Show 8 skeleton items while loading
                 Array.from({ length: 8 }, (_, index) => (
                   <FactSkeleton key={`skeleton-${index}`} index={index} />
                 ))
               ) : (
-                // Show actual facts when loaded
                 facts.map((fact, index) => {
                   const IconComponent = getCategoryIcon(fact.category);
                   return (
@@ -252,12 +262,12 @@ export const FactsDebunker = () => {
                           <div className="flex-1 text-left">
                             <div className="font-semibold text-lg">{fact.category}</div>
                             <div className="text-sm text-muted-foreground truncate">
-                              {fact.fact.length > 60 ? `${fact.fact.substring(0, 60)}...` : fact.fact}
+                              {fact.fact.length > 80 ? `${fact.fact.substring(0, 80)}...` : fact.fact}
                             </div>
                           </div>
                           <Badge variant="destructive" className="ml-auto">
                             <AlertTriangle className="w-3 h-3 mr-1" />
-                            {fact.yearDebunked}
+                            Debunked {fact.yearDebunked}
                           </Badge>
                         </div>
                       </AccordionTrigger>
@@ -266,10 +276,10 @@ export const FactsDebunker = () => {
                           <div className="bg-destructive/5 border border-destructive/20 rounded-lg p-4">
                             <h4 className="font-semibold text-destructive mb-2 flex items-center gap-2">
                               <AlertTriangle className="w-4 h-4" />
-                              What you were taught:
+                              What you were taught in {graduationYear}:
                             </h4>
                             <p className="text-sm italic">
-                              „{fact.fact}"
+                              „{fact.fact.replace(`In ${graduationYear}, ${country} students were`, 'You were')}"
                             </p>
                           </div>
                           
@@ -287,7 +297,7 @@ export const FactsDebunker = () => {
                             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                               <h4 className="font-semibold text-amber-700 mb-2 flex items-center gap-2">
                                 <Lightbulb className="w-4 h-4" />
-                                Mind-Blowing Factor:
+                                Why This Matters:
                               </h4>
                               <p className="text-sm text-amber-800">
                                 {fact.mindBlowingFactor}
@@ -314,15 +324,15 @@ export const FactsDebunker = () => {
                               ) : (
                                 <p className="text-sm text-slate-600">{fact.sourceName}</p>
                               )}
-                          </div>
-                        )}
+                            </div>
+                          )}
 
-                        <FactShare 
-                          fact={fact} 
-                          country={country} 
-                          graduationYear={graduationYear} 
-                        />
-                      </div>
+                          <FactShare 
+                            fact={fact} 
+                            country={country} 
+                            graduationYear={graduationYear} 
+                          />
+                        </div>
                       </AccordionContent>
                     </AccordionItem>
                   );
@@ -337,7 +347,7 @@ export const FactsDebunker = () => {
                   variant="outline"
                   className="px-8"
                 >
-                  Start New Search
+                  Analyze Another Era
                 </Button>
               </div>
             )}
