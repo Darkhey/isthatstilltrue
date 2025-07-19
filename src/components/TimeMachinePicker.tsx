@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 
 interface TimeMachinePickerProps {
   value?: string;
@@ -15,29 +16,41 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
 }) => {
   const [firstTwoDigits, setFirstTwoDigits] = useState<number>(19);
   const [lastTwoDigits, setLastTwoDigits] = useState<number>(95);
-  const [isDragging, setIsDragging] = useState<{ drum: 'first' | 'last' | null }>({ drum: null });
-  const [startY, setStartY] = useState(0);
-  const [startRotation, setStartRotation] = useState({ first: 0, last: 0 });
-  const [rotation, setRotation] = useState({ first: 0, last: 0 });
   
-  const firstRef = useRef<HTMLDivElement>(null);
-  const lastRef = useRef<HTMLDivElement>(null);
+  const firstScrollRef = useRef<HTMLDivElement>(null);
+  const lastScrollRef = useRef<HTMLDivElement>(null);
 
   // Available options
-  const firstDigitOptions = [16, 17, 18, 19, 20, 21];
-  const lastDigitOptions = Array.from({ length: 100 }, (_, i) => i); // 0-99
+  const firstDigitOptions = useMemo(() => [16, 17, 18, 19, 20, 21], []);
+  const lastDigitOptions = useMemo(() => Array.from({ length: 100 }, (_, i) => i), []);
 
   // Calculate the full year
-  const fullYear = parseInt(`${firstTwoDigits}${lastTwoDigits.toString().padStart(2, '0')}`);
+  const fullYear = useMemo(() => {
+    return parseInt(`${firstTwoDigits}${lastTwoDigits.toString().padStart(2, '0')}`);
+  }, [firstTwoDigits, lastTwoDigits]);
+  
   const currentYear = new Date().getFullYear();
+
+  // Debounced value change
+  const debouncedOnValueChange = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout;
+      return (year: number) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+          if (year <= currentYear) {
+            onValueChange(year.toString());
+          }
+        }, 100);
+      };
+    })(),
+    [onValueChange, currentYear]
+  );
 
   // Update value when digits change
   useEffect(() => {
-    const year = parseInt(`${firstTwoDigits}${lastTwoDigits.toString().padStart(2, '0')}`);
-    if (year <= currentYear) {
-      onValueChange(year.toString());
-    }
-  }, [firstTwoDigits, lastTwoDigits, onValueChange, currentYear]);
+    debouncedOnValueChange(fullYear);
+  }, [fullYear, debouncedOnValueChange]);
 
   // Initialize from existing value
   useEffect(() => {
@@ -50,98 +63,139 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
         setFirstTwoDigits(first);
         setLastTwoDigits(last);
         
-        // Set rotations
-        const firstIndex = firstDigitOptions.indexOf(first);
-        const lastIndex = last;
-        setRotation({
-          first: firstIndex * -80,
-          last: lastIndex * -15
-        });
+        // Scroll to correct positions
+        setTimeout(() => {
+          const firstIndex = firstDigitOptions.indexOf(first);
+          const firstElement = firstScrollRef.current?.children[firstIndex + 2] as HTMLElement; // +2 for padding items
+          if (firstElement) {
+            firstElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+          
+          const lastElement = lastScrollRef.current?.children[last + 2] as HTMLElement; // +2 for padding items
+          if (lastElement) {
+            lastElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+          }
+        }, 50);
       }
     }
-  }, [value]);
+  }, [value, firstDigitOptions]);
 
-  const handlePointerDown = (e: React.PointerEvent, drum: 'first' | 'last') => {
-    e.preventDefault();
-    setIsDragging({ drum });
-    setStartY(e.clientY);
-    setStartRotation({ ...rotation });
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-  };
+  const handleScroll = useCallback((
+    ref: React.RefObject<HTMLDivElement>,
+    options: number[],
+    setter: (value: number) => void
+  ) => {
+    if (!ref.current) return;
+    
+    const container = ref.current;
+    const itemHeight = 48; // Fixed item height
+    const containerCenter = container.scrollTop + container.clientHeight / 2;
+    const selectedIndex = Math.round((containerCenter - itemHeight) / itemHeight) - 2; // -2 for padding items
+    
+    const clampedIndex = Math.max(0, Math.min(selectedIndex, options.length - 1));
+    setter(options[clampedIndex]);
+  }, []);
 
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging.drum) return;
+  const scrollToValue = useCallback((
+    ref: React.RefObject<HTMLDivElement>,
+    options: number[],
+    value: number,
+    delta: number
+  ) => {
+    const currentIndex = options.indexOf(value);
+    const newIndex = Math.max(0, Math.min(currentIndex + delta, options.length - 1));
+    const newValue = options[newIndex];
     
-    const deltaY = e.clientY - startY;
-    const rotationDelta = deltaY * 0.5;
-    
-    if (isDragging.drum === 'first') {
-      const newRotation = startRotation.first + rotationDelta;
-      setRotation(prev => ({ ...prev, first: newRotation }));
-      
-      const index = Math.round(-newRotation / 80) % firstDigitOptions.length;
-      const normalizedIndex = ((index % firstDigitOptions.length) + firstDigitOptions.length) % firstDigitOptions.length;
-      const newFirst = firstDigitOptions[normalizedIndex];
-      if (newFirst !== firstTwoDigits) {
-        setFirstTwoDigits(newFirst);
+    if (ref.current) {
+      const targetElement = ref.current.children[newIndex + 2] as HTMLElement; // +2 for padding items
+      if (targetElement) {
+        targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
       }
-    } else {
-      const newRotation = startRotation.last + rotationDelta;
-      setRotation(prev => ({ ...prev, last: newRotation }));
-      
-      const index = Math.round(-newRotation / 15) % lastDigitOptions.length;
-      const normalizedIndex = ((index % lastDigitOptions.length) + lastDigitOptions.length) % lastDigitOptions.length;
-      setLastTwoDigits(lastDigitOptions[normalizedIndex]);
     }
-  };
+  }, []);
 
-  const handlePointerUp = (e: React.PointerEvent) => {
-    setIsDragging({ drum: null });
-    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-    
-    // Snap to final positions
-    const firstIndex = firstDigitOptions.indexOf(firstTwoDigits);
-    const lastIndex = lastTwoDigits;
-    setRotation({
-      first: firstIndex * -80,
-      last: lastIndex * -15
-    });
-  };
-
-  const DrumItem: React.FC<{ 
-    children: React.ReactNode; 
-    isSelected: boolean; 
-    index: number;
-    rotation: number;
-    itemSize: number;
-  }> = ({ children, isSelected, index, rotation, itemSize }) => {
-    const itemRotation = index * itemSize + rotation;
-    const distance = 80;
-    
-    return (
-      <div
-        className={cn(
-          "absolute w-16 h-8 flex items-center justify-center text-sm font-bold transition-all duration-300",
-          "border rounded backdrop-blur-sm",
-          isSelected 
-            ? "bg-primary/20 border-primary text-primary shadow-lg scale-110 z-10" 
-            : "bg-background/40 border-border text-muted-foreground"
-        )}
-        style={{
-          transform: `rotateX(${itemRotation}deg) translateZ(${distance}px)`,
-          transformOrigin: 'center center',
-        }}
-      >
-        {children}
+  const PickerColumn: React.FC<{
+    options: number[];
+    selectedValue: number;
+    onValueChange: (value: number) => void;
+    scrollRef: React.RefObject<HTMLDivElement>;
+    formatValue?: (value: number) => string;
+    label: string;
+  }> = ({ options, selectedValue, onValueChange, scrollRef, formatValue = (v) => v.toString(), label }) => (
+    <div className="flex flex-col items-center gap-2">
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <div className="relative">
+        {/* Scroll Up Button */}
+        <button
+          onClick={() => scrollToValue(scrollRef, options, selectedValue, -1)}
+          className="absolute -top-8 left-1/2 transform -translate-x-1/2 z-10 p-1 rounded-full bg-background/80 hover:bg-background transition-colors"
+        >
+          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+        </button>
+        
+        {/* Picker Container */}
+        <div className="relative w-20 h-36 bg-background/50 rounded-lg border border-border/50 overflow-hidden">
+          {/* Selection Indicator */}
+          <div className="absolute top-1/2 left-0 right-0 h-12 -mt-6 bg-primary/10 border-y border-primary/20 pointer-events-none z-10" />
+          
+          {/* Scrollable Items */}
+          <div
+            ref={scrollRef}
+            className="h-full overflow-y-auto scrollbar-hide scroll-smooth"
+            style={{
+              scrollSnapType: 'y mandatory',
+              scrollPadding: '48px 0',
+            }}
+            onScroll={() => handleScroll(scrollRef, options, onValueChange)}
+          >
+            {/* Top padding items */}
+            <div className="h-12" style={{ scrollSnapAlign: 'center' }} />
+            <div className="h-12" style={{ scrollSnapAlign: 'center' }} />
+            
+            {/* Actual options */}
+            {options.map((option) => (
+              <div
+                key={option}
+                className={cn(
+                  "h-12 flex items-center justify-center text-sm font-medium transition-all duration-200 cursor-pointer",
+                  option === selectedValue 
+                    ? "text-primary scale-110 font-bold" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                style={{ scrollSnapAlign: 'center' }}
+                onClick={() => {
+                  const targetElement = scrollRef.current?.children[options.indexOf(option) + 2] as HTMLElement;
+                  if (targetElement) {
+                    targetElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                  }
+                }}
+              >
+                {formatValue(option)}
+              </div>
+            ))}
+            
+            {/* Bottom padding items */}
+            <div className="h-12" style={{ scrollSnapAlign: 'center' }} />
+            <div className="h-12" style={{ scrollSnapAlign: 'center' }} />
+          </div>
+        </div>
+        
+        {/* Scroll Down Button */}
+        <button
+          onClick={() => scrollToValue(scrollRef, options, selectedValue, 1)}
+          className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 z-10 p-1 rounded-full bg-background/80 hover:bg-background transition-colors"
+        >
+          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+        </button>
       </div>
-    );
-  };
+    </div>
+  );
 
   return (
     <div className="flex flex-col items-center gap-6 p-6 bg-gradient-to-b from-background/50 to-background/80 rounded-lg border border-border/50 backdrop-blur-sm">
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Time Machine Year Selector</h3>
-        <p className="text-sm text-muted-foreground">Drag the drums to select your graduation year</p>
+        <p className="text-sm text-muted-foreground">Scroll the wheels to select your graduation year</p>
         <div className="mt-2 text-2xl font-bold text-primary">
           {fullYear}
         </div>
@@ -153,73 +207,22 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
       </div>
       
       <div className="flex gap-8 items-center">
-        {/* First Two Digits Drum */}
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">First Digits</span>
-          <div 
-            className="relative w-20 h-32 cursor-grab active:cursor-grabbing touch-none"
-            style={{ perspective: '400px' }}
-            onPointerDown={(e) => handlePointerDown(e, 'first')}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            ref={firstRef}
-          >
-            <div
-              className="relative w-full h-full"
-              style={{
-                transformStyle: 'preserve-3d',
-                transform: `rotateX(${rotation.first}deg)`,
-                transition: isDragging.drum === 'first' ? 'none' : 'transform 0.3s ease-out'
-              }}
-            >
-              {firstDigitOptions.map((digit, index) => (
-                <DrumItem
-                  key={digit}
-                  isSelected={digit === firstTwoDigits}
-                  index={index}
-                  rotation={0}
-                  itemSize={80}
-                >
-                  {digit}
-                </DrumItem>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Last Two Digits Drum */}
-        <div className="flex flex-col items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Last Digits</span>
-          <div 
-            className="relative w-20 h-32 cursor-grab active:cursor-grabbing touch-none overflow-hidden"
-            style={{ perspective: '400px' }}
-            onPointerDown={(e) => handlePointerDown(e, 'last')}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            ref={lastRef}
-          >
-            <div
-              className="relative w-full h-full"
-              style={{
-                transformStyle: 'preserve-3d',
-                transform: `rotateX(${rotation.last}deg)`,
-                transition: isDragging.drum === 'last' ? 'none' : 'transform 0.3s ease-out'
-              }}
-            >
-              {lastDigitOptions.map((digit, index) => (
-                <DrumItem
-                  key={digit}
-                  isSelected={digit === lastTwoDigits}
-                  index={index}
-                  rotation={0}
-                  itemSize={15}
-                >
-                  {digit.toString().padStart(2, '0')}
-                </DrumItem>
-              ))}
-            </div>
-          </div>
-        </div>
+        <PickerColumn
+          options={firstDigitOptions}
+          selectedValue={firstTwoDigits}
+          onValueChange={setFirstTwoDigits}
+          scrollRef={firstScrollRef}
+          label="Century"
+        />
+        
+        <PickerColumn
+          options={lastDigitOptions}
+          selectedValue={lastTwoDigits}
+          onValueChange={setLastTwoDigits}
+          scrollRef={lastScrollRef}
+          formatValue={(v) => v.toString().padStart(2, '0')}
+          label="Year"
+        />
       </div>
 
       {/* Quick Jump Buttons */}
@@ -235,12 +238,19 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
                 setFirstTwoDigits(first);
                 setLastTwoDigits(last);
                 
-                const firstIndex = firstDigitOptions.indexOf(first);
-                const lastIndex = last;
-                setRotation({
-                  first: firstIndex * -80,
-                  last: lastIndex * -15
-                });
+                // Scroll to positions
+                setTimeout(() => {
+                  const firstIndex = firstDigitOptions.indexOf(first);
+                  const firstElement = firstScrollRef.current?.children[firstIndex + 2] as HTMLElement;
+                  if (firstElement) {
+                    firstElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                  }
+                  
+                  const lastElement = lastScrollRef.current?.children[last + 2] as HTMLElement;
+                  if (lastElement) {
+                    lastElement.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                  }
+                }, 50);
               }
             }}
             className={cn(
