@@ -209,6 +209,24 @@ export const FactsDebunker = () => {
     try {
       console.log(`Generating facts for ${country} ${graduationYear}`);
       
+      // First, quickly get the fun fact and show it immediately
+      try {
+        const { data: quickFactData } = await supabase.functions.invoke('quick-fun-fact', {
+          body: {
+            country,
+            graduationYear: parseInt(graduationYear)
+          }
+        });
+        
+        if (quickFactData?.quickFunFact) {
+          setQuickFunFact(quickFactData.quickFunFact);
+        }
+      } catch (quickFactError) {
+        console.warn('Failed to generate quick fun fact:', quickFactError);
+        // Continue with main fact generation even if quick fact fails
+      }
+      
+      // Then get the main facts
       const { data, error } = await supabase.functions.invoke('generate-facts', {
         body: {
           country,
@@ -228,7 +246,6 @@ export const FactsDebunker = () => {
 
       setFacts(data.facts);
       setEducationProblems(data.educationProblems || []);
-      setQuickFunFact(data.quickFunFact || null);
       setShowSkeletons(false);
       
       if (data.cached) {
@@ -395,9 +412,9 @@ export const FactsDebunker = () => {
                   {facts.length} facts from your school days that have since been updated
                 </p>
               )}
-              {quickFunFact && !showSkeletons && (
+              {quickFunFact && (
                 <div className="mt-4 max-w-2xl mx-auto">
-                  <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-lg p-4">
+                  <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-lg p-4 animate-fade-in">
                     <div className="flex items-start gap-3">
                       <Lightbulb className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                       <div>

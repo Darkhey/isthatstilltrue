@@ -374,19 +374,33 @@ function extractJSONFromResponse(generatedText: string): string {
 
 // Helper function to fix common JSON formatting issues
 function fixCommonJSONIssues(jsonText: string): string {
-  // Fix unescaped quotes in string values
-  // This regex finds quotes within JSON string values and escapes them
-  jsonText = jsonText.replace(/"([^"]*)"(\s*:\s*)"([^"]*(?:[^"\\]|\\.)*)"/g, (match, key, colon, value) => {
-    // Escape unescaped quotes in the value
-    const escapedValue = value.replace(/(?<!\\)"/g, '\\"');
-    return `"${key}"${colon}"${escapedValue}"`;
+  // Remove any leading/trailing whitespace
+  jsonText = jsonText.trim();
+  
+  // Fix unescaped quotes in string values by properly escaping them
+  // This is a more robust approach for handling quotes in JSON strings
+  jsonText = jsonText.replace(/"([^"]*(?:\\.[^"]*)*)"(\s*:\s*)"([^"]*(?:\\.[^"]*)*)"([^"]*(?:\\.[^"]*)*)/g, (match, key, colon, value, rest) => {
+    // Only escape unescaped quotes in the value part
+    const escapedValue = value.replace(/\\"/g, '___ESCAPED_QUOTE___')
+                             .replace(/"/g, '\\"')
+                             .replace(/___ESCAPED_QUOTE___/g, '\\"');
+    return `"${key}"${colon}"${escapedValue}"${rest}`;
   });
   
-  // Fix trailing commas
+  // Fix specific issue with apostrophes in contractions
+  jsonText = jsonText.replace(/([a-zA-Z])'([a-zA-Z])/g, '$1\\\'$2');
+  
+  // Fix trailing commas before closing brackets or braces
   jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
   
   // Fix missing commas between objects
   jsonText = jsonText.replace(/}(\s*){/g, '},\n{');
+  
+  // Fix missing commas between array elements
+  jsonText = jsonText.replace(/}(\s*\n\s*){/g, '},\n{');
+  
+  // Fix newlines within strings that break JSON
+  jsonText = jsonText.replace(/"([^"]*)\n([^"]*)"(\s*:)/g, '"$1 $2"$3');
   
   return jsonText;
 }
@@ -490,7 +504,7 @@ serve(async (req) => {
     
     console.log(`Processing request for country: ${country}, graduation year: ${graduationYear}`);
 
-    // Generate quick fun fact first
+    // Generate quick fun fact first and return it immediately
     const quickFunFact = await generateQuickFunFact(country, graduationYear);
     console.log(`Generated quick fun fact: ${quickFunFact}`);
 
@@ -527,39 +541,74 @@ serve(async (req) => {
 
     console.log(`Generating new data for ${country} ${graduationYear}`);
 
-    // Generate political facts, regular facts, and education problems
-    const [politicalFacts, regularFacts, educationProblems] = await Promise.all([
-      generatePoliticalFacts(country, graduationYear),
-      generateOutdatedFacts(country, graduationYear),
-      generateEducationProblems(country, graduationYear)
-    ]);
+    // Generate facts and education problems separately, with better error handling
+    let politicalFacts: any[] = [];
+    let regularFacts: any[] = [];
+    let educationProblems: any[] = [];
+
+    try {
+      const results = await Promise.allSettled([
+        generatePoliticalFacts(country, graduationYear),
+        generateOutdatedFacts(country, graduationYear),
+        generateEducationProblems(country, graduationYear)
+      ]);
+
+      if (results[0].status === 'fulfilled') {
+        politicalFacts = results[0].value;
+      } else {
+        console.error('Political facts generation failed:', results[0].reason);
+      }
+
+      if (results[1].status === 'fulfilled') {
+        regularFacts = results[1].value;
+      } else {
+        console.error('Regular facts generation failed:', results[1].reason);
+      }
+
+      if (results[2].status === 'fulfilled') {
+        educationProblems = results[2].value;
+      } else {
+        console.error('Education problems generation failed:', results[2].reason);
+      }
+
+      // Ensure we have at least some content
+      if (politicalFacts.length === 0 && regularFacts.length === 0 && educationProblems.length === 0) {
+        throw new Error('Failed to generate any content');
+      }
+
+    } catch (error) {
+      console.error('Error generating facts:', error);
+      throw error;
+    }
 
     // Combine and prioritize political facts first
     const allFacts = [...politicalFacts, ...regularFacts];
     
     console.log(`Successfully generated ${politicalFacts.length} political facts, ${regularFacts.length} regular facts, and ${educationProblems.length} education problems`);
 
-    // Save the generated data to cache
-    try {
-      const { error: insertError } = await supabase
-        .from('cached_facts')
-        .upsert({
-          country,
-          graduation_year: graduationYear,
-          facts_data: allFacts,
-          education_system_problems: educationProblems,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'country,graduation_year'
-        });
+    // Save the generated data to cache only if we have content
+    if (allFacts.length > 0 || educationProblems.length > 0) {
+      try {
+        const { error: insertError } = await supabase
+          .from('cached_facts')
+          .upsert({
+            country,
+            graduation_year: graduationYear,
+            facts_data: allFacts,
+            education_system_problems: educationProblems,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'country,graduation_year'
+          });
 
-      if (insertError) {
-        console.error('Failed to cache data:', insertError);
-      } else {
-        console.log(`Successfully cached data for ${country} ${graduationYear}`);
+        if (insertError) {
+          console.error('Failed to cache data:', insertError);
+        } else {
+          console.log(`Successfully cached data for ${country} ${graduationYear}`);
+        }
+      } catch (cacheError) {
+        console.error('Cache insertion error:', cacheError);
       }
-    } catch (cacheError) {
-      console.error('Cache insertion error:', cacheError);
     }
 
     return new Response(JSON.stringify({ 
