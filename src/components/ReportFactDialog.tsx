@@ -25,11 +25,11 @@ interface ReportFactDialogProps {
 }
 
 const reportReasons = [
-  { value: "incorrect", label: "Faktisch falsch", description: "Der Fakt oder die Korrektur sind nicht korrekt" },
-  { value: "misleading", label: "Irreführend", description: "Der Fakt ist verwirrend oder missverständlich dargestellt" },
-  { value: "outdated", label: "Veraltet", description: "Die Information ist nicht mehr aktuell" },
-  { value: "source", label: "Schlechte Quelle", description: "Die angegebene Quelle ist unzuverlässig" },
-  { value: "other", label: "Sonstiges", description: "Ein anderes Problem" }
+  { value: "incorrect", label: "Factually incorrect", description: "The fact or correction is not accurate" },
+  { value: "misleading", label: "Misleading", description: "The fact is confusing or misleadingly presented" },
+  { value: "outdated", label: "Outdated", description: "The information is no longer current" },
+  { value: "source", label: "Poor source", description: "The cited source is unreliable" },
+  { value: "other", label: "Other", description: "Another issue" }
 ];
 
 export function ReportFactDialog({ open, onOpenChange, fact, country, graduationYear }: ReportFactDialogProps) {
@@ -46,8 +46,8 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
   const handleSubmit = async () => {
     if (!selectedReason) {
       toast({
-        title: "Bitte wählen Sie einen Grund",
-        description: "Wählen Sie einen Grund für die Meldung aus.",
+        title: "Please select a reason",
+        description: "Choose a reason for reporting this fact.",
         variant: "destructive",
       });
       return;
@@ -55,8 +55,8 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
 
     if (selectedReason === "other" && !customReason.trim()) {
       toast({
-        title: "Bitte geben Sie eine Beschreibung an",
-        description: "Bei 'Sonstiges' ist eine Beschreibung erforderlich.",
+        title: "Please provide a description",
+        description: "A description is required when selecting 'Other'.",
         variant: "destructive",
       });
       return;
@@ -87,8 +87,8 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
       }
 
       toast({
-        title: "Fakt gemeldet",
-        description: "Vielen Dank für Ihre Meldung. Wir werden den Fakt überprüfen.",
+        title: "Fact reported",
+        description: "Thank you for your report. We will review this fact.",
       });
 
       onOpenChange(false);
@@ -97,8 +97,8 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
     } catch (error) {
       console.error('Error reporting fact:', error);
       toast({
-        title: "Fehler beim Melden",
-        description: "Es gab ein Problem beim Übermitteln Ihrer Meldung. Bitte versuchen Sie es später erneut.",
+        title: "Error reporting fact",
+        description: "There was a problem submitting your report. Please try again later.",
         variant: "destructive",
       });
     } finally {
@@ -112,21 +112,21 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Flag className="h-5 w-5 text-destructive" />
-            Fakt melden
+            Report Fact
           </DialogTitle>
           <DialogDescription>
-            Helfen Sie uns dabei, die Qualität der Fakten zu verbessern. Melden Sie Probleme mit diesem Fakt.
+            Help us improve the quality of facts. Report any issues with this fact.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm font-medium text-muted-foreground mb-1">Gemeldeter Fakt:</p>
+            <p className="text-sm font-medium text-muted-foreground mb-1">Reported Fact:</p>
             <p className="text-sm">{fact.fact}</p>
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base font-medium">Was ist das Problem?</Label>
+            <Label className="text-base font-medium">What's the problem?</Label>
             <RadioGroup value={selectedReason} onValueChange={setSelectedReason}>
               {reportReasons.map((reason) => (
                 <div key={reason.value} className="flex items-start space-x-2">
@@ -149,10 +149,10 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
 
           {selectedReason === "other" && (
             <div className="space-y-2">
-              <Label htmlFor="custom-reason">Beschreibung des Problems</Label>
+              <Label htmlFor="custom-reason">Problem Description</Label>
               <Textarea
                 id="custom-reason"
-                placeholder="Beschreiben Sie das Problem mit diesem Fakt..."
+                placeholder="Describe the problem with this fact..."
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
                 rows={3}
@@ -163,17 +163,17 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
           <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-amber-800 dark:text-amber-200">
-              Fakten mit mehr als 5 Meldungen werden automatisch zur Überprüfung markiert und gegebenenfalls ersetzt.
+              Facts with more than 5 reports are automatically flagged for review and may be replaced.
             </p>
           </div>
         </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Abbrechen
+            Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!selectedReason || isSubmitting}>
-            {isSubmitting ? "Wird gemeldet..." : "Melden"}
+            {isSubmitting ? "Reporting..." : "Report"}
           </Button>
         </DialogFooter>
       </DialogContent>
