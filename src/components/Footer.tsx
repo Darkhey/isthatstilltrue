@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { CreditCard } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -26,9 +26,9 @@ const Footer = () => {
               href="https://www.paypal.com/donate/?hosted_button_id=CRF92JRY9SW4J"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#0070ba] hover:bg-[#005ea6] text-white px-4 py-2 rounded-lg transition-all duration-300 animate-bounce hover:animate-none hover:scale-105"
+              className="inline-flex items-center gap-2 bg-[#0070ba] hover:bg-[#005ea6] text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 animate-pulse hover:animate-none"
             >
-              <Heart className="w-4 h-4" />
+              <CreditCard className="w-4 h-4" />
               Donate
             </a>
           </div>
