@@ -1,12 +1,13 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 
 interface GenerateFactsRequest {
   country: string;
@@ -63,16 +64,11 @@ serve(async (req) => {
     
     console.log(`Generating facts for country: ${country}, graduation year: ${graduationYear}`);
 
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiApiKey) {
-      throw new Error('GEMINI_API_KEY not configured');
-    }
-
     const currentYear = new Date().getFullYear();
-    const prompt = `You are an educational historian with access to historical curriculum archives. Research and provide EXACTLY 8 specific examples of outdated content that was actually taught in ${country} schools around ${graduationYear}.
+    const prompt = `You are an educational historian with access to historical curriculum archives. Research and provide EXACTLY 8 detailed examples of outdated content that was actually taught in ${country} schools around ${graduationYear}.
 
 RESEARCH APPROACH:
-- Reference actual textbook publishers active in ${country} during ${graduationYear} (e.g., Hachette, Nathan, Bordas for France)
+- Reference actual textbook publishers active in ${country} during ${graduationYear} (e.g., Hachette, Nathan, Bordas for France; McGraw-Hill, Pearson for USA)
 - Look up official ministry of education curriculum standards from that era
 - Find specific scientific consensus that existed in ${graduationYear} vs today
 - Identify major discoveries/paradigm shifts that happened AFTER ${graduationYear}
@@ -84,11 +80,13 @@ COUNTRY-SPECIFIC REQUIREMENTS FOR ${country}:
 - Include specific cultural/political context that shaped education in ${country} at that time
 - Mention specific exam systems or educational frameworks that were in place
 
-FACT VERIFICATION REQUIREMENTS:
-- Each fact must represent something that was ACTUALLY taught as settled knowledge in ${graduationYear}
-- Include specific year when the consensus changed (must be AFTER ${graduationYear})
-- Provide credible sources that document both the old and new understanding
-- Focus on major paradigm shifts, not minor updates
+FACT LENGTH & DIVERSITY REQUIREMENTS:
+- Each "fact" should be 2-3 detailed sentences explaining what was taught and why
+- Each "correction" should be 4-6 sentences with specific evidence, dates, and discoveries
+- Each "mindBlowingFactor" should be 3-4 sentences with context and significance
+- Vary the types of misconceptions: scientific paradigm shifts, technology predictions, medical breakthroughs, social changes, legal reforms, environmental understanding, physics discoveries, cultural evolution
+- Include both dramatic reversals and gradual shifts in understanding
+- Mix well-known changes with surprising lesser-known updates
 
 CATEGORIES (use exactly these):
 1. Science - Biology/Chemistry/Physics textbook content from ${graduationYear}
@@ -101,16 +99,18 @@ CATEGORIES (use exactly these):
 8. Culture - Literature/arts curriculum assumptions and canons from ${graduationYear}
 
 TONE: Educational but with playful mockery. Use phrases like:
-- "In ${graduationYear}, ${country} students were taught as absolute fact that..."
-- "Your ${graduationYear} textbooks in ${country} confidently declared that..."
-- "Teachers in ${country} around ${graduationYear} would seriously make students memorize that..."
-- "Feeling stupid for cramming that bullshit for your ${country} exams?"
+- "In ${graduationYear}, ${country} students were drilled to memorize as absolute scientific fact that..."
+- "Your ${graduationYear} textbooks in ${country} confidently declared with zero doubt that..."
+- "Teachers in ${country} around ${graduationYear} would seriously make students write essays defending the idea that..."
+- "Feeling stupid for cramming that complete bullshit for your ${country} final exams?"
+- "Your teachers were so laughably wrong about this that..."
 
 For each fact, provide:
-- The specific claim that was taught as settled science/fact in ${graduationYear}
+- The specific detailed claim that was taught as settled science/fact in ${graduationYear}
 - The year when this understanding was proven wrong or significantly revised
-- Current scientific/academic consensus with specific evidence
+- Current scientific/academic consensus with specific evidence, studies, and breakthroughs
 - Real sources documenting both the historical teaching and current understanding
+- Explain WHY this change is significant and what it reveals about the evolution of knowledge
 
 CRITICAL: Return ONLY valid JSON array. No markdown, no code blocks, no extra text.
 
@@ -118,16 +118,59 @@ JSON format:
 [
   {
     "category": "Science",
-    "fact": "In ${graduationYear}, ${country} students were taught as absolute fact that [specific textbook claim from that era]",
-    "correction": "Today we know that [current understanding with specific evidence and dates]",
+    "fact": "In ${graduationYear}, ${country} students were drilled to memorize as absolute scientific fact that [detailed 2-3 sentence explanation of what was taught and the reasoning behind it at the time]",
+    "correction": "Today we know that [detailed 4-6 sentence explanation with specific evidence, breakthrough discoveries, key researchers, and timeline of how our understanding evolved]",
     "yearDebunked": [specific year between ${graduationYear} and ${currentYear}],
-    "mindBlowingFactor": "Feeling stupid for cramming that bullshit for your ${country} exams? [explain the significance of this change]",
+    "mindBlowingFactor": "Feeling stupid for cramming that complete bullshit for your ${country} final exams? [3-4 sentences explaining the broader significance of this change, what it reveals about scientific progress, and why this shift was so important for the field]",
     "sourceUrl": "https://credible-source.com",
     "sourceName": "Research Institution/Study Name"
   }
 ]`;
 
+    // Try OpenAI first
+    const makeOpenAIRequest = async () => {
+      if (!openAIApiKey) {
+        throw new Error('OpenAI API key not available');
+      }
+
+      console.log('Making OpenAI API request...');
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: [
+            { role: 'system', content: 'You are an educational historian specializing in curriculum analysis. Return only valid JSON arrays with no markdown formatting.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.8,
+          max_tokens: 4000
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`OpenAI API error details:`, errorText);
+        throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('OpenAI API response status:', response.status);
+      
+      const generatedText = data.choices[0].message.content;
+      console.log('Generated text:', generatedText);
+      
+      return generatedText;
+    };
+
     const makeGeminiRequest = async () => {
+      if (!geminiApiKey) {
+        throw new Error('Gemini API key not available');
+      }
+      
       console.log('Making Gemini API request...');
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
@@ -142,7 +185,7 @@ JSON format:
           }],
           generationConfig: {
             temperature: 0.8,
-            maxOutputTokens: 4096,
+            maxOutputTokens: 4000,
           },
           safetySettings: [
             {
@@ -165,29 +208,37 @@ JSON format:
         })
       });
 
-      console.log(`Gemini API response status: ${response.status}`);
-      
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`Gemini API error details:`, errorText);
         throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
       }
 
-      return response;
+      const data = await response.json();
+      console.log('Gemini API response status:', response.status);
+      console.log('Raw Gemini response structure:', JSON.stringify(data, null, 2));
+      
+      const generatedText = data.candidates[0].content.parts[0].text;
+      console.log('Generated text:', generatedText);
+      
+      return generatedText;
     };
 
-    const response = await retryWithBackoff(makeGeminiRequest, 3, 2000);
-    const data = await response.json();
-    
-    console.log('Raw Gemini response structure:', JSON.stringify(data, null, 2));
-
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      console.error('Unexpected Gemini response structure:', data);
-      throw new Error('Invalid response structure from Gemini API');
+    // Try OpenAI first, fall back to Gemini if it fails
+    let generatedText;
+    try {
+      generatedText = await retryWithBackoff(makeOpenAIRequest, 3, 2000);
+      console.log('Successfully used OpenAI');
+    } catch (openAIError) {
+      console.log('OpenAI failed, trying Gemini fallback:', openAIError.message);
+      try {
+        generatedText = await retryWithBackoff(makeGeminiRequest, 3, 2000);
+        console.log('Successfully used Gemini fallback');
+      } catch (geminiError) {
+        console.error('Both OpenAI and Gemini failed:', { openAIError: openAIError.message, geminiError: geminiError.message });
+        throw new Error('Both AI providers failed to generate facts');
+      }
     }
-
-    const generatedText = data.candidates[0].content.parts[0].text;
-    console.log('Generated text:', generatedText);
 
     // Advanced JSON extraction with multiple fallback methods
     let extractedText = generatedText.trim();
@@ -209,7 +260,7 @@ JSON format:
           extractedText = extractedText.substring(startIndex, lastIndex + 1);
         } else {
           console.error('Could not extract JSON from response:', generatedText.substring(0, 500) + '...');
-          throw new Error('Could not extract valid JSON from Gemini response');
+          throw new Error('Could not extract valid JSON from AI response');
         }
       }
     }
@@ -233,7 +284,7 @@ JSON format:
         console.log('Successfully parsed after fixing JSON issues');
       } catch (secondError) {
         console.error('Second parsing attempt failed:', secondError);
-        throw new Error('Failed to parse JSON response from Gemini');
+        throw new Error('Failed to parse JSON response from AI');
       }
     }
 
