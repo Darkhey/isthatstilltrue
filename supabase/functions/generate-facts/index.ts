@@ -69,36 +69,48 @@ serve(async (req) => {
     }
 
     const currentYear = new Date().getFullYear();
-    const prompt = `You are a educational historian specializing in curriculum analysis. Generate EXACTLY 8 specific examples of outdated school content from ${country} in ${graduationYear}.
+    const prompt = `You are an educational historian with access to historical curriculum archives. Research and provide EXACTLY 8 specific examples of outdated content that was actually taught in ${country} schools around ${graduationYear}.
 
-FOCUS ON ACTUAL SCHOOL CURRICULUM:
-- What was specifically taught in ${country} textbooks around ${graduationYear}
-- Official curriculum standards and common teaching materials from that era
-- Specific scientific "facts" that students memorized for tests
-- Standard explanations given in classrooms of that time period
+RESEARCH APPROACH:
+- Reference actual textbook publishers active in ${country} during ${graduationYear} (e.g., Hachette, Nathan, Bordas for France)
+- Look up official ministry of education curriculum standards from that era
+- Find specific scientific consensus that existed in ${graduationYear} vs today
+- Identify major discoveries/paradigm shifts that happened AFTER ${graduationYear}
+- Reference specific teaching materials, exam requirements, and standard explanations from that time
+
+COUNTRY-SPECIFIC REQUIREMENTS FOR ${country}:
+- Use curriculum standards specific to ${country}'s education system circa ${graduationYear}
+- Reference major textbook publishers and educational authorities from that country/era
+- Include specific cultural/political context that shaped education in ${country} at that time
+- Mention specific exam systems or educational frameworks that were in place
+
+FACT VERIFICATION REQUIREMENTS:
+- Each fact must represent something that was ACTUALLY taught as settled knowledge in ${graduationYear}
+- Include specific year when the consensus changed (must be AFTER ${graduationYear})
+- Provide credible sources that document both the old and new understanding
+- Focus on major paradigm shifts, not minor updates
+
+CATEGORIES (use exactly these):
+1. Science - Biology/Chemistry/Physics textbook content from ${graduationYear}
+2. Technology - Computer science predictions and tech understanding circa ${graduationYear}  
+3. Medicine - Health education and medical facts taught in ${graduationYear}
+4. Society - Social studies curriculum and demographic assumptions from ${graduationYear}
+5. Laws - Civics/government class content reflecting ${graduationYear} legal landscape
+6. Environment - Environmental science teachings and climate understanding circa ${graduationYear}
+7. Physics - Physics explanations and models taught in ${graduationYear} textbooks
+8. Culture - Literature/arts curriculum assumptions and canons from ${graduationYear}
 
 TONE: Educational but with playful mockery. Use phrases like:
-- "In ${graduationYear}, students in ${country} were actually taught that..."
-- "Your ${graduationYear} textbooks confidently stated that..."
-- "Teachers in ${country} around ${graduationYear} would seriously tell their classes that..."
-- "Feeling stupid for memorizing that bullshit in school?"
-- "Your teachers were so confidently wrong about this..."
+- "In ${graduationYear}, ${country} students were taught as absolute fact that..."
+- "Your ${graduationYear} textbooks in ${country} confidently declared that..."
+- "Teachers in ${country} around ${graduationYear} would seriously make students memorize that..."
+- "Feeling stupid for cramming that bullshit for your ${country} exams?"
 
-SPECIFIC CATEGORIES (use exactly these):
-1. Science - Biology/Chemistry textbook content
-2. Technology - Computer science and tech predictions
-3. Medicine - Health education and medical "facts"
-4. Society - Social studies curriculum  
-5. Laws - Civics/government class content
-6. Environment - Environmental science teachings
-7. Physics - Physics textbook explanations
-8. Culture - Literature/arts curriculum assumptions
-
-For each fact:
-- Reference specific teaching methods or common textbook explanations from that era
-- Include what students would have written on tests or homework
-- Contrast with detailed current understanding
-- Add sources when possible (research institutions, updated textbooks, etc.)
+For each fact, provide:
+- The specific claim that was taught as settled science/fact in ${graduationYear}
+- The year when this understanding was proven wrong or significantly revised
+- Current scientific/academic consensus with specific evidence
+- Real sources documenting both the historical teaching and current understanding
 
 CRITICAL: Return ONLY valid JSON array. No markdown, no code blocks, no extra text.
 
@@ -106,12 +118,12 @@ JSON format:
 [
   {
     "category": "Science",
-    "fact": "In ${graduationYear}, students in ${country} were actually taught that [specific textbook claim with mocking tone]",
-    "correction": "Today we know that [detailed current understanding with specific facts]",
+    "fact": "In ${graduationYear}, ${country} students were taught as absolute fact that [specific textbook claim from that era]",
+    "correction": "Today we know that [current understanding with specific evidence and dates]",
     "yearDebunked": [specific year between ${graduationYear} and ${currentYear}],
-    "mindBlowingFactor": "Feeling stupid for memorizing that bullshit in school? [explain why this change is shocking]",
+    "mindBlowingFactor": "Feeling stupid for cramming that bullshit for your ${country} exams? [explain the significance of this change]",
     "sourceUrl": "https://credible-source.com",
-    "sourceName": "Institution/Study Name"
+    "sourceName": "Research Institution/Study Name"
   }
 ]`;
 
