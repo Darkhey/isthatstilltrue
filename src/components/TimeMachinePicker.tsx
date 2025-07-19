@@ -13,121 +13,102 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
   placeholder = "Select graduation year..."
 }) => {
   const [century, setCentury] = useState<number>(20);
-  const [decade, setDecade] = useState<number>(9);
-  const [isDragging, setIsDragging] = useState<{ drum: 'century' | 'decade' | null }>({ drum: null });
+  const [selectedYear, setSelectedYear] = useState<number>(1995);
+  const [isDragging, setIsDragging] = useState<{ drum: 'century' | 'year' | null }>({ drum: null });
   const [startY, setStartY] = useState(0);
-  const [startRotation, setStartRotation] = useState({ century: 0, decade: 0 });
-  const [rotation, setRotation] = useState({ century: 0, decade: 0 });
+  const [startRotation, setStartRotation] = useState({ century: 0, year: 0 });
+  const [rotation, setRotation] = useState({ century: 0, year: 0 });
   
   const centuryRef = useRef<HTMLDivElement>(null);
-  const decadeRef = useRef<HTMLDivElement>(null);
+  const yearRef = useRef<HTMLDivElement>(null);
 
   // Available options
   const centuries = [19, 20, 21];
-  const decades = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-
-  // Calculate year from century and decade
-  const calculateYear = (cent: number, dec: number) => {
-    if (cent === 21 && dec > 2) return 2024; // Cap at current year
-    return cent * 100 + dec * 10 + 5; // Middle of decade
+  const getYearsForCentury = (cent: number) => {
+    const currentYear = new Date().getFullYear();
+    const startYear = cent * 100;
+    const endYear = Math.min((cent + 1) * 100 - 1, currentYear);
+    
+    const years = [];
+    for (let y = startYear; y <= endYear; y++) {
+      years.push(y);
+    }
+    return years;
   };
 
-  // Update value when century or decade changes
+  const availableYears = getYearsForCentury(century);
+
+  // Update value when year changes
   useEffect(() => {
-    const year = calculateYear(century, decade);
-    onValueChange(year.toString());
-  }, [century, decade, onValueChange]);
+    onValueChange(selectedYear.toString());
+  }, [selectedYear, onValueChange]);
 
   // Initialize from existing value
   useEffect(() => {
     if (value) {
-      const year = parseInt(value);
-      const cent = Math.floor(year / 100);
-      const dec = Math.floor((year % 100) / 10);
+      const yearValue = parseInt(value);
+      const cent = Math.floor(yearValue / 100);
       setCentury(cent);
-      setDecade(dec);
+      setSelectedYear(yearValue);
       
       // Set rotations
       const centIndex = centuries.indexOf(cent);
-      const decIndex = decades.indexOf(dec);
+      const years = getYearsForCentury(cent);
+      const yearIndex = years.indexOf(yearValue);
       setRotation({
-        century: centIndex * -36, // 360 / 10 items
-        decade: decIndex * -36
+        century: centIndex * -120,
+        year: yearIndex * -8 // Smaller rotation for many years
       });
     }
   }, [value]);
 
-  const handleMouseDown = (e: React.MouseEvent, drum: 'century' | 'decade') => {
+  const handlePointerDown = (e: React.PointerEvent, drum: 'century' | 'year') => {
     e.preventDefault();
     setIsDragging({ drum });
     setStartY(e.clientY);
     setStartRotation({ ...rotation });
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handlePointerMove = (e: React.PointerEvent) => {
     if (!isDragging.drum) return;
     
     const deltaY = e.clientY - startY;
-    const rotationDelta = deltaY * 0.5; // Sensitivity
+    const rotationDelta = deltaY * 0.5;
     
     if (isDragging.drum === 'century') {
       const newRotation = startRotation.century + rotationDelta;
       setRotation(prev => ({ ...prev, century: newRotation }));
       
-      // Snap to nearest option
-      const index = Math.round(-newRotation / 36) % centuries.length;
+      const index = Math.round(-newRotation / 120) % centuries.length;
       const normalizedIndex = ((index % centuries.length) + centuries.length) % centuries.length;
-      setCentury(centuries[normalizedIndex]);
+      const newCentury = centuries[normalizedIndex];
+      if (newCentury !== century) {
+        setCentury(newCentury);
+        const newYears = getYearsForCentury(newCentury);
+        setSelectedYear(newYears[Math.floor(newYears.length / 2)]);
+      }
     } else {
-      const newRotation = startRotation.decade + rotationDelta;
-      setRotation(prev => ({ ...prev, decade: newRotation }));
+      const newRotation = startRotation.year + rotationDelta;
+      setRotation(prev => ({ ...prev, year: newRotation }));
       
-      // Snap to nearest option
-      const index = Math.round(-newRotation / 36) % decades.length;
-      const normalizedIndex = ((index % decades.length) + decades.length) % decades.length;
-      setDecade(decades[normalizedIndex]);
+      const index = Math.round(-newRotation / 8) % availableYears.length;
+      const normalizedIndex = ((index % availableYears.length) + availableYears.length) % availableYears.length;
+      setSelectedYear(availableYears[normalizedIndex]);
     }
   };
 
-  const handleMouseUp = () => {
+  const handlePointerUp = (e: React.PointerEvent) => {
     setIsDragging({ drum: null });
+    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
     
     // Snap to final positions
     const centIndex = centuries.indexOf(century);
-    const decIndex = decades.indexOf(decade);
+    const yearIndex = availableYears.indexOf(selectedYear);
     setRotation({
-      century: centIndex * -36,
-      decade: decIndex * -36
+      century: centIndex * -120,
+      year: yearIndex * -8
     });
-  };
-
-  // Mouse event listeners
-  useEffect(() => {
-    if (isDragging.drum) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-      };
-    }
-  }, [isDragging, startY, startRotation]);
-
-  const handleWheel = (e: React.WheelEvent, drum: 'century' | 'decade') => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 1 : -1;
-    
-    if (drum === 'century') {
-      const currentIndex = centuries.indexOf(century);
-      const newIndex = Math.max(0, Math.min(centuries.length - 1, currentIndex + delta));
-      setCentury(centuries[newIndex]);
-      setRotation(prev => ({ ...prev, century: newIndex * -36 }));
-    } else {
-      const currentIndex = decades.indexOf(decade);
-      const newIndex = Math.max(0, Math.min(decades.length - 1, currentIndex + delta));
-      setDecade(decades[newIndex]);
-      setRotation(prev => ({ ...prev, decade: newIndex * -36 }));
-    }
   };
 
   const DrumItem: React.FC<{ 
@@ -135,18 +116,19 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
     isSelected: boolean; 
     index: number;
     rotation: number;
-  }> = ({ children, isSelected, index, rotation }) => {
-    const itemRotation = index * 36 + rotation;
-    const distance = 80; // Distance from center
+    itemSize: number;
+  }> = ({ children, isSelected, index, rotation, itemSize }) => {
+    const itemRotation = index * itemSize + rotation;
+    const distance = 80;
     
     return (
       <div
         className={cn(
-          "absolute w-16 h-12 flex items-center justify-center text-xl font-bold transition-all duration-300",
-          "border-2 rounded-lg backdrop-blur-sm",
+          "absolute w-16 h-8 flex items-center justify-center text-sm font-bold transition-all duration-300",
+          "border rounded backdrop-blur-sm",
           isSelected 
             ? "bg-primary/20 border-primary text-primary shadow-lg scale-110 z-10" 
-            : "bg-background/40 border-border text-muted-foreground hover:bg-background/60"
+            : "bg-background/40 border-border text-muted-foreground"
         )}
         style={{
           transform: `rotateX(${itemRotation}deg) translateZ(${distance}px)`,
@@ -162,9 +144,9 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
     <div className="flex flex-col items-center gap-6 p-6 bg-gradient-to-b from-background/50 to-background/80 rounded-lg border border-border/50 backdrop-blur-sm">
       <div className="text-center">
         <h3 className="text-lg font-semibold mb-2">Time Machine Year Selector</h3>
-        <p className="text-sm text-muted-foreground">Drag the drums or use your mouse wheel</p>
+        <p className="text-sm text-muted-foreground">Drag the drums to select your graduation year</p>
         <div className="mt-2 text-2xl font-bold text-primary">
-          {calculateYear(century, decade)}
+          {selectedYear}
         </div>
       </div>
       
@@ -173,10 +155,11 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
         <div className="flex flex-col items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground">Century</span>
           <div 
-            className="relative w-20 h-32 cursor-grab active:cursor-grabbing"
+            className="relative w-20 h-32 cursor-grab active:cursor-grabbing touch-none"
             style={{ perspective: '400px' }}
-            onMouseDown={(e) => handleMouseDown(e, 'century')}
-            onWheel={(e) => handleWheel(e, 'century')}
+            onPointerDown={(e) => handlePointerDown(e, 'century')}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
             ref={centuryRef}
           >
             <div
@@ -193,6 +176,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
                   isSelected={cent === century}
                   index={index}
                   rotation={0}
+                  itemSize={120}
                 >
                   {cent}th
                 </DrumItem>
@@ -201,32 +185,34 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
           </div>
         </div>
 
-        {/* Decade Drum */}
+        {/* Year Drum */}
         <div className="flex flex-col items-center gap-2">
-          <span className="text-sm font-medium text-muted-foreground">Decade</span>
+          <span className="text-sm font-medium text-muted-foreground">Year</span>
           <div 
-            className="relative w-20 h-32 cursor-grab active:cursor-grabbing"
+            className="relative w-20 h-32 cursor-grab active:cursor-grabbing touch-none overflow-hidden"
             style={{ perspective: '400px' }}
-            onMouseDown={(e) => handleMouseDown(e, 'decade')}
-            onWheel={(e) => handleWheel(e, 'decade')}
-            ref={decadeRef}
+            onPointerDown={(e) => handlePointerDown(e, 'year')}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            ref={yearRef}
           >
             <div
               className="relative w-full h-full"
               style={{
                 transformStyle: 'preserve-3d',
-                transform: `rotateX(${rotation.decade}deg)`,
-                transition: isDragging.drum === 'decade' ? 'none' : 'transform 0.3s ease-out'
+                transform: `rotateX(${rotation.year}deg)`,
+                transition: isDragging.drum === 'year' ? 'none' : 'transform 0.3s ease-out'
               }}
             >
-              {decades.map((dec, index) => (
+              {availableYears.map((year, index) => (
                 <DrumItem
-                  key={dec}
-                  isSelected={dec === decade}
+                  key={year}
+                  isSelected={year === selectedYear}
                   index={index}
                   rotation={0}
+                  itemSize={8}
                 >
-                  {dec}0s
+                  {year}
                 </DrumItem>
               ))}
             </div>
@@ -241,20 +227,20 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
             key={year}
             onClick={() => {
               const cent = Math.floor(year / 100);
-              const dec = Math.floor((year % 100) / 10);
               setCentury(cent);
-              setDecade(dec);
+              setSelectedYear(year);
               
               const centIndex = centuries.indexOf(cent);
-              const decIndex = decades.indexOf(dec);
+              const years = getYearsForCentury(cent);
+              const yearIndex = years.indexOf(year);
               setRotation({
-                century: centIndex * -36,
-                decade: decIndex * -36
+                century: centIndex * -120,
+                year: yearIndex * -8
               });
             }}
             className={cn(
               "px-3 py-1 text-xs rounded-full border transition-all",
-              calculateYear(century, decade) === year
+              selectedYear === year
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background/60 text-muted-foreground border-border hover:bg-background hover:text-foreground"
             )}
