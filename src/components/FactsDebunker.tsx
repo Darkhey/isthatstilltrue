@@ -95,14 +95,14 @@ export const FactsDebunker = () => {
       setShowSkeletons(false);
       
       toast({
-        title: "Truth Revealed!",
-        description: `Exposed ${data.facts?.length || 0} lies from your school days.`,
+        title: "Knowledge Updated!",
+        description: `Found ${data.facts?.length || 0} outdated facts from your school days.`,
       });
     } catch (error) {
       console.error('Error generating facts:', error);
       toast({
         title: "Error",
-        description: "Could not expose the lies. Please try again.",
+        description: "Could not find outdated facts. Please try again.",
         variant: "destructive",
       });
       setShowSkeletons(false);
@@ -199,7 +199,7 @@ export const FactsDebunker = () => {
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Exposing lies...
+                        Finding outdated facts...
                       </>
                     ) : (
                       "Reveal The Truth!"
@@ -215,7 +215,7 @@ export const FactsDebunker = () => {
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold mb-4">
-                {showSkeletons ? "Exposing The Lies..." : "Exposed Lies from Your School Days"}
+                {showSkeletons ? "Finding Outdated Facts..." : "Outdated Facts from Your School Days"}
               </h2>
               <Badge variant="secondary" className="text-lg px-4 py-2">
                 {country} • Graduated {graduationYear}
