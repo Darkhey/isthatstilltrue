@@ -343,28 +343,52 @@ function extractJSONFromResponse(generatedText: string): string {
   
   // Remove any markdown code blocks first
   extractedText = extractedText.replace(/```json\s*/, '').replace(/```\s*$/, '');
+  extractedText = extractedText.replace(/```\s*/, '');
   
-  // Method 1: Direct array extraction
+  // Method 1: Direct array extraction with better boundary detection
   let arrayMatch = extractedText.match(/\[[\s\S]*\]/);
   if (arrayMatch) {
-    return arrayMatch[0];
+    let jsonText = arrayMatch[0];
+    
+    // Try to fix common JSON issues
+    jsonText = fixCommonJSONIssues(jsonText);
+    
+    return jsonText;
   }
   
   // Method 2: Find array boundaries manually
   const startIndex = extractedText.indexOf('[');
   const lastIndex = extractedText.lastIndexOf(']');
   if (startIndex !== -1 && lastIndex !== -1 && lastIndex > startIndex) {
-    return extractedText.substring(startIndex, lastIndex + 1);
-  }
-  
-  // Method 3: Try to find JSON-like content
-  const jsonMatch = extractedText.match(/(\[[\s\S]*?\])/);
-  if (jsonMatch) {
-    return jsonMatch[1];
+    let jsonText = extractedText.substring(startIndex, lastIndex + 1);
+    
+    // Try to fix common JSON issues
+    jsonText = fixCommonJSONIssues(jsonText);
+    
+    return jsonText;
   }
   
   console.error('Could not extract JSON from response:', extractedText);
   throw new Error('Could not extract valid JSON from AI response');
+}
+
+// Helper function to fix common JSON formatting issues
+function fixCommonJSONIssues(jsonText: string): string {
+  // Fix unescaped quotes in string values
+  // This regex finds quotes within JSON string values and escapes them
+  jsonText = jsonText.replace(/"([^"]*)"(\s*:\s*)"([^"]*(?:[^"\\]|\\.)*)"/g, (match, key, colon, value) => {
+    // Escape unescaped quotes in the value
+    const escapedValue = value.replace(/(?<!\\)"/g, '\\"');
+    return `"${key}"${colon}"${escapedValue}"`;
+  });
+  
+  // Fix trailing commas
+  jsonText = jsonText.replace(/,(\s*[}\]])/g, '$1');
+  
+  // Fix missing commas between objects
+  jsonText = jsonText.replace(/}(\s*){/g, '},\n{');
+  
+  return jsonText;
 }
 
 serve(async (req) => {
