@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,6 +78,53 @@ const getCategoryColor = (category: string) => {
   return "bg-destructive";
 };
 
+const generateFunMessage = (year: number) => {
+  const currentYear = new Date().getFullYear();
+  const age = currentYear - parseInt(year.toString());
+  
+  const messages = {
+    ancient: [
+      "Wow, you're a living piece of history! 📚",
+      "Ancient wisdom incoming! 🏛️",
+      "You've seen the world change completely! 🌍",
+      "Living legend detected! 👑"
+    ],
+    vintage: [
+      "You are that old? Impressive! 🎓",
+      "Vintage knowledge unlocked! 📖",
+      "Classic education era! 🏫",
+      "Old school wisdom! 💭"
+    ],
+    classic: [
+      "Classic graduation year! 🎒",
+      "Retro education vibes! ✨",
+      "Time traveler spotted! ⏰",
+      "Seasoned scholar! 🧠"
+    ],
+    experienced: [
+      "Lots of life experience! 🌟",
+      "Well-seasoned graduate! 🎯",
+      "Experienced learner! 📚",
+      "Wisdom gained over time! 🔍"
+    ]
+  };
+
+  let categoryMessages;
+  if (age > 100) {
+    categoryMessages = messages.ancient;
+  } else if (age > 80) {
+    categoryMessages = messages.vintage;
+  } else if (age > 60) {
+    categoryMessages = messages.classic;
+  } else if (age > 40) {
+    categoryMessages = messages.experienced;
+  } else {
+    return null; // No message for younger ages
+  }
+
+  return categoryMessages[Math.floor(Math.random() * categoryMessages.length)];
+};
+
 export const FactsDebunker = () => {
   const [country, setCountry] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
@@ -90,6 +136,7 @@ export const FactsDebunker = () => {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isEducationProblemsOpen, setIsEducationProblemsOpen] = useState(false);
+  const [funMessage, setFunMessage] = useState<string | null>(null);
 
   const handleNextStep = () => {
     if (!country) {
@@ -100,9 +147,16 @@ export const FactsDebunker = () => {
     setStep(2);
   };
 
+  const handleYearChange = (value: string) => {
+    setGraduationYear(value);
+    const message = generateFunMessage(parseInt(value));
+    setFunMessage(message);
+    setError(null);
+  };
+
   const generateFacts = async () => {
-    if (!graduationYear || parseInt(graduationYear) < 1950 || parseInt(graduationYear) > new Date().getFullYear()) {
-      setError("Please enter a valid graduation year between 1950 and current year.");
+    if (!graduationYear || parseInt(graduationYear) < 1900 || parseInt(graduationYear) > new Date().getFullYear()) {
+      setError("Please enter a valid graduation year between 1900 and current year.");
       return;
     }
 
@@ -160,6 +214,7 @@ export const FactsDebunker = () => {
     setError(null);
     setSuccessMessage(null);
     setIsEducationProblemsOpen(false);
+    setFunMessage(null);
   };
 
   return (
@@ -223,7 +278,7 @@ export const FactsDebunker = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Select value={graduationYear} onValueChange={setGraduationYear}>
+                <Select value={graduationYear} onValueChange={handleYearChange}>
                   <SelectTrigger className="text-center text-lg">
                     <SelectValue placeholder="Select graduation year..." />
                   </SelectTrigger>
@@ -238,6 +293,12 @@ export const FactsDebunker = () => {
                     })}
                   </SelectContent>
                 </Select>
+                {funMessage && (
+                  <div className="flex items-center gap-2 text-primary text-sm bg-primary/10 p-3 rounded-md">
+                    <Lightbulb className="h-4 w-4" />
+                    {funMessage}
+                  </div>
+                )}
                 {error && (
                   <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
                     <AlertCircle className="h-4 w-4" />
@@ -346,7 +407,6 @@ export const FactsDebunker = () => {
               ) : (
                 facts
                   .sort((a, b) => {
-                    // Define category order: scientific first, then political
                     const categoryOrder = [
                       'Space/Astronomy', 'Medicine', 'Technology', 'Science', 
                       'Nutrition', 'Health', 'Environment', 'Geography',
