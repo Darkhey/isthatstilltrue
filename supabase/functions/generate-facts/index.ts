@@ -19,39 +19,39 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 function getHistoricalContext(country: string, year: number): { region: string; educationSystem: string; culturalContext: string } {
   const contexts: Record<string, any> = {
     "Germany": {
-      pre1871: { region: "Deutsche Länder/Heiliges Römisches Reich", educationSystem: "Klosterschulen und Universitäten verschiedener Fürstentümer", culturalContext: "Fragmentierte deutsche Territorialstaaten" },
-      pre1918: { region: "Deutsches Kaiserreich", educationSystem: "Preußisches Bildungssystem", culturalContext: "Aufstrebende Industriemacht" },
-      pre1949: { region: "Deutschland", educationSystem: "Staatliches Bildungssystem", culturalContext: "Weimarer Republik und NS-Zeit" }
+      pre1871: { region: "German States/Holy Roman Empire", educationSystem: "Monastery schools and universities of various principalities", culturalContext: "Fragmented German territorial states" },
+      pre1918: { region: "German Empire", educationSystem: "Prussian education system", culturalContext: "Rising industrial power" },
+      pre1949: { region: "Germany", educationSystem: "State education system", culturalContext: "Weimar Republic and Nazi era" }
     },
     "Italy": {
-      pre1861: { region: "Italienische Stadtstaaten und Königreiche", educationSystem: "Kirchliche und städtische Schulen", culturalContext: "Politisch fragmentiertes Italien" },
-      pre1946: { region: "Königreich Italien", educationSystem: "Zentralisiertes italienisches Bildungssystem", culturalContext: "Vereinigtes Italien unter der Monarchie" }
+      pre1861: { region: "Italian city-states and kingdoms", educationSystem: "Church and municipal schools", culturalContext: "Politically fragmented Italy" },
+      pre1946: { region: "Kingdom of Italy", educationSystem: "Centralized Italian education system", culturalContext: "United Italy under monarchy" }
     },
     "USA": {
-      pre1776: { region: "Nordamerikanische Kolonien", educationSystem: "Koloniale Privatschulen und religiöse Institutionen", culturalContext: "Britische Kolonialherrschaft" },
-      pre1865: { region: "Vereinigte Staaten (vor Bürgerkrieg)", educationSystem: "Dezentrale Bildungssysteme der Einzelstaaten", culturalContext: "Junge Republik mit Sklaverei" },
-      pre1900: { region: "Vereinigte Staaten (Gilded Age)", educationSystem: "Aufbau öffentlicher Schulen", culturalContext: "Industrialisierung und Westexpansion" }
+      pre1776: { region: "North American Colonies", educationSystem: "Colonial private schools and religious institutions", culturalContext: "British colonial rule" },
+      pre1865: { region: "United States (pre-Civil War)", educationSystem: "Decentralized state education systems", culturalContext: "Young republic with slavery" },
+      pre1900: { region: "United States (Gilded Age)", educationSystem: "Development of public schools", culturalContext: "Industrialization and westward expansion" }
     },
     "United Kingdom": {
-      pre1066: { region: "Angelsächsische Königreiche", educationSystem: "Klöster und königliche Höfe", culturalContext: "Frühmittelalterliche Stammeskönigreiche" },
-      pre1707: { region: "England (vor Union)", educationSystem: "Kathedralschulen und frühe Universitäten", culturalContext: "Mittelalterliches England" },
-      pre1800: { region: "Großbritannien", educationSystem: "Privatschulen und Grammar Schools", culturalContext: "Aufstiegendes Britisches Empire" }
+      pre1066: { region: "Anglo-Saxon kingdoms", educationSystem: "Monasteries and royal courts", culturalContext: "Early medieval tribal kingdoms" },
+      pre1707: { region: "England (before Union)", educationSystem: "Cathedral schools and early universities", culturalContext: "Medieval England" },
+      pre1800: { region: "Great Britain", educationSystem: "Private schools and Grammar Schools", culturalContext: "Rising British Empire" }
     },
     "France": {
-      pre1789: { region: "Königreich Frankreich", educationSystem: "Kirchliche Schulen und Jesuitenkollegien", culturalContext: "Absolutistische Monarchie" },
-      pre1870: { region: "Frankreich (verschiedene Regime)", educationSystem: "Napoleonisches Bildungssystem", culturalContext: "Revolutionszeit und Napoleon" }
+      pre1789: { region: "Kingdom of France", educationSystem: "Church schools and Jesuit colleges", culturalContext: "Absolutist monarchy" },
+      pre1870: { region: "France (various regimes)", educationSystem: "Napoleonic education system", culturalContext: "Revolutionary period and Napoleon" }
     },
     "Austria": {
-      pre1918: { region: "Österreich-Ungarn", educationSystem: "Habsburger Bildungssystem", culturalContext: "Multiethnisches Kaiserreich" },
-      pre1938: { region: "Republik Österreich", educationSystem: "Österreichisches Schulsystem", culturalContext: "Erste Republik" }
+      pre1918: { region: "Austria-Hungary", educationSystem: "Habsburg education system", culturalContext: "Multi-ethnic empire" },
+      pre1938: { region: "Republic of Austria", educationSystem: "Austrian school system", culturalContext: "First Republic" }
     },
     "Russia": {
-      pre1917: { region: "Russisches Zarenreich", educationSystem: "Orthodoxe Kirchenschulen und Staatsgymnasien", culturalContext: "Autokratisches Zarenreich" },
-      pre1991: { region: "Sowjetunion", educationSystem: "Sowjetisches Bildungssystem", culturalContext: "Kommunistische Ideologie" }
+      pre1917: { region: "Russian Empire", educationSystem: "Orthodox church schools and state gymnasiums", culturalContext: "Autocratic tsarist empire" },
+      pre1991: { region: "Soviet Union", educationSystem: "Soviet education system", culturalContext: "Communist ideology" }
     },
     "China": {
-      pre1912: { region: "Kaiserliches China", educationSystem: "Konfuzianische Akademien und Prüfungssystem", culturalContext: "Dynastische Herrschaft" },
-      pre1949: { region: "Republik China", educationSystem: "Modernisierte chinesische Schulen", culturalContext: "Übergangszeit und Bürgerkrieg" }
+      pre1912: { region: "Imperial China", educationSystem: "Confucian academies and examination system", culturalContext: "Dynastic rule" },
+      pre1949: { region: "Republic of China", educationSystem: "Modernized Chinese schools", culturalContext: "Transition period and civil war" }
     }
   };
 
@@ -59,15 +59,15 @@ function getHistoricalContext(country: string, year: number): { region: string; 
   
   if (year < 1500) {
     return {
-      region: countryContexts.pre1066?.region || `${country} (Mittelalterliche Regionen)`,
-      educationSystem: "Klöster, Kathedralschulen und private Gelehrte",
-      culturalContext: "Mittelalterliche Gesellschaftsordnung"
+      region: countryContexts.pre1066?.region || `${country} (Medieval regions)`,
+      educationSystem: "Monasteries, cathedral schools and private scholars",
+      culturalContext: "Medieval social order"
     };
   } else if (year < 1800) {
     return {
-      region: countryContexts.pre1707?.region || countryContexts.pre1789?.region || `${country} (Frühe Neuzeit)`,
-      educationSystem: "Humanistenschulen, Jesuitenkollegien und frühe Universitäten",
-      culturalContext: "Renaissance bis Aufklärung"
+      region: countryContexts.pre1707?.region || countryContexts.pre1789?.region || `${country} (Early modern period)`,
+      educationSystem: "Humanist schools, Jesuit colleges and early universities",
+      culturalContext: "Renaissance to Enlightenment"
     };
   } else if (year < 1871 && country === "Germany") {
     return countryContexts.pre1871;
