@@ -60,10 +60,10 @@ export const HistoricalHeadlines = ({ headlines, year }: HistoricalHeadlinesProp
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          Was geschah {year}?
+          What Happened in {year}?
         </CardTitle>
         <CardDescription>
-          Wichtige Ereignisse aus dem Jahr deines Schulabschlusses
+          Major events from your graduation year
         </CardDescription>
       </CardHeader>
       <CardContent>

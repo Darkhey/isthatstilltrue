@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -203,7 +202,7 @@ async function getHistoricalHeadlines(year: number): Promise<HistoricalHeadline[
   }
 
   try {
-    const headlinesPrompt = `Generate 3-4 important historical headlines from ${year} in Germany and worldwide. 
+    const headlinesPrompt = `Generate 3-4 important historical headlines from ${year} worldwide and in major countries. 
     Focus on events that would have been significant to students graduating that year.
     Return ONLY valid JSON in this format:
     [
