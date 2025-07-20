@@ -127,7 +127,23 @@ serve(async (req) => {
       }
 
       try {
-        const parsedResponse = JSON.parse(factContent);
+        // Clean up the response by removing markdown code blocks
+        let cleanContent = factContent.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        cleanContent = cleanContent.trim();
+        
+        // Find the JSON object in the response
+        const jsonStart = cleanContent.indexOf('{');
+        const jsonEnd = cleanContent.lastIndexOf('}');
+        
+        if (jsonStart === -1 || jsonEnd === -1) {
+          throw new Error('No valid JSON object found in response');
+        }
+        
+        const jsonString = cleanContent.substring(jsonStart, jsonEnd + 1);
+        console.log('Raw content:', factContent.substring(0, 200) + '...');
+        console.log('Cleaned JSON string preview:', jsonString.substring(0, 200) + '...');
+
+        const parsedResponse = JSON.parse(jsonString);
         const allFacts = parsedResponse.facts || [];
         
         // Validate facts: yearDebunked must be > graduationYear
@@ -261,6 +277,8 @@ ${curriculumResearch}
 - yearDebunked MUST be AFTER ${year} (minimum ${year + 1}, maximum ${currentYear})
 - Do NOT invent facts - only use what the curriculum research reveals
 - Focus on what was ACTUALLY taught in schools, not general historical knowledge
+
+RETURN ONLY PURE JSON - NO MARKDOWN, NO EXPLANATIONS, NO CODE BLOCKS.
 
 Generate 8-10 educational facts in this exact JSON format:
 
