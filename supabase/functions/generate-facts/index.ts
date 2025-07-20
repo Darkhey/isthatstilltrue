@@ -56,75 +56,179 @@ interface FactGenerationType {
   ancient: string[];
 }
 
-// Historical context mapping for countries/regions
+// Specific curriculum context for each country and era
+interface CurriculumContext {
+  region: string;
+  educationSystem: string;
+  culturalContext: string;
+  specificCurriculum: string[];
+  textbooks: string[];
+  teachingMethods: string;
+  nationalFocus: string;
+}
+
+interface CountryContexts {
+  [country: string]: {
+    [era: string]: CurriculumContext;
+  };
+}
+
+// Enhanced historical context mapping with detailed curriculum information
 function getHistoricalContext(country: string, year: number): HistoricalContext {
   const contexts: CountryContexts = {
     "Germany": {
-      pre1871: { region: "German States/Holy Roman Empire", educationSystem: "Monastery schools and universities of various principalities", culturalContext: "Fragmented German territorial states" },
-      pre1918: { region: "German Empire", educationSystem: "Prussian education system", culturalContext: "Rising industrial power" },
-      pre1949: { region: "Germany", educationSystem: "State education system", culturalContext: "Weimar Republic and Nazi era" }
-    },
-    "Italy": {
-      pre1861: { region: "Italian city-states and kingdoms", educationSystem: "Church and municipal schools", culturalContext: "Politically fragmented Italy" },
-      pre1946: { region: "Kingdom of Italy", educationSystem: "Centralized Italian education system", culturalContext: "United Italy under monarchy" }
+      pre1871: { 
+        region: "German States/Holy Roman Empire", 
+        educationSystem: "Monastery schools and universities of various principalities", 
+        culturalContext: "Fragmented German territorial states",
+        specificCurriculum: ["Latin classics", "Theology", "Natural philosophy", "Mathematics via Euclidean geometry", "Regional history of principalities"],
+        textbooks: ["Donatus grammar", "Medieval chronicles", "Church fathers"],
+        teachingMethods: "Rote memorization, Latin recitation, religious instruction",
+        nationalFocus: "Religious orthodoxy and local princely loyalty"
+      },
+      pre1918: { 
+        region: "German Empire", 
+        educationSystem: "Prussian education system with Gymnasium and Realschule tracks", 
+        culturalContext: "Rising industrial power with strong militaristic culture",
+        specificCurriculum: ["Classical languages (Latin/Greek)", "German literature (Goethe, Schiller)", "Prussian history", "Scientific method", "Imperial geography", "Military preparedness"],
+        textbooks: ["Prussian Readers", "Ranke's History", "Scientific textbooks emphasizing German achievements"],
+        teachingMethods: "Drill instruction, competitive ranking, nationalistic pedagogy",
+        nationalFocus: "German superiority, imperial expansion, scientific leadership"
+      },
+      pre1949: { 
+        region: "Germany", 
+        educationSystem: "State education system (Weimar democratic then Nazi ideological)", 
+        culturalContext: "Democratic experimentation followed by totalitarian control",
+        specificCurriculum: ["Race science (Nazi era)", "German racial superiority", "Lebensraum theory", "Aryan history", "Applied biology", "Physical fitness for war"],
+        textbooks: ["Der Giftpilz", "Nazi racial primers", "Mein Kampf excerpts"],
+        teachingMethods: "Ideological indoctrination, physical training, youth organizations",
+        nationalFocus: "Racial purity, territorial expansion, Führer loyalty"
+      },
+      modern: {
+        region: "Federal Republic of Germany",
+        educationSystem: "Federal state-controlled education with Länder autonomy",
+        culturalContext: "Democratic reconstruction and European integration",
+        specificCurriculum: ["Democratic citizenship", "European integration", "Holocaust education", "Environmental science", "Critical thinking skills", "Multicultural awareness"],
+        textbooks: ["Standardized state-approved textbooks", "Critical history texts", "Scientific methodology"],
+        teachingMethods: "Student-centered learning, critical discussion, democratic participation",
+        nationalFocus: "European cooperation, democratic values, historical responsibility"
+      }
     },
     "USA": {
-      pre1776: { region: "North American Colonies", educationSystem: "Colonial private schools and religious institutions", culturalContext: "British colonial rule" },
-      pre1865: { region: "United States (pre-Civil War)", educationSystem: "Decentralized state education systems", culturalContext: "Young republic with slavery" },
-      pre1900: { region: "United States (Gilded Age)", educationSystem: "Development of public schools", culturalContext: "Industrialization and westward expansion" }
+      pre1776: { 
+        region: "North American Colonies", 
+        educationSystem: "Colonial private schools and religious institutions", 
+        culturalContext: "British colonial rule with Puritan influence",
+        specificCurriculum: ["Biblical studies", "Classical languages", "British history", "Colonial governance", "Protestant theology"],
+        textbooks: ["New England Primer", "Hornbooks", "Biblical texts"],
+        teachingMethods: "Religious instruction, memorization, moral education",
+        nationalFocus: "Christian virtue and British loyalty"
+      },
+      pre1865: { 
+        region: "United States (pre-Civil War)", 
+        educationSystem: "Decentralized state education systems with regional variations", 
+        culturalContext: "Young republic with slavery and westward expansion",
+        specificCurriculum: ["American exceptionalism", "Manifest Destiny", "States' rights theory", "Racial hierarchies", "Classical republicanism"],
+        textbooks: ["McGuffey Readers", "American geographies", "Patriotic histories"],
+        teachingMethods: "Moral instruction, patriotic recitation, regional biases",
+        nationalFocus: "National destiny and racial superiority"
+      },
+      modern: {
+        region: "United States",
+        educationSystem: "Public school districts with state standards",
+        culturalContext: "Global superpower with diverse population",
+        specificCurriculum: ["American democracy", "Civil rights history", "Global citizenship", "STEM emphasis", "Critical thinking"],
+        textbooks: ["State-approved textbooks", "Digital resources", "Diverse perspectives"],
+        teachingMethods: "Standards-based learning, technology integration, inclusive education",
+        nationalFocus: "Democratic leadership and innovation"
+      }
     },
     "United Kingdom": {
-      pre1066: { region: "Anglo-Saxon kingdoms", educationSystem: "Monasteries and royal courts", culturalContext: "Early medieval tribal kingdoms" },
-      pre1707: { region: "England (before Union)", educationSystem: "Cathedral schools and early universities", culturalContext: "Medieval England" },
-      pre1800: { region: "Great Britain", educationSystem: "Private schools and Grammar Schools", culturalContext: "Rising British Empire" }
+      pre1707: { 
+        region: "England (before Union)", 
+        educationSystem: "Cathedral schools and early universities", 
+        culturalContext: "Medieval feudal society with Church dominance",
+        specificCurriculum: ["Latin liturgy", "Scholastic philosophy", "Canon law", "Medieval chronicles", "Feudal obligations"],
+        textbooks: ["Vulgate Bible", "Church fathers", "Chronicles"],
+        teachingMethods: "Religious instruction, manuscript copying, oral tradition",
+        nationalFocus: "Christian orthodoxy and royal loyalty"
+      },
+      pre1800: { 
+        region: "Great Britain", 
+        educationSystem: "Grammar schools and public schools for elite", 
+        culturalContext: "Rising British Empire with colonial expansion",
+        specificCurriculum: ["Classical education", "Imperial geography", "British superiority", "Colonial administration", "Naval history"],
+        textbooks: ["Classical texts", "Imperial histories", "Geography primers"],
+        teachingMethods: "Elite formation, character building, imperial preparation",
+        nationalFocus: "Imperial dominance and cultural superiority"
+      },
+      modern: {
+        region: "United Kingdom",
+        educationSystem: "National curriculum with comprehensive schools",
+        culturalContext: "Post-imperial democracy in global context",
+        specificCurriculum: ["British values", "Multicultural history", "European relations", "Democratic citizenship", "Global awareness"],
+        textbooks: ["National curriculum materials", "Inclusive histories", "Diverse perspectives"],
+        teachingMethods: "Student-centered learning, critical analysis, inclusive education",
+        nationalFocus: "Democratic values and global cooperation"
+      }
     },
     "France": {
-      pre1789: { region: "Kingdom of France", educationSystem: "Church schools and Jesuit colleges", culturalContext: "Absolutist monarchy" },
-      pre1870: { region: "France (various regimes)", educationSystem: "Napoleonic education system", culturalContext: "Revolutionary period and Napoleon" }
-    },
-    "Austria": {
-      pre1918: { region: "Austria-Hungary", educationSystem: "Habsburg education system", culturalContext: "Multi-ethnic empire" },
-      pre1938: { region: "Republic of Austria", educationSystem: "Austrian school system", culturalContext: "First Republic" }
-    },
-    "Russia": {
-      pre1917: { region: "Russian Empire", educationSystem: "Orthodox church schools and state gymnasiums", culturalContext: "Autocratic tsarist empire" },
-      pre1991: { region: "Soviet Union", educationSystem: "Soviet education system", culturalContext: "Communist ideology" }
-    },
-    "China": {
-      pre1912: { region: "Imperial China", educationSystem: "Confucian academies and examination system", culturalContext: "Dynastic rule" },
-      pre1949: { region: "Republic of China", educationSystem: "Modernized Chinese schools", culturalContext: "Transition period and civil war" }
+      pre1789: { 
+        region: "Kingdom of France", 
+        educationSystem: "Church schools and Jesuit colleges for elite", 
+        culturalContext: "Absolutist monarchy with Catholic dominance",
+        specificCurriculum: ["Catholic doctrine", "Royal history", "Classical languages", "Courtly manners", "Divine right theory"],
+        textbooks: ["Jesuit education manuals", "Royal chronicles", "Religious texts"],
+        teachingMethods: "Religious instruction, classical formation, elite preparation",
+        nationalFocus: "Royal loyalty and Catholic orthodoxy"
+      },
+      modern: {
+        region: "Republic of France",
+        educationSystem: "Centralized national education system",
+        culturalContext: "Secular republic with emphasis on equality",
+        specificCurriculum: ["Republican values", "Laïcité", "French cultural heritage", "European integration", "Universal rights"],
+        textbooks: ["State-produced textbooks", "Republican histories", "Secular materials"],
+        teachingMethods: "Secular instruction, republican formation, critical thinking",
+        nationalFocus: "Republican values and cultural excellence"
+      }
     }
   };
 
   const countryContexts = contexts[country] || {};
   
+  // Select the most appropriate historical context
   if (year < 1500) {
-    return {
-      region: countryContexts.pre1066?.region || `${country} (Medieval regions)`,
+    const context = countryContexts.pre1066 || countryContexts.pre1707 || countryContexts.pre1789;
+    return context || {
+      region: `${country} (Medieval regions)`,
       educationSystem: "Monasteries, cathedral schools and private scholars",
       culturalContext: "Medieval social order"
     };
   } else if (year < 1800) {
-    return {
-      region: countryContexts.pre1707?.region || countryContexts.pre1789?.region || `${country} (Early modern period)`,
+    const context = countryContexts.pre1707 || countryContexts.pre1789;
+    return context || {
+      region: `${country} (Early modern period)`,
       educationSystem: "Humanist schools, Jesuit colleges and early universities",
       culturalContext: "Renaissance to Enlightenment"
     };
   } else if (year < 1871 && country === "Germany") {
-    return countryContexts.pre1871;
-  } else if (year < 1861 && country === "Italy") {
-    return countryContexts.pre1861;
+    return countryContexts.pre1871 || countryContexts.pre1918;
+  } else if (year < 1918 && country === "Germany") {
+    return countryContexts.pre1918;
+  } else if (year < 1949 && country === "Germany") {
+    return countryContexts.pre1949;
   } else if (year < 1776 && country === "USA") {
     return countryContexts.pre1776;
-  } else if (year < 1917 && country === "Russia") {
-    return countryContexts.pre1917;
-  } else if (year < 1912 && country === "China") {
-    return countryContexts.pre1912;
-  } else if (year < 1918 && (country === "Austria" || country === "Germany")) {
-    return countryContexts.pre1918 || countryContexts.pre1871;
+  } else if (year < 1865 && country === "USA") {
+    return countryContexts.pre1865;
+  } else if (year < 1800 && country === "United Kingdom") {
+    return countryContexts.pre1800;
+  } else if (year < 1789 && country === "France") {
+    return countryContexts.pre1789;
   }
   
-  return {
+  // Default to modern context
+  return countryContexts.modern || {
     region: country,
     educationSystem: "Modernes staatliches Bildungssystem",
     culturalContext: "Moderne Nationalstaaten"
@@ -284,20 +388,33 @@ async function generatePoliticalFacts(country: string, year: number): Promise<Ou
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `You are an expert in international relations and political education. Analyze how students in ${historicalContext.region} were taught about politics and international relations in ${year} vs today in ${currentYear}.
+    const context = historicalContext as CurriculumContext;
+    prompt = `You are analyzing the SPECIFIC political and international relations curriculum taught in ${context.region} during ${year}.
 
-Historical Context: ${historicalContext.culturalContext}
-Education System: ${historicalContext.educationSystem}
+DETAILED CURRICULUM CONTEXT FOR ${context.region} IN ${year}:
+- Political Education System: ${context.educationSystem}
+- Cultural/Political Climate: ${context.culturalContext}
+- Specific Political Subjects: ${context.specificCurriculum?.filter(subject => subject.toLowerCase().includes('politic') || subject.toLowerCase().includes('history') || subject.toLowerCase().includes('geography')).join(', ') || 'Political studies'}
+- Educational Materials Used: ${context.textbooks?.join(', ') || 'Standard textbooks'}
+- Ideological Teaching Approach: ${context.teachingMethods || 'Traditional instruction'}
+- National Political Focus: ${context.nationalFocus || 'National interests'}
 
-Generate exactly 2-3 political/international relations facts that were commonly taught in ${historicalContext.region} around ${year} but have since been proven wrong, overly simplified, or significantly updated.
+Generate exactly 2-3 SPECIFIC political/international facts that were taught in ${context.region}'s schools in ${year} but have been proven wrong or drastically changed.
 
-Focus on these areas:
-- **Views on other nations/empires** (how ${historicalContext.region} students were taught to view other powers)
-- **International conflicts** and how they were presented
-- **Political systems** and ideologies of the time
-- **Colonial attitudes** and imperial perspectives
-- **Diplomatic relations** that have dramatically changed
-- **Economic theories** prevalent at the time
+REQUIREMENTS FOR ${context.region}-SPECIFIC CONTENT:
+- Reference actual political theories taught in ${context.region}'s curriculum
+- Include specific views about other nations that were taught to students
+- Mention actual government policies or international relations taught as fact
+- Reference specific textbooks, educational materials, or official curricula
+- Avoid generic political facts - focus on ${context.region}'s unique educational perspective
+
+Focus on ${context.region}-specific areas:
+- How ${context.region} students were taught to view specific rival/ally nations
+- Official government positions taught as objective truth
+- Colonial/imperial attitudes specific to ${context.region}
+- Economic theories promoted by ${context.region}'s education system
+- International conflicts as presented in ${context.region}'s textbooks
+- Diplomatic relations and treaties as taught in ${context.region}
 
 CRITICAL JSON FORMATTING RULES:
 - Use double quotes for ALL strings
@@ -464,12 +581,45 @@ Return ONLY a valid JSON array:
   return await makeAIRequest(prompt, 'education-problems');
 }
 
+// Get country-specific curriculum details for more targeted fact generation
+function getCountrySpecificPromptEnhancement(country: string, year: number): string {
+  const context = getHistoricalContext(country, year) as CurriculumContext;
+  
+  return `
+CRITICAL: Generate facts that are UNIQUELY specific to ${context.region}'s curriculum in ${year}:
+
+CURRICULUM SPECIFICITY REQUIREMENTS:
+- Reference actual subjects taught: ${context.specificCurriculum?.join(', ') || 'Standard curriculum'}
+- Include textbook content from: ${context.textbooks?.join(', ') || 'Period textbooks'}
+- Reflect teaching approach: ${context.teachingMethods || 'Traditional methods'}
+- Align with national focus: ${context.nationalFocus || 'Academic goals'}
+
+AVOID GENERIC FACTS. Each fact must be demonstrably tied to ${context.region}'s specific educational content in ${year}.
+
+Examples of country-specific elements to include:
+- Specific scientific theories promoted in ${context.region}'s textbooks
+- Medical practices taught in ${context.region}'s health curriculum  
+- Historical narratives specific to ${context.region}'s national story
+- Geographic concepts reflecting ${context.region}'s perspective
+- Political theories aligned with ${context.region}'s ideological framework
+
+VARIANCE REQUIREMENTS:
+- Use different sentence structures for each fact
+- Vary the complexity and length of explanations
+- Include different types of sources and evidence
+- Mix different debunking timeframes and reasons
+- Ensure each correction approach is unique
+`;
+}
+
 // Generate regular academic facts with historical context and anti-duplicate logic
 async function generateOutdatedFactsWithContext(country: string, year: number, existingFacts: string[]): Promise<OutdatedFact[]> {
   const currentYear = new Date().getFullYear();
   const factType = getFactGenerationType(year);
   const historicalContext = getHistoricalContext(country, year);
   const fixedCategories = getFixedCategories(year);
+  
+  const countrySpecificEnhancement = getCountrySpecificPromptEnhancement(country, year);
   
   let antiDuplicateSection = '';
   if (existingFacts.length > 0) {
@@ -478,7 +628,7 @@ async function generateOutdatedFactsWithContext(country: string, year: number, e
 IMPORTANT: DO NOT repeat these already existing facts:
 ${existingFacts.slice(0, 10).map(fact => `- ${fact.substring(0, 100)}...`).join('\n')}
 
-Generate COMPLETELY DIFFERENT facts that cover different topics and areas.`;
+Generate COMPLETELY DIFFERENT facts specific to ${country} that cover different topics and areas.`;
   }
   
   let prompt = '';
@@ -750,10 +900,25 @@ Generate COMPLETELY DIFFERENT education problems that cover different aspects an
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `List 3-5 major problems that the education system in ${historicalContext.region} faced around ${year}.
+    const context = historicalContext as CurriculumContext;
+    prompt = `Analyze the SPECIFIC education system problems in ${context.region} during ${year}.
 
-Historical Context: ${historicalContext.culturalContext}
-Education System: ${historicalContext.educationSystem}
+DETAILED EDUCATION CONTEXT FOR ${context.region} IN ${year}:
+- Education System Structure: ${context.educationSystem}
+- Social/Political Climate: ${context.culturalContext}
+- Curriculum Content: ${context.specificCurriculum?.join(', ') || 'Standard subjects'}
+- Educational Resources: ${context.textbooks?.join(', ') || 'Available materials'}
+- Teaching Methodology: ${context.teachingMethods || 'Standard methods'}
+- Educational Goals: ${context.nationalFocus || 'Academic achievement'}
+
+List 3-5 SPECIFIC problems that plagued ${context.region}'s education system in ${year}.
+
+REQUIREMENTS FOR ${context.region}-SPECIFIC PROBLEMS:
+- Focus on actual documented issues in ${context.region}'s schools during ${year}
+- Reference specific policies, funding issues, or structural problems
+- Include problems unique to ${context.region}'s cultural/political context
+- Mention specific educational challenges related to the curriculum or teaching methods
+- Avoid generic education problems - focus on ${context.region}'s unique situation
 
 ${antiDuplicateSection}
 
@@ -835,15 +1000,32 @@ async function generateOutdatedFacts(country: string, year: number): Promise<Out
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `You are an educational historian analyzing what students in ${historicalContext.region} were taught in ${year} vs what we know today.
+    const context = historicalContext as CurriculumContext;
+    prompt = `You are an educational historian analyzing the specific curriculum taught in ${context.region} during ${year}.
 
-Historical Context: ${historicalContext.culturalContext}
-Education System: ${historicalContext.educationSystem}
+CURRICULUM CONTEXT FOR ${context.region} IN ${year}:
+- Education System: ${context.educationSystem}
+- Cultural Context: ${context.culturalContext}
+- Specific Subjects Taught: ${context.specificCurriculum?.join(', ') || 'Standard academic subjects'}
+- Standard Textbooks: ${context.textbooks?.join(', ') || 'Period-appropriate materials'}
+- Teaching Methods: ${context.teachingMethods || 'Traditional instruction'}
+- National Educational Focus: ${context.nationalFocus || 'Academic excellence'}
 
-Generate exactly 4-5 concrete scientific/medical facts that were taught in ${historicalContext.region} around ${year} but have since been proven wrong.
+Generate exactly 4-5 SPECIFIC facts that were taught in ${context.region}'s curriculum around ${year} but have since been proven wrong or significantly updated. 
 
-Focus on knowledge areas relevant to ${year}:
+REQUIREMENTS:
+- Facts must be SPECIFIC to ${context.region}'s educational system in ${year}
+- Reference actual curriculum subjects from that era
+- Include specific scientific theories, medical practices, or academic content taught in schools
+- Avoid generic facts that could apply to any country
+- Focus on what was ACTUALLY in textbooks and lesson plans of ${context.region}
+
+Knowledge domains specific to ${context.region} in ${year}:
 ${knowledgeDomains.map(domain => `- **${domain}**`).join('\n')}
+
+${countrySpecificEnhancement}
+
+${antiDuplicateSection}
 
 CRITICAL JSON FORMATTING RULES:
 - Use ONLY double quotes for strings
@@ -1235,14 +1417,24 @@ function aggressiveJSONCleaning(response: string): string {
 // Generate quick fun fact with historical context
 async function generateQuickFunFact(country: string, year: number): Promise<string> {
   const factType = getFactGenerationType(year);
-  const historicalContext = getHistoricalContext(country, year);
+  const historicalContext = getHistoricalContext(country, year) as CurriculumContext;
   
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `Generate a single, interesting historical fun fact about ${historicalContext.region} in the year ${year}.
+    prompt = `Generate a single, specific and interesting fun fact about ${historicalContext.region} in the year ${year}.
 
-Historical Context: ${historicalContext.culturalContext}
+CONTEXT FOR ${historicalContext.region} IN ${year}:
+- Historical Context: ${historicalContext.culturalContext}
+- Education System: ${historicalContext.educationSystem}
+- National Focus: ${historicalContext.nationalFocus}
+- Cultural Elements: ${historicalContext.specificCurriculum?.slice(0, 3).join(', ') || 'Standard culture'}
+
+REQUIREMENTS:
+- Must be specifically about ${historicalContext.region} in ${year} (not generic)
+- Include specific cultural, political, or social details unique to ${historicalContext.region}
+- Reference actual events, policies, or developments specific to that year
+- Avoid facts that could apply to multiple countries
 
 Focus on something cool that happened that year - like weather, culture, politics, economy, sports, or notable events. Make it engaging and specific to that exact year.
 
