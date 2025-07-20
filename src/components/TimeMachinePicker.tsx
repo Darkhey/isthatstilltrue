@@ -166,9 +166,6 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
         <div className="mt-2 text-2xl font-bold text-primary">
           {fullYear}
         </div>
-        <div className="mt-2 text-sm text-muted-foreground italic max-w-xs">
-          {funMessage}
-        </div>
         {fullYear > 2023 && (
           <p className="text-xs text-destructive mt-1">
             Year cannot be beyond 2023
