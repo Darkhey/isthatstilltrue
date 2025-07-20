@@ -209,43 +209,98 @@ serve(async (req) => {
 async function generateCurriculumResearchPrompt(country: string, year: number): Promise<string> {
   const factType = getFactGenerationType(year);
   
-  return `You are a historical education researcher. Research the ACTUAL educational curricula, textbooks, and teaching standards used in ${country} around ${year}.
+  return `You are an expert educational researcher with comprehensive online access. Conduct an INTENSIVE, THOROUGH online search to find ACTUAL curriculum documents, textbooks, and educational materials used in ${country} around ${year}.
 
-CRITICAL RESEARCH REQUIREMENTS:
-1. Find REAL, SPECIFIC educational sources from that time period
-2. Identify actual textbooks, curriculum guides, educational laws that existed
-3. Research what was ACTUALLY taught in schools, not general historical knowledge
-4. Look for concrete examples of educational content from that era
+🔍 **INTENSIVE SEARCH PROTOCOL - SPEND SIGNIFICANT TIME RESEARCHING:**
 
-Please provide detailed research on:
+**1. GOVERNMENT & OFFICIAL SOURCES (Search Extensively):**
+   - Ministry of Education websites for ${country}
+   - National archive sites (.gov, .edu domains)
+   - Official curriculum frameworks from ${year-3} to ${year+2}
+   - Educational policy documents and white papers
+   - Teacher certification requirements from that era
+   - School inspection reports and standards
 
-**SPECIFIC TEXTBOOKS & MATERIALS:**
-- What science textbooks were used in ${country} schools around ${year}?
-- Which history books were standard curriculum?
-- What medical/health education materials were taught?
-- Which geography and social studies resources were used?
+**2. INSTITUTIONAL DATABASES (Deep Search):**
+   - University education department archives
+   - Teacher training college repositories
+   - State/provincial education board materials
+   - National library education collections
+   - International education databases (UNESCO, OECD)
 
-**CURRICULUM STANDARDS:**
-- What were the official educational standards for different subjects?
-- Which scientific theories were part of mandatory curriculum?
-- What political/social concepts were required teaching?
-- Which historical interpretations were standard in textbooks?
+**3. TEXTBOOK & PUBLISHER RESEARCH (Comprehensive):**
+   - Major education publisher websites and catalogs
+   - ISBN databases for books published ${year-5} to ${year+2}
+   - School adoption lists and approved textbook lists
+   - Publisher annual reports mentioning popular titles
+   - Academic book reviews from education journals
 
-**EDUCATIONAL POLICIES:**
-- What educational laws or reforms were in place around ${year}?
-- Which subjects were emphasized or de-emphasized?
-- What were the official teaching guidelines?
+**4. PRIMARY EDUCATIONAL SOURCES (Detailed Investigation):**
+   - Teacher training manuals and guides
+   - Curriculum development conference proceedings
+   - Educational research papers and dissertations
+   - School board meeting minutes and decisions
+   - Contemporary education journal articles
 
-**CONCRETE EXAMPLES:**
-Find specific examples of what students in ${country} around ${year} would have learned that:
-- Has since been scientifically disproven or updated
-- Reflected the political/social views of that time but changed since
-- Was considered medical/health fact then but revised now
-- Represented the geographical/historical understanding of that era
+**5. HISTORICAL EDUCATION ANALYSIS:**
+   - Comparative education studies focusing on ${country}
+   - Historical analysis of ${country}'s education system
+   - International education policy comparisons
+   - Educational reform documentation
 
-Focus on AUTHENTIC educational content, not general historical assumptions. Provide specific source names, textbook titles, curriculum names wherever possible.
+**SPECIFIC SEARCH TARGETS FOR ${country} ${year}:**
 
-Research thoroughly and provide concrete, verifiable educational sources from ${country} circa ${year}.`;
+📚 **EXACT TEXTBOOKS & MATERIALS:**
+   - Search for specific textbook titles used in science classes
+   - Find biology, chemistry, physics books from major publishers
+   - Locate history textbooks with specific ISBN numbers
+   - Identify health education and sex education materials
+   - Find geography atlases and social studies resources
+   - Search for mathematics textbooks and their content
+
+📋 **DETAILED CURRICULUM STANDARDS:**
+   - Official learning objectives for each grade level
+   - Mandatory vs optional curriculum components
+   - Assessment standards and testing requirements
+   - Subject-specific teaching guidelines
+   - Cross-curricular themes and approaches
+
+🏛️ **EDUCATIONAL POLICIES & REFORMS:**
+   - Specific education laws enacted around ${year}
+   - Funding formulas and resource allocation
+   - Teacher training and qualification requirements
+   - Special education policies and inclusion practices
+   - Language instruction policies
+
+**CRITICAL CONTENT TO IDENTIFY:**
+Find specific examples of what was taught as FACT in ${country} schools around ${year} that has since been:
+   ✓ Scientifically disproven or significantly updated
+   ✓ Medically revised or replaced with new understanding
+   ✓ Historically reinterpreted or corrected
+   ✓ Technologically superseded or proven wrong
+   ✓ Geographically corrected (maps, boundaries, data)
+   ✓ Socially or politically reconsidered
+
+**RESEARCH DEPTH REQUIREMENTS:**
+- Spend extensive time searching each category
+- Cross-reference multiple sources for accuracy
+- Look for specific page numbers, chapter titles, lesson plans
+- Find exact quotes from educational materials when possible
+- Verify information through multiple independent sources
+- Focus on widely-adopted, mainstream educational content
+
+**OUTPUT REQUIREMENTS:**
+Provide extremely detailed findings including:
+- Specific textbook titles, authors, publishers, ISBN numbers
+- Exact curriculum document names and sections
+- Direct quotes from educational materials
+- Specific topics, theories, and facts taught as established truth
+- Names of educational officials, policies, and reform initiatives
+- Detailed description of teaching methods and approaches
+
+Take your time with this research - accuracy and specificity are critical. The more detailed and authentic your findings, the better the educational fact generation will be.
+
+RESEARCH INTENSIVELY - This is the foundation for accurate fact generation.`;
 }
 
 async function generateFactPrompt(country: string, year: number, curriculumResearch: string): Promise<string> {
