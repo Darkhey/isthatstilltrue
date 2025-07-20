@@ -13,7 +13,7 @@ import { FactShare } from "./FactShare";
 import { ReportFactDialog } from "./ReportFactDialog";
 import { AnimatedHeadline } from "./AnimatedHeadline";
 import { TimeMachinePicker } from "./TimeMachinePicker";
-import { SingleFactChecker } from "./SingleFactChecker";
+
 
 interface OutdatedFact {
   category: string;
@@ -516,21 +516,6 @@ export const FactsDebunker = () => {
           )}
         </Card>
 
-        {/* Alternative: Single Fact Checker */}
-        <div className="max-w-4xl mx-auto mb-8">
-          <div className="text-center mb-6">
-            <div className="flex items-center justify-center gap-4 mb-4">
-              <div className="h-px bg-border flex-1"></div>
-              <span className="text-muted-foreground text-sm">OR</span>
-              <div className="h-px bg-border flex-1"></div>
-            </div>
-            <h3 className="text-lg font-semibold mb-2">Quick Fact Check</h3>
-            <p className="text-sm text-muted-foreground">
-              Have a specific fact you'd like to verify? Check it instantly below
-            </p>
-          </div>
-          <SingleFactChecker />
-        </div>
 
         {(showSkeletons || facts.length > 0) && (
           <div ref={factsResultsRef} className="max-w-4xl mx-auto">
