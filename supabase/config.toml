@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.quick-fun-fact]
 verify_jwt = false
+
+[functions.research-school-memories]
+verify_jwt = false

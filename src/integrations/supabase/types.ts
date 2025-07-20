@@ -149,6 +149,42 @@ export type Database = {
         }
         Relationships: []
       }
+      school_memories: {
+        Row: {
+          city: string
+          created_at: string
+          graduation_year: number
+          id: string
+          research_sources: Json
+          school_memories_data: Json
+          school_name: string
+          shareable_content: Json
+          updated_at: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          graduation_year: number
+          id?: string
+          research_sources?: Json
+          school_memories_data?: Json
+          school_name: string
+          shareable_content?: Json
+          updated_at?: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          graduation_year?: number
+          id?: string
+          research_sources?: Json
+          school_memories_data?: Json
+          school_name?: string
+          shareable_content?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

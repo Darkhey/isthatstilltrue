@@ -13,6 +13,10 @@ import { FactShare } from "./FactShare";
 import { ReportFactDialog } from "./ReportFactDialog";
 import { AnimatedHeadline } from "./AnimatedHeadline";
 import { TimeMachinePicker } from "./TimeMachinePicker";
+import { SchoolModeToggle } from "./SchoolModeToggle";
+import { SchoolPicker } from "./SchoolPicker";
+import { SchoolMemoryCard } from "./SchoolMemoryCard";
+import { SchoolShareCard } from "./SchoolShareCard";
 
 
 interface OutdatedFact {
@@ -29,6 +33,31 @@ interface EducationSystemProblem {
   problem: string;
   description: string;
   impact: string;
+}
+
+interface SchoolMemoryData {
+  whatHappenedAtSchool: Array<{
+    title: string;
+    description: string;
+    category: "facilities" | "academics" | "sports" | "culture" | "technology";
+  }>;
+  nostalgiaFactors: Array<{
+    memory: string;
+    shareableText: string;
+  }>;
+  localContext: Array<{
+    event: string;
+    relevance: string;
+  }>;
+  shareableQuotes: string[];
+}
+
+interface ShareableContent {
+  mainShare: string;
+  whatsappShare: string;
+  instagramStory: string;
+  twitterPost: string;
+  variants: string[];
 }
 
 const countries = [
@@ -252,8 +281,14 @@ const generateFunMessage = (year: number) => {
 };
 
 export const FactsDebunker = () => {
+  const [isSchoolMode, setIsSchoolMode] = useState(false);
   const [country, setCountry] = useState("");
   const [graduationYear, setGraduationYear] = useState("");
+  const [schoolName, setSchoolName] = useState("");
+  const [city, setCity] = useState("");
+  const [schoolType, setSchoolType] = useState("");
+  const [schoolMemories, setSchoolMemories] = useState<SchoolMemoryData | null>(null);
+  const [schoolShareableContent, setSchoolShareableContent] = useState<ShareableContent | null>(null);
   const [facts, setFacts] = useState<OutdatedFact[]>([]);
   const [educationProblems, setEducationProblems] = useState<EducationSystemProblem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -270,9 +305,16 @@ export const FactsDebunker = () => {
   const factsResultsRef = useRef<HTMLDivElement>(null);
 
   const handleNextStep = () => {
-    if (!country) {
-      setError("Please select your country.");
-      return;
+    if (isSchoolMode) {
+      if (!schoolName || !city || !schoolType) {
+        setError("Please fill in all school information.");
+        return;
+      }
+    } else {
+      if (!country) {
+        setError("Please select your country.");
+        return;
+      }
     }
     setError(null);
     setStep(2);
@@ -294,6 +336,8 @@ export const FactsDebunker = () => {
     setIsLoading(true);
     setShowSkeletons(true);
     setFacts([]);
+    setSchoolMemories(null);
+    setSchoolShareableContent(null);
     setError(null);
     setSuccessMessage(null);
     
@@ -306,72 +350,104 @@ export const FactsDebunker = () => {
     }, 100);
     
     try {
-      console.log(`Generating facts for ${country} ${graduationYear}`);
-      
-      // First, quickly get the fun fact and show it immediately
-      try {
-        const { data: quickFactData } = await supabase.functions.invoke('quick-fun-fact', {
+      if (isSchoolMode) {
+        console.log(`Researching school memories for ${schoolName} in ${city}, graduation year ${graduationYear}`);
+        
+        const { data, error } = await supabase.functions.invoke('research-school-memories', {
+          body: {
+            schoolName,
+            city,
+            graduationYear: parseInt(graduationYear)
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (!data.schoolMemories) {
+          setError("Could not research school memories. Please try different school information.");
+          setShowSkeletons(false);
+          return;
+        }
+
+        setSchoolMemories(data.schoolMemories);
+        setSchoolShareableContent(data.shareableContent);
+        setShowSkeletons(false);
+        
+        if (data.cached) {
+          setSuccessMessage(`Found school memories (researched ${data.cacheAge} days ago)`);
+        } else {
+          setSuccessMessage(`Successfully researched school memories for ${schoolName}!`);
+        }
+      } else {
+        console.log(`Generating facts for ${country} ${graduationYear}`);
+        
+        // First, quickly get the fun fact and show it immediately
+        try {
+          const { data: quickFactData } = await supabase.functions.invoke('quick-fun-fact', {
+            body: {
+              country,
+              graduationYear: parseInt(graduationYear)
+            }
+          });
+          
+          if (quickFactData?.quickFunFact) {
+            setQuickFunFact(quickFactData.quickFunFact);
+          }
+        } catch (quickFactError) {
+          console.warn('Failed to generate quick fun fact:', quickFactError);
+          // Continue with main fact generation even if quick fact fails
+        }
+        
+        // Then get the main facts
+        const { data, error } = await supabase.functions.invoke('generate-facts', {
           body: {
             country,
             graduationYear: parseInt(graduationYear)
           }
         });
-        
-        if (quickFactData?.quickFunFact) {
-          setQuickFunFact(quickFactData.quickFunFact);
-        }
-      } catch (quickFactError) {
-        console.warn('Failed to generate quick fun fact:', quickFactError);
-        // Continue with main fact generation even if quick fact fails
-      }
-      
-      // Then get the main facts
-      const { data, error } = await supabase.functions.invoke('generate-facts', {
-        body: {
-          country,
-          graduationYear: parseInt(graduationYear)
-        }
-      });
 
-      if (error) {
-        throw error;
-      }
-
-      if (!data.facts || data.facts.length === 0) {
-        const factType = getFactGenerationType(parseInt(graduationYear));
-        let errorMsg = "No facts could be found for this combination. Try a different country or year.";
-        
-        if (factType === 'historical') {
-          errorMsg = "Could not generate historical perspectives for this era. Try a different combination.";
-        } else if (factType === 'ancient') {
-          errorMsg = "Could not generate ancient worldviews for this time period. Try a different combination.";
+        if (error) {
+          throw error;
         }
-        
-        setError(errorMsg);
+
+        if (!data.facts || data.facts.length === 0) {
+          const factType = getFactGenerationType(parseInt(graduationYear));
+          let errorMsg = "No facts could be found for this combination. Try a different country or year.";
+          
+          if (factType === 'historical') {
+            errorMsg = "Could not generate historical perspectives for this era. Try a different combination.";
+          } else if (factType === 'ancient') {
+            errorMsg = "Could not generate ancient worldviews for this time period. Try a different combination.";
+          }
+          
+          setError(errorMsg);
+          setShowSkeletons(false);
+          return;
+        }
+
+        setFacts(data.facts);
+        setEducationProblems(data.educationProblems || []);
         setShowSkeletons(false);
-        return;
-      }
-
-      setFacts(data.facts);
-      setEducationProblems(data.educationProblems || []);
-      setShowSkeletons(false);
-      
-      const factType = getFactGenerationType(parseInt(graduationYear));
-      if (data.cached) {
-        if (factType === 'modern') {
-          setSuccessMessage(`Found ${data.facts.length} facts (researched ${data.cacheAge} days ago)`);
-        } else if (factType === 'historical') {
-          setSuccessMessage(`Found ${data.facts.length} historical perspectives (researched ${data.cacheAge} days ago)`);
+        
+        const factType = getFactGenerationType(parseInt(graduationYear));
+        if (data.cached) {
+          if (factType === 'modern') {
+            setSuccessMessage(`Found ${data.facts.length} facts (researched ${data.cacheAge} days ago)`);
+          } else if (factType === 'historical') {
+            setSuccessMessage(`Found ${data.facts.length} historical perspectives (researched ${data.cacheAge} days ago)`);
+          } else {
+            setSuccessMessage(`Found ${data.facts.length} ancient worldviews (researched ${data.cacheAge} days ago)`);
+          }
         } else {
-          setSuccessMessage(`Found ${data.facts.length} ancient worldviews (researched ${data.cacheAge} days ago)`);
-        }
-      } else {
-        if (factType === 'modern') {
-          setSuccessMessage(`Successfully researched ${data.facts.length} educational facts!`);
-        } else if (factType === 'historical') {
-          setSuccessMessage(`Successfully researched ${data.facts.length} historical perspectives!`);
-        } else {
-          setSuccessMessage(`Successfully researched ${data.facts.length} ancient worldviews!`);
+          if (factType === 'modern') {
+            setSuccessMessage(`Successfully researched ${data.facts.length} educational facts!`);
+          } else if (factType === 'historical') {
+            setSuccessMessage(`Successfully researched ${data.facts.length} historical perspectives!`);
+          } else {
+            setSuccessMessage(`Successfully researched ${data.facts.length} ancient worldviews!`);
+          }
         }
       }
     } catch (error) {
@@ -385,10 +461,16 @@ export const FactsDebunker = () => {
 
   const resetForm = () => {
     setStep(1);
+    setIsSchoolMode(false);
     setCountry("");
     setGraduationYear("");
+    setSchoolName("");
+    setCity("");
+    setSchoolType("");
     setFacts([]);
     setEducationProblems([]);
+    setSchoolMemories(null);
+    setSchoolShareableContent(null);
     setShowSkeletons(false);
     setError(null);
     setSuccessMessage(null);
@@ -410,33 +492,53 @@ export const FactsDebunker = () => {
         <div className="text-center mb-8 md:mb-12">
           <AnimatedHeadline />
           <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-4 mt-4">
-            Discover what you learned in school that has since been proven wrong. 
-            Find out how knowledge has evolved since you graduated.
+            {isSchoolMode 
+              ? "Discover personalized memories and events from your specific school and graduation year."
+              : "Discover what you learned in school that has since been proven wrong. Find out how knowledge has evolved since you graduated."
+            }
           </p>
         </div>
+
+        <SchoolModeToggle isSchoolMode={isSchoolMode} onToggle={setIsSchoolMode} />
 
         <Card className="max-w-md mx-auto mb-8 shadow-glow">
           {step === 1 ? (
             <>
               <CardHeader>
-                <CardTitle className="text-center">Step 1: Select Country</CardTitle>
+                <CardTitle className="text-center">
+                  {isSchoolMode ? "Step 1: Enter School Information" : "Step 1: Select Country"}
+                </CardTitle>
                 <CardDescription className="text-center">
-                  Choose your country for curriculum-specific analysis
+                  {isSchoolMode 
+                    ? "Enter your school details for personalized memories" 
+                    : "Choose your country for curriculum-specific analysis"
+                  }
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Select value={country} onValueChange={setCountry}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select country..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {countries.map((c) => (
-                      <SelectItem key={c.value} value={c.value}>
-                        {c.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isSchoolMode ? (
+                  <SchoolPicker
+                    schoolName={schoolName}
+                    city={city}
+                    schoolType={schoolType}
+                    onSchoolNameChange={setSchoolName}
+                    onCityChange={setCity}
+                    onSchoolTypeChange={setSchoolType}
+                  />
+                ) : (
+                  <Select value={country} onValueChange={setCountry}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countries.map((c) => (
+                        <SelectItem key={c.value} value={c.value}>
+                          {c.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
                 {error && (
                   <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
                     <AlertCircle className="h-4 w-4" />
@@ -456,13 +558,18 @@ export const FactsDebunker = () => {
               <CardHeader>
                 <CardTitle className="text-center">Step 2: Enter Graduation Year</CardTitle>
                 <CardDescription className="text-center">
-                  {country} • We'll analyze your school curriculum from that era
+                  {isSchoolMode 
+                    ? `${schoolName} in ${city} • We'll research what happened during your graduation year`
+                    : `${country} • We'll analyze your school curriculum from that era`
+                  }
                 </CardDescription>
-                <div className="text-center mt-3">
-                  <span className="text-2xl font-bold text-primary">
-                    {getLocalGreeting(country)}!
-                  </span>
-                </div>
+                {!isSchoolMode && (
+                  <div className="text-center mt-3">
+                    <span className="text-2xl font-bold text-primary">
+                      {getLocalGreeting(country)}!
+                    </span>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 <TimeMachinePicker
@@ -496,20 +603,20 @@ export const FactsDebunker = () => {
                   >
                     Back
                   </Button>
-                  <Button 
-                    onClick={generateFacts}
-                    disabled={isLoading}
-                     className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
-                   >
-                     {isLoading ? (
-                       <>
-                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                         Researching...
-                       </>
-                     ) : (
-                       "Research My Education!"
-                     )}
-                  </Button>
+                   <Button 
+                     onClick={generateFacts}
+                     disabled={isLoading}
+                      className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          {isSchoolMode ? "Researching..." : "Researching..."}
+                        </>
+                      ) : (
+                        isSchoolMode ? "Research My School!" : "Research My Education!"
+                      )}
+                   </Button>
                 </div>
               </CardContent>
             </>
@@ -517,7 +624,35 @@ export const FactsDebunker = () => {
         </Card>
 
 
-        {(showSkeletons || facts.length > 0) && (
+        {/* School Memory Results */}
+        {isSchoolMode && schoolMemories && schoolShareableContent && (
+          <div ref={factsResultsRef} className="max-w-4xl mx-auto space-y-6">
+            <SchoolMemoryCard 
+              schoolName={schoolName}
+              city={city}
+              graduationYear={parseInt(graduationYear)}
+              memoryData={schoolMemories}
+            />
+            <SchoolShareCard
+              schoolName={schoolName}
+              city={city}
+              graduationYear={parseInt(graduationYear)}
+              shareableContent={schoolShareableContent}
+            />
+            <div className="text-center mt-8">
+              <Button 
+                onClick={resetForm}
+                variant="outline"
+                className="px-8"
+              >
+                Research Another School
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Country Facts Results */}
+        {!isSchoolMode && (showSkeletons || facts.length > 0) && (
           <div ref={factsResultsRef} className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
