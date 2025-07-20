@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -266,6 +266,8 @@ export const FactsDebunker = () => {
   const [quickFunFact, setQuickFunFact] = useState<string | null>(null);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [selectedFactForReport, setSelectedFactForReport] = useState<OutdatedFact | null>(null);
+  
+  const factsResultsRef = useRef<HTMLDivElement>(null);
 
   const handleNextStep = () => {
     if (!country) {
@@ -294,6 +296,14 @@ export const FactsDebunker = () => {
     setFacts([]);
     setError(null);
     setSuccessMessage(null);
+    
+    // Scroll to facts section after a short delay to allow the UI to update
+    setTimeout(() => {
+      factsResultsRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }, 100);
     
     try {
       console.log(`Generating facts for ${country} ${graduationYear}`);
@@ -523,7 +533,7 @@ export const FactsDebunker = () => {
         </div>
 
         {(showSkeletons || facts.length > 0) && (
-          <div className="max-w-4xl mx-auto">
+          <div ref={factsResultsRef} className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-2xl md:text-3xl font-bold mb-4">
                 {showSkeletons ? getLoadingMessage(parseInt(graduationYear)) : getResultsTitle(parseInt(graduationYear))}
