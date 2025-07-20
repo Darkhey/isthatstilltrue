@@ -430,6 +430,13 @@ Education System: ${historicalContext.educationSystem}
 
 Generate exactly 4-5 concrete scientific/medical facts that were taught in ${historicalContext.region} around ${year} but have since been proven wrong.
 
+IMPORTANT: Each fact MUST be from a DIFFERENT category. Use these categories and ensure variety:
+- Science (physics, chemistry, biology)
+- Medicine (medical treatments, anatomy, disease understanding)  
+- Technology (inventions, engineering, transportation)
+- Astronomy (space, celestial bodies, earth's place)
+- Geography (world knowledge, maps, natural phenomena)
+
 Focus on knowledge areas relevant to ${year}:
 ${knowledgeDomains.map(domain => `- **${domain}**`).join('\n')}
 
@@ -465,6 +472,13 @@ ${knowledgeDomains.map(domain => `- ${domain}`).join('\n')}
 
 Generate exactly 4-5 scientific/natural beliefs that educated people in ${historicalContext.region} commonly held in ${year} but have been overturned.
 
+IMPORTANT: Each fact MUST be from a DIFFERENT category. Use these categories and ensure variety:
+- Historical Science (early scientific theories)
+- Natural Philosophy (understanding of natural world)
+- Medicine (historical medical beliefs)
+- Astronomy (celestial understanding)
+- Geography (world knowledge of that era)
+
 Remember: Use period-appropriate terminology and concepts. Don't anachronistically refer to modern "${country}" - use "${historicalContext.region}".
 
 ${antiDuplicateSection}
@@ -498,13 +512,12 @@ ${knowledgeDomains.map(domain => `- ${domain}`).join('\n')}
 
 Generate exactly 4-5 beliefs about the natural world that people in ${historicalContext.region} commonly held in ${year} but have been transformed by modern knowledge.
 
-Focus on authentic ancient/medieval beliefs:
-- Four elements theory
-- Humoral medicine
-- Geocentric cosmology
-- Aristotelian physics
-- Alchemical theories
-- Supernatural causation
+IMPORTANT: Each fact MUST be from a DIFFERENT category. Use these categories and ensure variety:
+- Ancient Natural Beliefs (four elements, supernatural causation)
+- Ancient Medicine (humoral theory, medical treatments)  
+- Ancient Astronomy (geocentric cosmology, celestial beliefs)
+- Ancient Physics (Aristotelian physics, motion understanding)
+- Ancient Geography (world shape, distant lands knowledge)
 
 ${antiDuplicateSection}
 
@@ -553,13 +566,10 @@ Education System: ${historicalContext.educationSystem}
 
 Generate exactly 2-3 political/international relations facts that were commonly taught in ${historicalContext.region} around ${year} but have since been proven wrong, overly simplified, or significantly updated.
 
-Focus on these areas:
-- **Views on other nations/empires** (how ${historicalContext.region} students were taught to view other powers)
-- **International conflicts** and how they were presented
-- **Political systems** and ideologies of the time
-- **Colonial attitudes** and imperial perspectives
-- **Diplomatic relations** that have dramatically changed
-- **Economic theories** prevalent at the time
+IMPORTANT: Each fact MUST be from a DIFFERENT category. Use these categories and ensure variety:
+- Politics (political systems, ideologies, governance beliefs)
+- International Relations (diplomatic relations, foreign policy views)
+- Colonial Perspectives (imperial attitudes, colonial justifications)
 
 ${antiDuplicateSection}
 
@@ -1287,9 +1297,23 @@ serve(async (req) => {
       const randomVariant = existingVariants[Math.floor(Math.random() * existingVariants.length)];
       console.log(`Returning existing variant ${randomVariant.variant_number}`);
       
+      // Apply category deduplication to existing variants too
+      function deduplicateByCategory(facts: any[]): any[] {
+        const seenCategories = new Set<string>();
+        return facts.filter(fact => {
+          if (seenCategories.has(fact.category)) {
+            return false;
+          }
+          seenCategories.add(fact.category);
+          return true;
+        });
+      }
+      
+      const deduplicatedFacts = deduplicateByCategory(randomVariant.facts_data || []);
+      
       return new Response(JSON.stringify({
         quickFunFact: randomVariant.quick_fun_fact,
-        facts: randomVariant.facts_data || [],
+        facts: deduplicatedFacts,
         educationProblems: randomVariant.education_system_problems || [],
         cached: true,
         variant: randomVariant.variant_number
@@ -1376,10 +1400,27 @@ serve(async (req) => {
         throw error;
       }
 
-      // Combine facts - prioritize scientific facts first
-      const allFacts = [...regularFacts, ...politicalFacts];
+      // Deduplicate facts by category to ensure variety
+      function deduplicateByCategory(facts: any[]): any[] {
+        const seenCategories = new Set<string>();
+        return facts.filter(fact => {
+          if (seenCategories.has(fact.category)) {
+            console.log(`Removing duplicate category: ${fact.category}`);
+            return false;
+          }
+          seenCategories.add(fact.category);
+          return true;
+        });
+      }
       
-      console.log(`New variant result: ${regularFacts.length} scientific facts, ${politicalFacts.length} political facts, ${educationProblems.length} education problems`);
+      // Apply category deduplication
+      const uniqueRegularFacts = deduplicateByCategory(regularFacts);
+      const uniquePoliticalFacts = deduplicateByCategory(politicalFacts);
+      
+      // Combine facts - prioritize scientific facts first
+      const allFacts = [...uniqueRegularFacts, ...uniquePoliticalFacts];
+      
+      console.log(`New variant result: ${uniqueRegularFacts.length} unique scientific facts, ${uniquePoliticalFacts.length} unique political facts, ${educationProblems.length} education problems`);
 
       // Save the new variant
       if (allFacts.length > 0 || educationProblems.length > 0) {
@@ -1420,9 +1461,23 @@ serve(async (req) => {
     const randomVariant = existingVariants[Math.floor(Math.random() * existingVariants.length)];
     console.log(`Maximum variants reached, returning random variant ${randomVariant.variant_number}`);
     
+    // Apply category deduplication 
+    function deduplicateByCategory(facts: any[]): any[] {
+      const seenCategories = new Set<string>();
+      return facts.filter(fact => {
+        if (seenCategories.has(fact.category)) {
+          return false;
+        }
+        seenCategories.add(fact.category);
+        return true;
+      });
+    }
+    
+    const deduplicatedFacts = deduplicateByCategory(randomVariant.facts_data || []);
+    
     return new Response(JSON.stringify({
       quickFunFact: randomVariant.quick_fun_fact,
-      facts: randomVariant.facts_data || [],
+      facts: deduplicatedFacts,
       educationProblems: randomVariant.education_system_problems || [],
       cached: true,
       variant: randomVariant.variant_number
