@@ -129,17 +129,21 @@ async function performFirecrawlSearch(query: string, limit: number = 3): Promise
   }
 }
 
-// Optimized research strategy with fewer simultaneous requests
+// Enhanced research strategy focusing on real local data
 async function conductComprehensiveResearch(schoolName: string, city: string, graduationYear: number): Promise<ResearchSources> {
-  console.log(`Starting optimized research for ${schoolName} in ${city}, graduation year ${graduationYear}`);
+  console.log(`Starting enhanced research for ${schoolName} in ${city}, graduation year ${graduationYear}`);
   
-  // Reduced and prioritized search queries
+  // Enhanced and more specific search queries for better local results
   const searchQueries = [
-    `"${schoolName}" ${city} school official website`,
-    `${schoolName} ${city} school history ${graduationYear}`,
-    `${city} school news ${graduationYear} graduation`,
-    `${city} local news ${graduationYear}`,
-    `Germany education ${graduationYear} changes`
+    `"${schoolName}" ${city} official school website contact`,
+    `${schoolName} ${city} gymnasium realschule hauptschule`,
+    `${city} Stadtzeitung lokale nachrichten ${graduationYear}`,
+    `${city} stadtrat gemeinde verwaltung ${graduationYear}`,
+    `${city} wirtschaft unternehmen ${graduationYear}`,
+    `${city} kultur veranstaltungen ${graduationYear}`,
+    `${schoolName} schulfest abitur ${graduationYear}`,
+    `${city} region local businesses companies ${graduationYear}`,
+    `"${city}" wikipedia stadtgeschichte`
   ];
 
   const sources: ResearchSources = {
@@ -152,42 +156,46 @@ async function conductComprehensiveResearch(schoolName: string, city: string, gr
     firecrawlSuccess: false
   };
 
-  // Sequential searches with delays to respect rate limits
-  for (let i = 0; i < Math.min(searchQueries.length, 3); i++) { // Limit to 3 searches
+  // Sequential searches with better coverage for local data
+  for (let i = 0; i < Math.min(searchQueries.length, 6); i++) { // Increase to 6 searches for better coverage
     const query = searchQueries[i];
-    console.log(`Executing search ${i + 1}: "${query}"`);
+    console.log(`Executing enhanced search ${i + 1}: "${query}"`);
     
     try {
-      const results = await performFirecrawlSearch(query, 2); // Reduce results per query
+      const results = await performFirecrawlSearch(query, 3); // Get more results per query
       
       if (results.length > 0) {
         sources.firecrawlSuccess = true;
         
-        // Simple categorization
+        // Enhanced categorization for better source attribution
         for (const result of results) {
-          const content = (result.title + ' ' + result.content).toLowerCase();
+          const content = (result.title + ' ' + result.content + ' ' + result.url).toLowerCase();
           
-          if (content.includes('school') || content.includes('schule')) {
+          if (content.includes('school') || content.includes('schule') || content.includes('gymnasium') || content.includes('realschule')) {
             sources.schoolWebsite.push(result);
-          } else if (content.includes('news') || content.includes('nachrichten')) {
+          } else if (content.includes('news') || content.includes('nachrichten') || content.includes('zeitung') || content.includes('presse')) {
             sources.localNews.push(result);
+          } else if (content.includes('stadt') || content.includes('gemeinde') || content.includes('city') || content.includes('wikipedia')) {
+            sources.historicalRecords.push(result);
+          } else if (content.includes('unternehmen') || content.includes('wirtschaft') || content.includes('business') || content.includes('company')) {
+            sources.educationalChanges.push(result);
           } else {
             sources.historicalRecords.push(result);
           }
         }
       }
       
-      // Add delay between searches
+      // Add delay between searches to respect rate limits
       if (i < searchQueries.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 second delay
+        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
       }
     } catch (error) {
       console.error(`Search failed for query "${query}":`, error);
     }
   }
 
-  sources.totalSourcesFound = sources.schoolWebsite.length + sources.localNews.length + sources.historicalRecords.length;
-  console.log(`Optimized research completed. Found ${sources.totalSourcesFound} total sources`);
+  sources.totalSourcesFound = sources.schoolWebsite.length + sources.localNews.length + sources.historicalRecords.length + sources.educationalChanges.length;
+  console.log(`Enhanced research completed. Found ${sources.totalSourcesFound} total sources (Schools: ${sources.schoolWebsite.length}, News: ${sources.localNews.length}, Historical: ${sources.historicalRecords.length}, Business: ${sources.educationalChanges.length})`);
 
   return sources;
 }
@@ -255,7 +263,7 @@ async function getHistoricalHeadlines(year: number): Promise<HistoricalHeadline[
   }
 }
 
-// Create source summary for AI prompt
+// Create enhanced source summary with attribution
 function createSourceSummary(sources: ResearchSources): string {
   let summary = '';
 
@@ -263,27 +271,53 @@ function createSourceSummary(sources: ResearchSources): string {
     summary += '\n=== SCHOOL INFORMATION ===\n';
     sources.schoolWebsite.forEach(source => {
       summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 300)}...\n\n`;
+      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
     });
   }
 
   if (sources.localNews.length > 0) {
-    summary += '\n=== LOCAL NEWS ===\n';
+    summary += '\n=== LOCAL NEWS & MEDIA ===\n';
     sources.localNews.forEach(source => {
       summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 300)}...\n\n`;
+      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
     });
   }
 
   if (sources.historicalRecords.length > 0) {
-    summary += '\n=== HISTORICAL CONTEXT ===\n';
+    summary += '\n=== HISTORICAL & MUNICIPAL CONTEXT ===\n';
     sources.historicalRecords.forEach(source => {
       summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 300)}...\n\n`;
+      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
+    });
+  }
+
+  if (sources.educationalChanges.length > 0) {
+    summary += '\n=== LOCAL BUSINESS & ECONOMY ===\n';
+    sources.educationalChanges.forEach(source => {
+      summary += `Source: ${source.title} (${source.url})\n`;
+      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
     });
   }
 
   return summary;
+}
+
+// Create source attribution object for JSON response
+function createSourceAttributions(sources: ResearchSources): any {
+  const attributions = [];
+  
+  [...sources.schoolWebsite, ...sources.localNews, ...sources.historicalRecords, ...sources.educationalChanges]
+    .forEach(source => {
+      attributions.push({
+        title: source.title,
+        url: source.url,
+        type: sources.schoolWebsite.includes(source) ? 'school' :
+              sources.localNews.includes(source) ? 'news' :
+              sources.historicalRecords.includes(source) ? 'historical' : 'business'
+      });
+    });
+    
+  return attributions;
 }
 
 serve(async (req) => {
@@ -328,44 +362,53 @@ serve(async (req) => {
     ]);
 
     const sourceSummary = createSourceSummary(researchSources);
+    const sourceAttributions = createSourceAttributions(researchSources);
 
-    // Enhanced AI prompt with better error handling
+    // Enhanced AI prompt with proper source attribution
     const schoolResearchPrompt = `
 You are researching school memories for ${schoolName} in ${city} for someone who graduated in ${graduationYear}.
 
 ${researchSources.totalSourcesFound > 0 ? `
-REAL SOURCE DATA FOUND:
+REAL SOURCE DATA FOUND (${researchSources.totalSourcesFound} sources):
 ${sourceSummary}
 
-Use the real information above when possible and mark with source references.
+IMPORTANT: When using real information from the sources above, you MUST include source attribution in the JSON response.
+Use the exact URLs and titles provided. Focus on factual, verifiable information from real sources.
 ` : `
 NO REAL SOURCES FOUND - Generate plausible school memories based on typical German school experiences for ${graduationYear}.
 Focus on realistic events that would have happened during that time period.
+Mark these as generated content without source attribution.
 `}
 
-Create content about what happened at the school during graduation year ${graduationYear}.
-Include nostalgic memories that graduates would relate to.
+Create detailed content about what happened at the school during graduation year ${graduationYear}.
+Include nostalgic memories that graduates would relate to and local context from ${city}.
 
-CRITICAL: Return ONLY valid JSON. No markdown formatting.
+CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribution when using real data.
 
 {
   "whatHappenedAtSchool": [
     {
       "title": "Event Title",
       "description": "Detailed description of what happened",
-      "category": "facilities"
+      "category": "facilities|academics|sports|culture|technology",
+      "sourceUrl": "http://example.com",
+      "sourceName": "Source Name"
     }
   ],
   "nostalgiaFactors": [
     {
       "memory": "Specific nostalgic memory",
-      "shareableText": "Social media friendly version"
+      "shareableText": "Social media friendly version",
+      "sourceUrl": "http://example.com",
+      "sourceName": "Source Name"
     }
   ],
   "localContext": [
     {
-      "event": "Local context during graduation year",
-      "relevance": "How it affected students"
+      "event": "Local historical context during graduation year",
+      "relevance": "How it affected students and the local community",
+      "sourceUrl": "http://example.com",
+      "sourceName": "Source Name"
     }
   ],
   "shareableQuotes": [

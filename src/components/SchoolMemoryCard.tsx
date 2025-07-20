@@ -106,11 +106,26 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
       {/* Header with School Image */}
       <Card className="bg-gradient-primary text-primary-foreground overflow-hidden">
         <div className="relative">
-          <div className="h-48 bg-gradient-to-r from-primary/80 to-primary-glow/60 flex items-center justify-center">
+          <div className="h-48 bg-gradient-to-r from-primary/80 to-primary-glow/60 flex items-center justify-center relative">
             <img 
-              src={`https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=300&fit=crop&crop=center`}
-              alt={`${schoolName} Gebäude`}
-              className="w-full h-full object-cover opacity-30"
+              src={`https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=300&fit=crop&crop=center&auto=format&q=80`}
+              alt={`${schoolName} school building`}
+              className="w-full h-full object-cover opacity-40"
+              onError={(e) => {
+                // Fallback to different school images if main one fails
+                const fallbackImages = [
+                  'photo-1518005020951-eccb494ad742',
+                  'photo-1496307653780-42ee777d4833',
+                  'photo-1449157291145-7efd050a4d0e'
+                ];
+                const currentSrc = e.currentTarget.src;
+                const currentImageId = currentSrc.match(/photo-([a-f0-9-]+)/)?.[1];
+                const currentIndex = fallbackImages.findIndex(id => currentSrc.includes(id));
+                const nextIndex = (currentIndex + 1) % fallbackImages.length;
+                if (nextIndex < fallbackImages.length) {
+                  e.currentTarget.src = `https://images.unsplash.com/photo-${fallbackImages[nextIndex]}?w=800&h=300&fit=crop&crop=center&auto=format&q=80`;
+                }
+              }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
           </div>
