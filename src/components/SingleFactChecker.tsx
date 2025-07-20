@@ -152,15 +152,15 @@ export const SingleFactChecker = () => {
                   <div className="space-y-3">
                     <div>
                       <span className="text-sm font-medium text-muted-foreground">Original Statement:</span>
-                      <p className="text-sm italic mt-1 p-2 bg-muted/50 rounded">
-                        "{result.originalStatement}"
-                      </p>
+                        <p className="text-sm italic mt-1 p-2 bg-muted/50 rounded break-words">
+                          "{result.originalStatement}"
+                        </p>
                     </div>
 
                     {!result.isStillValid && result.correction && (
                       <div>
                         <span className="text-sm font-medium text-muted-foreground">Correct Information:</span>
-                        <p className="text-sm mt-1 p-2 bg-green-50 dark:bg-green-950/30 rounded border border-green-200 dark:border-green-800">
+                        <p className="text-sm mt-1 p-2 bg-green-50 dark:bg-green-950/30 rounded border border-green-200 dark:border-green-800 break-words">
                           {result.correction}
                         </p>
                       </div>
@@ -177,7 +177,7 @@ export const SingleFactChecker = () => {
 
                     <div>
                       <span className="text-sm font-medium text-muted-foreground">Explanation:</span>
-                      <p className="text-sm mt-1 text-muted-foreground leading-relaxed">
+                      <p className="text-sm mt-1 text-muted-foreground leading-relaxed break-words">
                         {result.explanation}
                       </p>
                     </div>

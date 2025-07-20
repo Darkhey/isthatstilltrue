@@ -26,7 +26,7 @@ const Imprint = () => {
 
           <section>
             <h2 className="text-2xl font-semibold mb-4">Responsible for Content</h2>
-            <p>According to § 55 Abs. 2 RStV:</p>
+            <p>According to Section 55(2) RStV:</p>
             <div className="bg-muted p-6 rounded-lg">
               <p>Maximilian Leistner</p>
               <p>Hasberger Dorfstraße 67</p>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, no-useless-escape */
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -1078,7 +1079,7 @@ function extractJSONFromResponse(generatedText: string): string {
   extractedText = extractedText.replace(/```\s*/, '');
   
   // Method 1: Direct array extraction with better boundary detection
-  let arrayMatch = extractedText.match(/\[[\s\S]*\]/);
+  const arrayMatch = extractedText.match(/\[[\s\S]*\]/);
   if (arrayMatch) {
     let jsonText = arrayMatch[0];
     

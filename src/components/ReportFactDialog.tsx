@@ -38,7 +38,7 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const generateFactHash = (fact: any) => {
+  const generateFactHash = (fact: ReportFactDialogProps["fact"]) => {
     const factString = `${fact.category}|${fact.fact}|${fact.correction}`;
     return btoa(factString).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
   };
@@ -120,9 +120,9 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm font-medium text-muted-foreground mb-1">Reported Fact:</p>
-            <p className="text-sm">{fact.fact}</p>
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm font-medium text-muted-foreground mb-1">Reported Fact:</p>
+              <p className="text-sm break-words">{fact.fact}</p>
           </div>
 
           <div className="space-y-3">
@@ -138,7 +138,7 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
                     >
                       {reason.label}
                     </Label>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground break-words">
                       {reason.description}
                     </p>
                   </div>
@@ -162,7 +162,7 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
 
           <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
             <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-            <p className="text-xs text-amber-800 dark:text-amber-200">
+            <p className="text-xs text-amber-800 dark:text-amber-200 break-words">
               Facts with more than 5 reports are automatically flagged for review and may be replaced.
             </p>
           </div>
