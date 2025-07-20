@@ -27,22 +27,22 @@ export const SchoolShareCard = ({ schoolName, city, graduationYear, shareableCon
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${schoolName} Erinnerungen`,
+          title: `${schoolName} Memories`,
           text: text,
         });
       } catch (error) {
         await navigator.clipboard.writeText(text);
         toast({
-          title: "Text kopiert!",
-          description: "Jetzt kannst du es überall teilen",
+          title: "Text copied!",
+          description: "Now you can share it everywhere",
           duration: 2000,
         });
       }
     } else {
       await navigator.clipboard.writeText(text);
       toast({
-        title: "Text kopiert!",
-        description: "Jetzt kannst du es überall teilen",
+        title: "Text copied!",
+        description: "Now you can share it everywhere",
         duration: 2000,
       });
     }
@@ -53,10 +53,10 @@ export const SchoolShareCard = ({ schoolName, city, graduationYear, shareableCon
       <CardHeader className="text-center">
         <CardTitle className="flex items-center justify-center gap-2">
           <Share2 className="h-5 w-5" />
-          Nostalgie teilen
+          Share Nostalgia
         </CardTitle>
         <CardDescription>
-          Teile diese Erinnerungen mit deinen {schoolName} Mitschülern
+          Share these memories with your {schoolName} classmates
         </CardDescription>
       </CardHeader>
       <CardContent className="text-center space-y-4">
@@ -70,11 +70,11 @@ export const SchoolShareCard = ({ schoolName, city, graduationYear, shareableCon
           className="bg-gradient-primary hover:opacity-90 text-primary-foreground w-full"
         >
           <Share2 className="h-4 w-4 mr-2" />
-          Nostalgie teilen ✨
+          Share Nostalgia ✨
         </Button>
         
         <p className="text-xs text-muted-foreground">
-          Klick zum Teilen oder Kopieren - egal wo!
+          Click to share or copy - anywhere you want!
         </p>
       </CardContent>
     </Card>

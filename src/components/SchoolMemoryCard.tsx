@@ -1,23 +1,29 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building, Calendar, MapPin, Users, BookOpen, Zap, Flag, Share2, type LucideIcon } from "lucide-react";
+import { Building, Calendar, MapPin, Users, BookOpen, Zap, Flag, Share2, ExternalLink, type LucideIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SchoolEvent {
   title: string;
   description: string;
   category: "facilities" | "academics" | "sports" | "culture" | "technology";
+  sourceUrl?: string;
+  sourceName?: string;
 }
 
 interface NostalgiaFactor {
   memory: string;
   shareableText: string;
+  sourceUrl?: string;
+  sourceName?: string;
 }
 
 interface LocalContext {
   event: string;
   relevance: string;
+  sourceUrl?: string;
+  sourceName?: string;
 }
 
 interface SchoolMemoryData {
@@ -62,34 +68,34 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
 
   const handleReportIssue = () => {
     toast({
-      title: "Danke für dein Feedback!",
-      description: "Deine Meldung hilft uns, die Informationen zu verbessern.",
+      title: "Thank you for your feedback!",
+      description: "Your report helps us improve the information quality.",
       duration: 3000,
     });
   };
 
   const handleShare = async () => {
-    const text = shareableText || `Erinnerungen an ${schoolName} in ${city} - Abschlussjahrgang ${graduationYear}! 🎓✨ Diese Nostalgie bringt so viele Erinnerungen zurück...`;
+    const text = shareableText || `Memories from ${schoolName} in ${city} - Class of ${graduationYear}! 🎓✨ This nostalgia brings back so many memories...`;
     
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `${schoolName} Erinnerungen`,
+          title: `${schoolName} Memories`,
           text: text,
         });
       } catch (error) {
         await navigator.clipboard.writeText(text);
         toast({
-          title: "Text kopiert!",
-          description: "Jetzt kannst du es teilen wo du willst",
+          title: "Text copied!",
+          description: "Now you can share it anywhere you want",
           duration: 2000,
         });
       }
     } else {
       await navigator.clipboard.writeText(text);
       toast({
-        title: "Text kopiert!",
-        description: "Jetzt kannst du es teilen wo du willst",
+        title: "Text copied!",
+        description: "Now you can share it anywhere you want",
         duration: 2000,
       });
     }
@@ -134,14 +140,14 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
           className="bg-gradient-primary hover:opacity-90 text-primary-foreground"
         >
           <Share2 className="h-4 w-4 mr-2" />
-          Nostalgie teilen ✨
+          Share Nostalgia ✨
         </Button>
         <Button 
           onClick={handleReportIssue}
           variant="outline"
         >
           <Flag className="h-4 w-4 mr-2" />
-          Unakkurates melden
+          Report Inaccuracy
         </Button>
       </div>
 
@@ -159,19 +165,42 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
         <CardContent className="space-y-4">
           {memoryData.whatHappenedAtSchool?.map((event, index) => {
             const IconComponent = getCategoryIcon(event.category);
+            const handleEventClick = () => {
+              if (event.sourceUrl) {
+                window.open(event.sourceUrl, '_blank');
+              }
+            };
+            
             return (
-              <div key={index} className="flex gap-4 p-4 bg-background/50 rounded-lg border">
+              <div 
+                key={index} 
+                className={`flex gap-4 p-4 bg-background/50 rounded-lg border transition-all duration-200 ${
+                  event.sourceUrl ? 'cursor-pointer hover:bg-background/70 hover:border-primary/40' : ''
+                }`}
+                onClick={handleEventClick}
+              >
                 <div className={`p-2 rounded-full ${getCategoryColor(event.category)} text-white flex-shrink-0`}>
                   <IconComponent className="h-4 w-4" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <h4 className="font-semibold">{event.title}</h4>
-                    <Badge variant="secondary" className="capitalize text-xs">
-                      {event.category}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary" className="capitalize text-xs">
+                        {event.category}
+                      </Badge>
+                      {event.sourceUrl && (
+                        <Badge variant="outline" className="text-xs">
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          {event.sourceName || 'Source'}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <p className="text-sm text-muted-foreground">{event.description}</p>
+                  {event.sourceUrl && (
+                    <p className="text-xs text-primary mt-2">Click to view source →</p>
+                  )}
                 </div>
               </div>
             );
@@ -192,14 +221,39 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {memoryData.nostalgiaFactors.map((nostalgia, index) => (
-              <div key={index} className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                <p className="font-medium mb-2">{nostalgia.memory}</p>
-                <p className="text-sm text-muted-foreground italic">
-                  💬 "{nostalgia.shareableText}"
-                </p>
-              </div>
-            ))}
+            {memoryData.nostalgiaFactors.map((nostalgia, index) => {
+              const handleNostalgiaClick = () => {
+                if (nostalgia.sourceUrl) {
+                  window.open(nostalgia.sourceUrl, '_blank');
+                }
+              };
+              
+              return (
+                <div 
+                  key={index} 
+                  className={`p-4 bg-primary/5 rounded-lg border border-primary/20 transition-all duration-200 ${
+                    nostalgia.sourceUrl ? 'cursor-pointer hover:bg-primary/10 hover:border-primary/40' : ''
+                  }`}
+                  onClick={handleNostalgiaClick}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <p className="font-medium flex-1">{nostalgia.memory}</p>
+                    {nostalgia.sourceUrl && (
+                      <Badge variant="outline" className="text-xs">
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        {nostalgia.sourceName || 'Source'}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground italic">
+                    💬 "{nostalgia.shareableText}"
+                  </p>
+                  {nostalgia.sourceUrl && (
+                    <p className="text-xs text-primary mt-2">Click to view source →</p>
+                  )}
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       )}
@@ -217,12 +271,37 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {memoryData.localContext.map((context, index) => (
-              <div key={index} className="p-4 bg-background/50 rounded-lg border">
-                <h4 className="font-semibold mb-2">{context.event}</h4>
-                <p className="text-sm text-muted-foreground">{context.relevance}</p>
-              </div>
-            ))}
+            {memoryData.localContext.map((context, index) => {
+              const handleContextClick = () => {
+                if (context.sourceUrl) {
+                  window.open(context.sourceUrl, '_blank');
+                }
+              };
+              
+              return (
+                <div 
+                  key={index} 
+                  className={`p-4 bg-background/50 rounded-lg border transition-all duration-200 ${
+                    context.sourceUrl ? 'cursor-pointer hover:bg-background/70 hover:border-primary/40' : ''
+                  }`}
+                  onClick={handleContextClick}
+                >
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h4 className="font-semibold flex-1">{context.event}</h4>
+                    {context.sourceUrl && (
+                      <Badge variant="outline" className="text-xs">
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        {context.sourceName || 'Source'}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground">{context.relevance}</p>
+                  {context.sourceUrl && (
+                    <p className="text-xs text-primary mt-2">Click to view source →</p>
+                  )}
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       )}

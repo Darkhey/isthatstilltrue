@@ -160,19 +160,25 @@ serve(async (req) => {
           {
             "title": "Event Title",
             "description": "Detailed description",
-            "category": "facilities|academics|sports|culture|technology"
+            "category": "facilities|academics|sports|culture|technology",
+            "sourceUrl": "URL to relevant source (school website, news article, etc.)",
+            "sourceName": "Name of the source"
           }
         ],
         "nostalgiaFactors": [
           {
             "memory": "Specific nostalgic memory",
-            "shareableText": "Text optimized for social sharing"
+            "shareableText": "Text optimized for social sharing",
+            "sourceUrl": "URL to relevant source if available",
+            "sourceName": "Name of the source if available"
           }
         ],
         "localContext": [
           {
             "event": "Local historical event or context",
-            "relevance": "How it affected the school/students"
+            "relevance": "How it affected the school/students",
+            "sourceUrl": "URL to relevant source (news, historical records, etc.)",
+            "sourceName": "Name of the source"
           }
         ],
         "shareableQuotes": [
