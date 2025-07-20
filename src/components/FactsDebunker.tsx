@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle, ChevronDown, Flag } from "lucide-react";
+import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle, ChevronDown, Flag, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
 import { FactShare } from "./FactShare";
@@ -61,7 +61,7 @@ const getLocalGreeting = (country: string) => {
     "Switzerland": "Grüezi",
     "France": "Bonjour",
     "United Kingdom": "Hello",
-    "USA": "Hello", 
+    "USA": "Hello",
     "Canada": "Hello",
     "Australia": "G'day",
     "Netherlands": "Hallo",
@@ -81,7 +81,7 @@ const getLocalGreeting = (country: string) => {
 };
 
 const getCategoryIcon = (category: string) => {
-  const iconMap: Record<string, any> = {
+  const iconMap: Record<string, LucideIcon> = {
     "Politics": Flag,
     "International Relations": Flag,
     "Historical Politics": Flag,

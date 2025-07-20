@@ -38,7 +38,7 @@ export function ReportFactDialog({ open, onOpenChange, fact, country, graduation
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const generateFactHash = (fact: any) => {
+  const generateFactHash = (fact: ReportFactDialogProps["fact"]) => {
     const factString = `${fact.category}|${fact.fact}|${fact.correction}`;
     return btoa(factString).replace(/[^a-zA-Z0-9]/g, '').substring(0, 32);
   };
