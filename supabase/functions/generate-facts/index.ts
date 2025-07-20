@@ -1,4 +1,3 @@
-
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -15,6 +14,131 @@ const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Historical context mapping for countries/regions
+function getHistoricalContext(country: string, year: number): { region: string; educationSystem: string; culturalContext: string } {
+  const contexts: Record<string, any> = {
+    "Germany": {
+      pre1871: { region: "Deutsche Länder/Heiliges Römisches Reich", educationSystem: "Klosterschulen und Universitäten verschiedener Fürstentümer", culturalContext: "Fragmentierte deutsche Territorialstaaten" },
+      pre1918: { region: "Deutsches Kaiserreich", educationSystem: "Preußisches Bildungssystem", culturalContext: "Aufstrebende Industriemacht" },
+      pre1949: { region: "Deutschland", educationSystem: "Staatliches Bildungssystem", culturalContext: "Weimarer Republik und NS-Zeit" }
+    },
+    "Italy": {
+      pre1861: { region: "Italienische Stadtstaaten und Königreiche", educationSystem: "Kirchliche und städtische Schulen", culturalContext: "Politisch fragmentiertes Italien" },
+      pre1946: { region: "Königreich Italien", educationSystem: "Zentralisiertes italienisches Bildungssystem", culturalContext: "Vereinigtes Italien unter der Monarchie" }
+    },
+    "USA": {
+      pre1776: { region: "Nordamerikanische Kolonien", educationSystem: "Koloniale Privatschulen und religiöse Institutionen", culturalContext: "Britische Kolonialherrschaft" },
+      pre1865: { region: "Vereinigte Staaten (vor Bürgerkrieg)", educationSystem: "Dezentrale Bildungssysteme der Einzelstaaten", culturalContext: "Junge Republik mit Sklaverei" },
+      pre1900: { region: "Vereinigte Staaten (Gilded Age)", educationSystem: "Aufbau öffentlicher Schulen", culturalContext: "Industrialisierung und Westexpansion" }
+    },
+    "United Kingdom": {
+      pre1066: { region: "Angelsächsische Königreiche", educationSystem: "Klöster und königliche Höfe", culturalContext: "Frühmittelalterliche Stammeskönigreiche" },
+      pre1707: { region: "England (vor Union)", educationSystem: "Kathedralschulen und frühe Universitäten", culturalContext: "Mittelalterliches England" },
+      pre1800: { region: "Großbritannien", educationSystem: "Privatschulen und Grammar Schools", culturalContext: "Aufstiegendes Britisches Empire" }
+    },
+    "France": {
+      pre1789: { region: "Königreich Frankreich", educationSystem: "Kirchliche Schulen und Jesuitenkollegien", culturalContext: "Absolutistische Monarchie" },
+      pre1870: { region: "Frankreich (verschiedene Regime)", educationSystem: "Napoleonisches Bildungssystem", culturalContext: "Revolutionszeit und Napoleon" }
+    },
+    "Austria": {
+      pre1918: { region: "Österreich-Ungarn", educationSystem: "Habsburger Bildungssystem", culturalContext: "Multiethnisches Kaiserreich" },
+      pre1938: { region: "Republik Österreich", educationSystem: "Österreichisches Schulsystem", culturalContext: "Erste Republik" }
+    },
+    "Russia": {
+      pre1917: { region: "Russisches Zarenreich", educationSystem: "Orthodoxe Kirchenschulen und Staatsgymnasien", culturalContext: "Autokratisches Zarenreich" },
+      pre1991: { region: "Sowjetunion", educationSystem: "Sowjetisches Bildungssystem", culturalContext: "Kommunistische Ideologie" }
+    },
+    "China": {
+      pre1912: { region: "Kaiserliches China", educationSystem: "Konfuzianische Akademien und Prüfungssystem", culturalContext: "Dynastische Herrschaft" },
+      pre1949: { region: "Republik China", educationSystem: "Modernisierte chinesische Schulen", culturalContext: "Übergangszeit und Bürgerkrieg" }
+    }
+  };
+
+  const countryContexts = contexts[country] || {};
+  
+  if (year < 1500) {
+    return {
+      region: countryContexts.pre1066?.region || `${country} (Mittelalterliche Regionen)`,
+      educationSystem: "Klöster, Kathedralschulen und private Gelehrte",
+      culturalContext: "Mittelalterliche Gesellschaftsordnung"
+    };
+  } else if (year < 1800) {
+    return {
+      region: countryContexts.pre1707?.region || countryContexts.pre1789?.region || `${country} (Frühe Neuzeit)`,
+      educationSystem: "Humanistenschulen, Jesuitenkollegien und frühe Universitäten",
+      culturalContext: "Renaissance bis Aufklärung"
+    };
+  } else if (year < 1871 && country === "Germany") {
+    return countryContexts.pre1871;
+  } else if (year < 1861 && country === "Italy") {
+    return countryContexts.pre1861;
+  } else if (year < 1776 && country === "USA") {
+    return countryContexts.pre1776;
+  } else if (year < 1917 && country === "Russia") {
+    return countryContexts.pre1917;
+  } else if (year < 1912 && country === "China") {
+    return countryContexts.pre1912;
+  } else if (year < 1918 && (country === "Austria" || country === "Germany")) {
+    return countryContexts.pre1918 || countryContexts.pre1871;
+  }
+  
+  return {
+    region: country,
+    educationSystem: "Modernes staatliches Bildungssystem",
+    culturalContext: "Moderne Nationalstaaten"
+  };
+}
+
+// Get knowledge domains appropriate for the historical period
+function getHistoricalKnowledgeDomains(year: number): string[] {
+  if (year < 1500) {
+    return [
+      "Vier-Säfte-Lehre (Medizin)",
+      "Alchemie und Naturphilosophie", 
+      "Ptolemäisches Weltbild",
+      "Scholastische Theologie",
+      "Handwerkszünfte und Gilden",
+      "Feudale Gesellschaftsordnung"
+    ];
+  } else if (year < 1650) {
+    return [
+      "Übergang von Alchemie zur Chemie",
+      "Kopernikanische Wende",
+      "Frühe Anatomie und Medizin",
+      "Humanistische Bildung",
+      "Konfessionelle Spaltung",
+      "Merkantilismus"
+    ];
+  } else if (year < 1800) {
+    return [
+      "Naturphilosophie und frühe Physik",
+      "Aufklärungsmedizin",
+      "Botanik und Taxonomie",
+      "Politische Philosophie",
+      "Experimentelle Methoden",
+      "Gesellschaftsvertrag-Theorien"
+    ];
+  } else if (year < 1900) {
+    return [
+      "Frühe moderne Chemie",
+      "Evolutionstheorie-Vorläufer",
+      "Industrielle Revolution",
+      "Nationalstaatsbildung",
+      "Kolonialismus",
+      "Dampfkraft und Mechanik"
+    ];
+  } else {
+    return [
+      "Moderne Wissenschaften",
+      "Psychologie und Soziologie", 
+      "Elektrizität und Magnetismus",
+      "Bakteriologie",
+      "Imperialismus",
+      "Massenmedien"
+    ];
+  }
+}
 
 // Generate fact hash for tracking and quality control
 function generateFactHash(fact: OutdatedFact): string {
@@ -95,40 +219,42 @@ function getFactGenerationType(year: number): 'modern' | 'historical' | 'ancient
   return 'ancient';
 }
 
-// Generate politics/international relations facts (prioritized)
+// Generate politics/international relations facts with historical context
 async function generatePoliticalFacts(country: string, year: number): Promise<OutdatedFact[]> {
   const currentYear = new Date().getFullYear();
   const factType = getFactGenerationType(year);
+  const historicalContext = getHistoricalContext(country, year);
   
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `You are an expert in international relations and political education. Analyze how students in ${country} were taught about other countries and international relations in ${year} vs today in ${currentYear}.
+    prompt = `You are an expert in international relations and political education. Analyze how students in ${historicalContext.region} were taught about politics and international relations in ${year} vs today in ${currentYear}.
 
-Generate exactly 2-3 political/international relations facts that were commonly taught in ${country} schools around ${year} but have since been proven wrong, overly simplified, or significantly updated.
+Historical Context: ${historicalContext.culturalContext}
+Education System: ${historicalContext.educationSystem}
 
-Focus on these controversial/interesting areas:
-- **Views on specific countries** (how ${country} students were taught to view Russia, China, USA, Middle East, etc.)
+Generate exactly 2-3 political/international relations facts that were commonly taught in ${historicalContext.region} around ${year} but have since been proven wrong, overly simplified, or significantly updated.
+
+Focus on these areas:
+- **Views on other nations/empires** (how ${historicalContext.region} students were taught to view other powers)
 - **International conflicts** and how they were presented
-- **Economic systems** (capitalism vs socialism presentations)
-- **Colonial/Post-colonial** perspectives
+- **Political systems** and ideologies of the time
+- **Colonial attitudes** and imperial perspectives
 - **Diplomatic relations** that have dramatically changed
-- **Cultural stereotypes** that were taught as fact
-- **Historical interpretations** that have since evolved
+- **Economic theories** prevalent at the time
 
 CRITICAL JSON FORMATTING RULES:
 - Use double quotes for ALL strings
-- Escape quotes inside strings with backslash: \\"
+- Escape quotes inside strings with backslash: \\\"
 - No trailing commas
 - No line breaks inside string values
-- Test your JSON before responding
 
 Return ONLY a valid JSON array with NO markdown formatting:
 
 [
   {
     "category": "Politics",
-    "fact": "In ${year}, students in ${country} were taught that [specific political statement - keep under 150 characters]",
+    "fact": "In ${year}, students in ${historicalContext.region} were taught that [specific political statement - keep under 150 characters]",
     "correction": "Today we understand that [nuanced political reality - 2-3 sentences max]",
     "yearDebunked": [year when understanding changed],
     "mindBlowingFactor": "This evolution [significance - 2 sentences max]",
@@ -137,24 +263,31 @@ Return ONLY a valid JSON array with NO markdown formatting:
   }
 ]
 
-Focus on genuine political teachings from ${year} textbooks in ${country}.`;
+Focus on genuine political teachings from ${year} in ${historicalContext.region}.`;
   } else if (factType === 'historical') {
-    prompt = `You are a historian analyzing political beliefs in ${country} around ${year}. 
+    prompt = `You are a historian analyzing political beliefs in ${historicalContext.region} around ${year}.
 
-Generate exactly 2-3 political/diplomatic beliefs that educated people in ${country} commonly held in ${year} but have since been proven wrong.
+Historical Context: ${historicalContext.culturalContext}
+Political Reality: People lived under ${historicalContext.educationSystem} and were influenced by the dominant powers of the time.
+
+Generate exactly 2-3 political/diplomatic beliefs that educated people in ${historicalContext.region} commonly held in ${year} but have since been proven wrong or dramatically changed.
+
+Consider the actual political realities of ${year}:
+- The region was called "${historicalContext.region}" not modern "${country}"
+- Education was through ${historicalContext.educationSystem}
+- Political worldview was shaped by ${historicalContext.culturalContext}
 
 CRITICAL JSON FORMATTING RULES:
 - Use double quotes for ALL strings
-- Escape quotes inside strings with \\"
+- Escape quotes inside strings with \\\"
 - No trailing commas
-- Keep strings concise
 
 Return ONLY a valid JSON array:
 
 [
   {
     "category": "Historical Politics",
-    "fact": "In ${year}, educated people in ${country} commonly believed that [specific belief - under 150 chars]",
+    "fact": "In ${year}, educated people in ${historicalContext.region} commonly believed that [specific belief - under 150 chars]",
     "correction": "Today we understand that [modern perspective - 2-3 sentences]",
     "yearDebunked": [year when understanding changed],
     "mindBlowingFactor": "This evolution [significance - 2 sentences]",
@@ -163,22 +296,29 @@ Return ONLY a valid JSON array:
   }
 ]`;
   } else {
-    prompt = `You are a historian analyzing worldviews in ${country} around ${year}. 
+    prompt = `You are a historian analyzing worldviews in ${historicalContext.region} around ${year}.
 
-Generate exactly 2-3 beliefs about politics/society that people in ${country} commonly held in ${year} but have been transformed.
+Historical Reality: This was during ${historicalContext.culturalContext}, when "${country}" as we know it today did not exist. The region was "${historicalContext.region}" and knowledge was transmitted through ${historicalContext.educationSystem}.
+
+Generate exactly 2-3 beliefs about politics/society that people in ${historicalContext.region} commonly held in ${year} but have been transformed by modern understanding.
+
+Remember the historical context:
+- No modern nation-states as we know them
+- Different political structures (feudalism, tribal kingdoms, city-states)
+- Knowledge preserved in monasteries, courts, or oral traditions
+- Very different understanding of government, law, and society
 
 CRITICAL JSON FORMATTING RULES:
 - Use double quotes for ALL strings
-- Escape quotes inside strings with \\"
+- Escape quotes with \\\"
 - No trailing commas
-- Keep strings under 200 characters each
 
 Return ONLY a valid JSON array:
 
 [
   {
     "category": "Ancient Worldview",
-    "fact": "In ${year}, people in ${country} commonly believed that [specific belief - under 150 chars]",
+    "fact": "In ${year}, people in ${historicalContext.region} believed that [specific belief - under 150 chars]",
     "correction": "Today we understand that [modern perspective - 2-3 sentences]",
     "yearDebunked": [year when shift occurred],
     "mindBlowingFactor": "This transformation [significance - 2 sentences]",
@@ -191,13 +331,18 @@ Return ONLY a valid JSON array:
   return await makeAIRequest(prompt, 'political-facts');
 }
 
-// Generate education system problems for the given country and year
+// Generate education system problems with historical context
 async function generateEducationProblems(country: string, year: number): Promise<EducationSystemProblem[]> {
   const factType = getFactGenerationType(year);
+  const historicalContext = getHistoricalContext(country, year);
+  
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `List 3-5 major problems that the education system in ${country} faced around ${year}.
+    prompt = `List 3-5 major problems that the education system in ${historicalContext.region} faced around ${year}.
+
+Historical Context: ${historicalContext.culturalContext}
+Education System: ${historicalContext.educationSystem}
 
 CRITICAL JSON FORMATTING:
 - Use double quotes only
@@ -213,35 +358,49 @@ Return ONLY a valid JSON array:
   }
 ]`;
   } else if (factType === 'historical') {
-    prompt = `List 3-5 challenges that education faced in ${country} around ${year}.
+    prompt = `List 3-5 challenges that education faced in ${historicalContext.region} around ${year}.
+
+Historical Context: This was during ${historicalContext.culturalContext}
+Education System: Knowledge was transmitted through ${historicalContext.educationSystem}
+
+Remember: "${country}" as a modern state did not exist. Focus on the actual educational challenges of ${historicalContext.region} in ${year}.
 
 CRITICAL JSON FORMATTING:
 - Use double quotes only
-- Escape any quotes with \\"
+- Escape quotes with \\\"
 - No trailing commas
 
 Return ONLY a valid JSON array:
 [
   {
     "problem": "Brief challenge title",
-    "description": "2-3 sentence description",
-    "impact": "How this affected learning"
+    "description": "2-3 sentence description of the actual historical challenge",
+    "impact": "How this affected learning in that era"
   }
 ]`;
   } else {
-    prompt = `List 3-5 challenges that knowledge and learning faced in ${country} around ${year}.
+    prompt = `List 3-5 challenges that knowledge and learning faced in ${historicalContext.region} around ${year}.
+
+Historical Reality: During ${historicalContext.culturalContext}, formal education was limited to ${historicalContext.educationSystem}. The modern concept of "${country}" did not exist.
+
+Focus on authentic challenges of that era:
+- Limited literacy
+- Knowledge preservation issues
+- Social/religious restrictions on learning
+- Lack of standardized curricula
+- Geographic/political fragmentation
 
 CRITICAL JSON FORMATTING:
 - Use double quotes only
-- Escape quotes with \\"
+- Escape quotes with \\\"
 - No trailing commas
 
 Return ONLY a valid JSON array:
 [
   {
-    "problem": "Brief challenge title",
-    "description": "2-3 sentence description",
-    "impact": "How this affected knowledge sharing"
+    "problem": "Brief historical challenge title",
+    "description": "2-3 sentence description of the actual challenge",
+    "impact": "How this affected knowledge sharing in that era"
   }
 ]`;
   }
@@ -249,75 +408,70 @@ Return ONLY a valid JSON array:
   return await makeAIRequest(prompt, 'education-problems');
 }
 
-// Generate regular academic facts with dynamic prompts based on year
+// Generate regular academic facts with historical context
 async function generateOutdatedFacts(country: string, year: number): Promise<OutdatedFact[]> {
   const currentYear = new Date().getFullYear();
   const factType = getFactGenerationType(year);
+  const historicalContext = getHistoricalContext(country, year);
+  const knowledgeDomains = getHistoricalKnowledgeDomains(year);
   
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `You are an educational historian analyzing what students in ${country} were taught in ${year} vs what we know today.
+    prompt = `You are an educational historian analyzing what students in ${historicalContext.region} were taught in ${year} vs what we know today.
 
-Generate exactly 4-5 concrete scientific/medical facts that were taught in ${country} schools around ${year} but have since been proven wrong.
+Historical Context: ${historicalContext.culturalContext}
+Education System: ${historicalContext.educationSystem}
 
-Focus on these categories:
-- **Science** (biology, chemistry, physics discoveries)
-- **Medicine** (health advice, medical understanding)  
-- **Space/Astronomy** (planetary status, universe understanding)
-- **Technology** (predictions, capabilities)
-- **Nutrition** (dietary recommendations)
-- **Environment** (climate, pollution understanding)
+Generate exactly 4-5 concrete scientific/medical facts that were taught in ${historicalContext.region} around ${year} but have since been proven wrong.
+
+Focus on knowledge areas relevant to ${year}:
+${knowledgeDomains.map(domain => `- **${domain}**`).join('\n')}
 
 CRITICAL JSON FORMATTING RULES:
 - Use ONLY double quotes for strings
-- Escape any quotes inside strings with \\"
+- Escape any quotes inside strings with \\\"
 - NO trailing commas anywhere
 - NO line breaks inside string values
 - Keep each string under 300 characters
-- Test your JSON is valid before responding
-
-Example format (follow exactly):
-{
-  "category": "Science",
-  "fact": "In ${year}, students in ${country} were taught that atoms are indivisible",
-  "correction": "Today we know atoms contain protons, neutrons, and electrons. This understanding changed after Thomson discovered the electron in 1897.",
-  "yearDebunked": 1932,
-  "mindBlowingFactor": "This discovery led to modern electronics and nuclear physics.",
-  "sourceUrl": "https://www.example.com",
-  "sourceName": "Scientific Institution"
-}
 
 Return ONLY a valid JSON array with NO markdown:
 
 [
-  // Generate 4-5 facts following the exact format above
+  {
+    "category": "Science",
+    "fact": "In ${year}, students in ${historicalContext.region} were taught that [specific scientific belief]",
+    "correction": "Today we know that [modern understanding - 2-3 sentences]",
+    "yearDebunked": [year when overturned],
+    "mindBlowingFactor": "This discovery [significance - 2 sentences]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Scientific Institution"
+  }
 ]`;
   } else if (factType === 'historical') {
-    prompt = `You are a historian analyzing scientific beliefs in ${country} around ${year}.
+    prompt = `You are a historian analyzing scientific beliefs in ${historicalContext.region} around ${year}.
 
-Generate exactly 4-5 scientific/natural beliefs that educated people in ${country} commonly held in ${year} but have been overturned.
+Historical Reality: This was during ${historicalContext.culturalContext}. The region was "${historicalContext.region}" and knowledge was transmitted through ${historicalContext.educationSystem}.
 
-Focus on:
-- **Natural Philosophy** (early scientific theories)
-- **Medicine** (medical theories and treatments)
-- **Astronomy** (understanding of celestial bodies)
-- **Geography** (world knowledge)
-- **Biology** (understanding of life)
+Knowledge domains of that era:
+${knowledgeDomains.map(domain => `- ${domain}`).join('\n')}
+
+Generate exactly 4-5 scientific/natural beliefs that educated people in ${historicalContext.region} commonly held in ${year} but have been overturned.
+
+Remember: Use period-appropriate terminology and concepts. Don't anachronistically refer to modern "${country}" - use "${historicalContext.region}".
 
 CRITICAL JSON FORMATTING RULES:
 - Use ONLY double quotes
-- Escape quotes inside strings with \\"
+- Escape quotes inside strings with \\\"
 - NO trailing commas
 - Keep strings under 300 characters
-- NO line breaks in strings
 
 Return ONLY a valid JSON array:
 
 [
   {
     "category": "Historical Science",
-    "fact": "In ${year}, educated people in ${country} believed that [scientific belief - under 150 chars]",
+    "fact": "In ${year}, educated people in ${historicalContext.region} believed that [scientific belief - under 150 chars]",
     "correction": "Today we know that [modern understanding - 2-3 sentences max]",
     "yearDebunked": [year when overturned],
     "mindBlowingFactor": "This revolution [significance - 2 sentences max]",
@@ -326,30 +480,35 @@ Return ONLY a valid JSON array:
   }
 ]`;
   } else {
-    prompt = `You are a historian analyzing beliefs about nature in ${country} around ${year}.
+    prompt = `You are a historian analyzing beliefs about nature in ${historicalContext.region} around ${year}.
 
-Generate exactly 4-5 beliefs about the natural world that people in ${country} commonly held in ${year} but have been transformed.
+Historical Reality: During ${historicalContext.culturalContext}, the modern nation "${country}" did not exist. People lived in ${historicalContext.region} and learned through ${historicalContext.educationSystem}.
 
-Focus on:
-- **Cosmology** (beliefs about universe and earth)
-- **Medical theories** (disease and healing)
-- **Natural world** (animals, plants, weather)
-- **Geography** (world layout)
-- **Elements** (theories about matter)
+Ancient knowledge systems of that era:
+${knowledgeDomains.map(domain => `- ${domain}`).join('\n')}
+
+Generate exactly 4-5 beliefs about the natural world that people in ${historicalContext.region} commonly held in ${year} but have been transformed by modern knowledge.
+
+Focus on authentic ancient/medieval beliefs:
+- Four elements theory
+- Humoral medicine
+- Geocentric cosmology
+- Aristotelian physics
+- Alchemical theories
+- Supernatural causation
 
 CRITICAL JSON FORMATTING RULES:
 - Use ONLY double quotes
-- Escape quotes with \\"
+- Escape quotes with \\\"
 - NO trailing commas
-- Keep strings concise
 - NO line breaks in strings
 
 Return ONLY a valid JSON array:
 
 [
   {
-    "category": "Ancient Natural Beliefs",
-    "fact": "In ${year}, people in ${country} believed that [belief - under 150 chars]",
+    "category": "Ancient Natural Beliefs", 
+    "fact": "In ${year}, people in ${historicalContext.region} believed that [belief - under 150 chars]",
     "correction": "Today we understand that [modern knowledge - 2-3 sentences]",
     "yearDebunked": [year when understanding shifted],
     "mindBlowingFactor": "This transformation [significance - 2 sentences]",
@@ -652,27 +811,37 @@ function aggressiveJSONCleaning(response: string): string {
   return text;
 }
 
-// Generate quick fun fact about country and year
+// Generate quick fun fact with historical context
 async function generateQuickFunFact(country: string, year: number): Promise<string> {
   const factType = getFactGenerationType(year);
+  const historicalContext = getHistoricalContext(country, year);
+  
   let prompt = '';
   
   if (factType === 'modern') {
-    prompt = `Generate a single, interesting historical fun fact about ${country} in the year ${year}. 
+    prompt = `Generate a single, interesting historical fun fact about ${historicalContext.region} in the year ${year}.
+
+Historical Context: ${historicalContext.culturalContext}
 
 Focus on something cool that happened that year - like weather, culture, politics, economy, sports, or notable events. Make it engaging and specific to that exact year.
 
+Use "${historicalContext.region}" not modern "${country}" if they are different.
+
 Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
   } else if (factType === 'historical') {
-    prompt = `Generate a single, interesting historical fun fact about ${country} around the year ${year}.
+    prompt = `Generate a single, interesting historical fun fact about ${historicalContext.region} around the year ${year}.
 
-Focus on something fascinating from that era - like major events, cultural developments, notable figures, technological advances, or social changes. Make it engaging and historically accurate for that time period.
+Historical Context: During ${historicalContext.culturalContext}, the region was known as "${historicalContext.region}" (not modern "${country}").
+
+Focus on something fascinating from that era - like major events, cultural developments, notable figures, technological advances, or social changes specific to ${historicalContext.region}. Make it engaging and historically accurate for that time period.
 
 Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
   } else {
-    prompt = `Generate a single, interesting historical fun fact about ${country} around the year ${year}.
+    prompt = `Generate a single, interesting historical fun fact about ${historicalContext.region} around the year ${year}.
 
-Focus on something fascinating from that ancient era - like major historical events, cultural practices, notable rulers, early technologies, or social structures. Make it engaging and historically plausible for that time period.
+Historical Reality: This was during ${historicalContext.culturalContext}. The modern country "${country}" did not exist - the region was "${historicalContext.region}".
+
+Focus on something fascinating from that ancient era - like major historical events, cultural practices, notable rulers, early technologies, or social structures specific to ${historicalContext.region}. Make it engaging and historically plausible for that time period.
 
 Return ONLY the fun fact as a single sentence, no additional formatting or explanation.`;
   }
