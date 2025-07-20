@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-useless-escape */
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -16,9 +16,49 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Type definitions
+interface GenerateFactsRequest {
+  country: string;
+  graduationYear: number;
+}
+
+interface OutdatedFact {
+  category: string;
+  fact: string;
+  correction: string;
+  yearDebunked: number;
+  mindBlowingFactor: string;
+  sourceUrl?: string;
+  sourceName?: string;
+}
+
+interface EducationSystemProblem {
+  problem: string;
+  description: string;
+  impact: string;
+}
+
+interface HistoricalContext {
+  region: string;
+  educationSystem: string;
+  culturalContext: string;
+}
+
+interface CountryContexts {
+  [key: string]: {
+    [periodKey: string]: HistoricalContext;
+  };
+}
+
+interface FactGenerationType {
+  modern: string[];
+  historical: string[];
+  ancient: string[];
+}
+
 // Historical context mapping for countries/regions
-function getHistoricalContext(country: string, year: number): { region: string; educationSystem: string; culturalContext: string } {
-  const contexts: Record<string, any> = {
+function getHistoricalContext(country: string, year: number): HistoricalContext {
+  const contexts: CountryContexts = {
     "Germany": {
       pre1871: { region: "German States/Holy Roman Empire", educationSystem: "Monastery schools and universities of various principalities", culturalContext: "Fragmented German territorial states" },
       pre1918: { region: "German Empire", educationSystem: "Prussian education system", culturalContext: "Rising industrial power" },
@@ -92,7 +132,7 @@ function getHistoricalContext(country: string, year: number): { region: string; 
 }
 
 // Fixed category definitions for consistent fact generation
-const FIXED_CATEGORIES = {
+const FIXED_CATEGORIES: FactGenerationType = {
   modern: [
     "Science",
     "Medicine", 
@@ -121,6 +161,47 @@ const FIXED_CATEGORIES = {
     "Ancient Society"
   ]
 };
+
+// Determine the type of fact generation based on year
+function getFactGenerationType(year: number): 'modern' | 'historical' | 'ancient' {
+  if (year >= 1900) return 'modern';
+  if (year >= 1800) return 'historical';
+  return 'ancient';
+}
+
+// Get historical knowledge domains for the period
+function getHistoricalKnowledgeDomains(year: number): string[] {
+  const factType = getFactGenerationType(year);
+  
+  if (factType === 'modern') {
+    return [
+      "Modern Science and Research Methods",
+      "Industrial Medicine and Public Health",
+      "Engineering and Technology",
+      "Astronomy and Space Science",
+      "Modern Geography and Cartography",
+      "Political Science and International Relations"
+    ];
+  } else if (factType === 'historical') {
+    return [
+      "Natural Philosophy and Early Science",
+      "Traditional and Folk Medicine",
+      "Early Industrial Technology",
+      "Observational Astronomy",
+      "Exploration Geography",
+      "Classical Political Theory"
+    ];
+  } else {
+    return [
+      "Ancient Natural Beliefs and Philosophy",
+      "Humoral Medicine and Healing Arts",
+      "Ancient Astronomy and Astrology",
+      "Classical Geography",
+      "Ancient Political Systems",
+      "Traditional Knowledge Systems"
+    ];
+  }
+}
 
 // Get fixed categories for the historical period
 function getFixedCategories(year: number): string[] {
@@ -194,34 +275,6 @@ async function updateFactQualityStats(facts: OutdatedFact[], country: string, gr
   }
 }
 
-interface GenerateFactsRequest {
-  country: string;
-  graduationYear: number;
-}
-
-interface OutdatedFact {
-  category: string;
-  fact: string;
-  correction: string;
-  yearDebunked: number;
-  mindBlowingFactor: string;
-  sourceUrl?: string;
-  sourceName?: string;
-}
-
-interface EducationSystemProblem {
-  problem: string;
-  description: string;
-  impact: string;
-}
-
-// Determine the type of fact generation based on year
-function getFactGenerationType(year: number): 'modern' | 'historical' | 'ancient' {
-  if (year >= 1900) return 'modern';
-  if (year >= 1800) return 'historical';
-  return 'ancient';
-}
-
 // Generate politics/international relations facts with historical context
 async function generatePoliticalFacts(country: string, year: number): Promise<OutdatedFact[]> {
   const currentYear = new Date().getFullYear();
@@ -248,7 +301,7 @@ Focus on these areas:
 
 CRITICAL JSON FORMATTING RULES:
 - Use double quotes for ALL strings
-- Escape quotes inside strings with backslash: \\\"
+- Escape quotes inside strings with backslash: \\"
 - No trailing commas
 - No line breaks inside string values
 
@@ -282,7 +335,7 @@ Consider the actual political realities of ${year}:
 
 CRITICAL JSON FORMATTING RULES:
 - Use double quotes for ALL strings
-- Escape quotes inside strings with \\\"
+- Escape quotes inside strings with \\"
 - No trailing commas
 
 Return ONLY a valid JSON array:
@@ -313,7 +366,7 @@ Remember the historical context:
 
 CRITICAL JSON FORMATTING RULES:
 - Use double quotes for ALL strings
-- Escape quotes with \\\"
+- Escape quotes with \\"
 - No trailing commas
 
 Return ONLY a valid JSON array:
@@ -370,7 +423,7 @@ Remember: "${country}" as a modern state did not exist. Focus on the actual educ
 
 CRITICAL JSON FORMATTING:
 - Use double quotes only
-- Escape quotes with \\\"
+- Escape quotes with \\"
 - No trailing commas
 
 Return ONLY a valid JSON array:
@@ -395,7 +448,7 @@ Focus on authentic challenges of that era:
 
 CRITICAL JSON FORMATTING:
 - Use double quotes only
-- Escape quotes with \\\"
+- Escape quotes with \\"
 - No trailing commas
 
 Return ONLY a valid JSON array:
@@ -420,7 +473,12 @@ async function generateOutdatedFactsWithContext(country: string, year: number, e
   
   let antiDuplicateSection = '';
   if (existingFacts.length > 0) {
-    antiDuplicateSection = `\n\nIMPORTANT: DO NOT repeat these already existing facts:\n${existingFacts.slice(0, 10).map(fact => `- ${fact.substring(0, 100)}...`).join('\n')}\n\nGenerate COMPLETELY DIFFERENT facts that cover different topics and areas.`;
+    antiDuplicateSection = `
+
+IMPORTANT: DO NOT repeat these already existing facts:
+${existingFacts.slice(0, 10).map(fact => `- ${fact.substring(0, 100)}...`).join('\n')}
+
+Generate COMPLETELY DIFFERENT facts that cover different topics and areas.`;
   }
   
   let prompt = '';
@@ -547,7 +605,12 @@ async function generatePoliticalFactsWithContext(country: string, year: number, 
   
   let antiDuplicateSection = '';
   if (existingFacts.length > 0) {
-    antiDuplicateSection = `\n\nIMPORTANT: DO NOT repeat these already existing facts:\n${existingFacts.slice(0, 10).map(fact => `- ${fact.substring(0, 100)}...`).join('\n')}\n\nGenerate COMPLETELY DIFFERENT political facts that cover different aspects and topics.`;
+    antiDuplicateSection = `
+
+IMPORTANT: DO NOT repeat these already existing facts:
+${existingFacts.slice(0, 10).map(fact => `- ${fact.substring(0, 100)}...`).join('\n')}
+
+Generate COMPLETELY DIFFERENT political facts that cover different aspects and topics.`;
   }
   
   let prompt = '';
@@ -676,7 +739,12 @@ async function generateEducationProblemsWithContext(country: string, year: numbe
   
   let antiDuplicateSection = '';
   if (existingProblems.length > 0) {
-    antiDuplicateSection = `\n\nIMPORTANT: DO NOT repeat these already existing problems:\n${existingProblems.slice(0, 10).map(problem => `- ${problem.substring(0, 80)}...`).join('\n')}\n\nGenerate COMPLETELY DIFFERENT education problems that cover different aspects and challenges.`;
+    antiDuplicateSection = `
+
+IMPORTANT: DO NOT repeat these already existing problems:
+${existingProblems.slice(0, 10).map(problem => `- ${problem.substring(0, 80)}...`).join('\n')}
+
+Generate COMPLETELY DIFFERENT education problems that cover different aspects and challenges.`;
   }
   
   let prompt = '';
@@ -779,7 +847,7 @@ ${knowledgeDomains.map(domain => `- **${domain}**`).join('\n')}
 
 CRITICAL JSON FORMATTING RULES:
 - Use ONLY double quotes for strings
-- Escape any quotes inside strings with \\\"
+- Escape any quotes inside strings with \\"
 - NO trailing commas anywhere
 - NO line breaks inside string values
 - Keep each string under 300 characters
@@ -811,7 +879,7 @@ Remember: Use period-appropriate terminology and concepts. Don't anachronistical
 
 CRITICAL JSON FORMATTING RULES:
 - Use ONLY double quotes
-- Escape quotes inside strings with \\\"
+- Escape quotes inside strings with \\"
 - NO trailing commas
 - Keep strings under 300 characters
 
@@ -848,7 +916,7 @@ Focus on authentic ancient/medieval beliefs:
 
 CRITICAL JSON FORMATTING RULES:
 - Use ONLY double quotes
-- Escape quotes with \\\"
+- Escape quotes with \\"
 - NO trailing commas
 - NO line breaks in strings
 
@@ -879,14 +947,15 @@ async function retryWithBackoff<T>(
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn();
-    } catch (error: any) {
-      console.log(`Attempt ${attempt + 1} failed:`, error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log(`Attempt ${attempt + 1} failed:`, errorMessage);
       
       if (attempt === maxRetries - 1) {
         throw error;
       }
       
-      if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+      if (errorMessage.includes('429') || errorMessage.includes('rate limit')) {
         const delay = baseDelay * Math.pow(2, attempt) + Math.random() * 1000;
         console.log(`Rate limited, waiting ${delay}ms before retry...`);
         await new Promise(resolve => setTimeout(resolve, delay));
@@ -899,7 +968,7 @@ async function retryWithBackoff<T>(
 }
 
 // Helper function to make AI requests with fallback
-async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'education-problems' | 'political-facts'): Promise<any[]> {
+async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'education-problems' | 'political-facts'): Promise<OutdatedFact[] | EducationSystemProblem[]> {
   const makeOpenAIRequest = async () => {
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not available');
@@ -998,7 +1067,8 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
       response = await retryWithBackoff(makeOpenAIRequest, 2, 1000);
       break;
     } catch (openAIError) {
-      console.log(`OpenAI failed for ${requestType} (attempt ${attempts + 1}), trying Gemini fallback:`, openAIError.message);
+      const errorMessage = openAIError instanceof Error ? openAIError.message : 'Unknown error';
+      console.log(`OpenAI failed for ${requestType} (attempt ${attempts + 1}), trying Gemini fallback:`, errorMessage);
       try {
         response = await retryWithBackoff(makeGeminiRequest, 2, 1000);
         break;
@@ -1015,7 +1085,7 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
   }
 
   // Parse and validate the response with enhanced error handling
-  let results: any[];
+  let results: OutdatedFact[] | EducationSystemProblem[];
   try {
     const extractedText = extractJSONFromResponse(response!);
     console.log(`Extracted JSON text for ${requestType}:`, extractedText);
@@ -1049,16 +1119,18 @@ async function makeAIRequest(prompt: string, requestType: 'outdated-facts' | 'ed
 
   // Validate based on request type
   if (requestType === 'outdated-facts' || requestType === 'political-facts') {
-    for (let i = 0; i < results.length; i++) {
-      const fact = results[i];
+    const facts = results as OutdatedFact[];
+    for (let i = 0; i < facts.length; i++) {
+      const fact = facts[i];
       if (!fact.category || !fact.fact || !fact.correction || !fact.yearDebunked || !fact.mindBlowingFactor) {
         console.error(`Fact ${i} is missing required fields:`, fact);
         throw new Error(`Fact ${i} is missing required fields`);
       }
     }
   } else if (requestType === 'education-problems') {
-    for (let i = 0; i < results.length; i++) {
-      const problem = results[i];
+    const problems = results as EducationSystemProblem[];
+    for (let i = 0; i < problems.length; i++) {
+      const problem = problems[i];
       if (!problem.problem || !problem.description || !problem.impact) {
         console.error(`Education problem ${i} is missing required fields:`, problem);
         throw new Error(`Education problem ${i} is missing required fields`);
@@ -1260,7 +1332,8 @@ Return ONLY the fun fact as a single sentence, no additional formatting or expla
   try {
     return await makeOpenAIRequest();
   } catch (openAIError) {
-    console.log('OpenAI failed for fun fact, trying Gemini:', openAIError.message);
+    const errorMessage = openAIError instanceof Error ? openAIError.message : 'Unknown error';
+    console.log('OpenAI failed for fun fact, trying Gemini:', errorMessage);
     try {
       return await makeGeminiRequest();
     } catch (geminiError) {
@@ -1302,7 +1375,7 @@ serve(async (req) => {
       console.log(`Returning existing variant ${randomVariant.variant_number}`);
       
       // Apply category deduplication to existing variants too
-      function deduplicateByCategory(facts: any[]): any[] {
+      function deduplicateByCategory(facts: OutdatedFact[]): OutdatedFact[] {
         const seenCategories = new Set<string>();
         return facts.filter(fact => {
           if (seenCategories.has(fact.category)) {
@@ -1341,12 +1414,14 @@ serve(async (req) => {
       if (existingVariants && existingVariants.length > 0) {
         for (const variant of existingVariants) {
           if (variant.facts_data) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             variant.facts_data.forEach((fact: any) => {
               if (fact.claim) existingFacts.push(fact.claim);
               if (fact.outdatedInfo) existingFacts.push(fact.outdatedInfo);
             });
           }
           if (variant.education_system_problems) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             variant.education_system_problems.forEach((problem: any) => {
               if (problem.problem) existingEducationProblems.push(problem.problem);
             });
@@ -1358,9 +1433,9 @@ serve(async (req) => {
       console.log(`Found ${existingEducationProblems.length} existing education problems to avoid duplicating`);
 
       // Generate facts with anti-duplicate prompts
-      let politicalFacts: any[] = [];
-      let regularFacts: any[] = [];
-      let educationProblems: any[] = [];
+      let politicalFacts: OutdatedFact[] = [];
+      let regularFacts: OutdatedFact[] = [];
+      let educationProblems: EducationSystemProblem[] = [];
 
       try {
         console.log('Starting fact generation with anti-duplicate logic...');
@@ -1373,21 +1448,21 @@ serve(async (req) => {
         ]);
 
         if (results[0].status === 'fulfilled') {
-          regularFacts = results[0].value;
+          regularFacts = results[0].value as OutdatedFact[];
           console.log(`Successfully generated ${regularFacts.length} new scientific/regular facts`);
         } else {
           console.error('Scientific facts generation failed:', results[0].reason);
         }
 
         if (results[1].status === 'fulfilled') {
-          politicalFacts = results[1].value;
+          politicalFacts = results[1].value as OutdatedFact[];
           console.log(`Successfully generated ${politicalFacts.length} new political facts`);
         } else {
           console.error('Political facts generation failed:', results[1].reason);
         }
 
         if (results[2].status === 'fulfilled') {
-          educationProblems = results[2].value;
+          educationProblems = results[2].value as EducationSystemProblem[];
           console.log(`Successfully generated ${educationProblems.length} new education problems`);
         } else {
           console.error('Education problems generation failed:', results[2].reason);
@@ -1455,7 +1530,7 @@ serve(async (req) => {
     console.log(`Maximum variants reached, returning random variant ${randomVariant.variant_number}`);
     
     // Apply category deduplication 
-    function deduplicateByCategory(facts: any[]): any[] {
+    function deduplicateByCategory(facts: OutdatedFact[]): OutdatedFact[] {
       const seenCategories = new Set<string>();
       return facts.filter(fact => {
         if (seenCategories.has(fact.category)) {
@@ -1482,18 +1557,19 @@ serve(async (req) => {
     console.error('Error in generate-facts function:', error);
     
     let errorMessage = 'Failed to generate facts';
-    if (error.message?.includes('429') || error.message?.includes('rate limit')) {
+    const errorStr = error instanceof Error ? error.message : 'Unknown error';
+    if (errorStr.includes('429') || errorStr.includes('rate limit')) {
       errorMessage = 'API rate limit exceeded. Please try again in a moment.';
-    } else if (error.message?.includes('API key')) {
+    } else if (errorStr.includes('API key')) {
       errorMessage = 'API configuration error. Please check the setup.';
-    } else if (error.message?.includes('JSON')) {
+    } else if (errorStr.includes('JSON')) {
       errorMessage = 'Failed to process the generated content. Please try again.';
     }
 
     return new Response(
       JSON.stringify({ 
         error: errorMessage,
-        details: error.message,
+        details: errorStr,
         timestamp: new Date().toISOString()
       }), 
       {
