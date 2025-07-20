@@ -86,6 +86,56 @@ serve(async (req) => {
       }
     }
 
+    // Helper function to extract and parse JSON from potentially markdown-wrapped responses
+    const extractJsonFromResponse = (content: string) => {
+      console.log('Raw OpenAI response content:', content.substring(0, 200) + '...');
+      
+      try {
+        // First, try direct parsing
+        return JSON.parse(content);
+      } catch (directParseError) {
+        console.log('Direct JSON parse failed, trying to extract from markdown...');
+        
+        try {
+          // Remove markdown code block markers
+          let cleanedContent = content.trim();
+          
+          // Remove ```json and ``` markers
+          if (cleanedContent.startsWith('```json')) {
+            cleanedContent = cleanedContent.replace(/^```json\s*/, '');
+          }
+          if (cleanedContent.startsWith('```')) {
+            cleanedContent = cleanedContent.replace(/^```\s*/, '');
+          }
+          if (cleanedContent.endsWith('```')) {
+            cleanedContent = cleanedContent.replace(/\s*```$/, '');
+          }
+          
+          // Try parsing the cleaned content
+          const parsed = JSON.parse(cleanedContent.trim());
+          console.log('Successfully extracted JSON from markdown wrapper');
+          return parsed;
+        } catch (markdownParseError) {
+          console.error('Failed to parse JSON even after markdown cleanup:', markdownParseError);
+          
+          // Try to find JSON object in the content
+          const jsonMatch = content.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            try {
+              const extracted = JSON.parse(jsonMatch[0]);
+              console.log('Successfully extracted JSON using regex');
+              return extracted;
+            } catch (regexParseError) {
+              console.error('Regex-extracted JSON is also invalid:', regexParseError);
+            }
+          }
+          
+          // If all parsing fails, throw the original error with context
+          throw new Error(`Failed to parse OpenAI response as JSON. Original content: ${content.substring(0, 500)}...`);
+        }
+      }
+    };
+
     // Generate AI-powered school research
     const schoolResearchPrompt = `
       Research and generate personalized school memories for ${schoolName} in ${city} for someone who graduated in ${graduationYear}.
@@ -101,6 +151,8 @@ serve(async (req) => {
 
       Focus on creating shareable, nostalgic content that would resonate with graduates from that specific school and year.
       Be creative but plausible - if specific information isn't available, generate realistic scenarios based on typical school experiences of that era.
+
+      IMPORTANT: Return ONLY the JSON object, no markdown formatting or explanatory text.
 
       Respond in JSON format:
       {
@@ -130,6 +182,7 @@ serve(async (req) => {
       }
     `;
 
+    console.log('Sending request to OpenAI for school memories generation...');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -141,7 +194,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are an expert researcher specializing in educational history and school memories. Generate engaging, nostalgic content that encourages social sharing.'
+            content: 'You are an expert researcher specializing in educational history and school memories. Always respond with valid JSON only, no markdown formatting or explanatory text.'
           },
           {
             role: 'user',
@@ -154,11 +207,15 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
     const aiData = await response.json();
-    const generatedContent = JSON.parse(aiData.choices[0].message.content);
+    console.log('OpenAI response received, parsing content...');
+    
+    const generatedContent = extractJsonFromResponse(aiData.choices[0].message.content);
 
     // Create shareable content variants
     const shareableContent = {
