@@ -286,8 +286,8 @@ export const FactsDebunker = () => {
   };
 
   const generateFacts = async () => {
-    if (!graduationYear || parseInt(graduationYear) < 1900 || parseInt(graduationYear) > new Date().getFullYear()) {
-      setError("Please enter a valid graduation year between 1900 and current year.");
+    if (!graduationYear || parseInt(graduationYear) < 1200 || parseInt(graduationYear) > new Date().getFullYear()) {
+      setError("Please enter a valid graduation year between 1200 and current year.");
       return;
     }
 
