@@ -8,6 +8,7 @@ const corsHeaders = {
 };
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -50,9 +51,46 @@ serve(async (req) => {
       });
     }
 
+    // Try to scrape school website with Firecrawl if API key is available
+    let scrapedContent = '';
+    if (firecrawlApiKey) {
+      try {
+        console.log(`Attempting to scrape school website for ${schoolName}`);
+        const searchQuery = `${schoolName} ${city} school website`;
+        
+        // Use Firecrawl to search and scrape relevant school information
+        const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/search', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${firecrawlApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query: searchQuery,
+            limit: 3,
+            search_depth: 'basic'
+          }),
+        });
+
+        if (firecrawlResponse.ok) {
+          const firecrawlData = await firecrawlResponse.json();
+          if (firecrawlData.data && firecrawlData.data.length > 0) {
+            scrapedContent = firecrawlData.data
+              .map((result: any) => `${result.title}: ${result.content?.substring(0, 500)}`)
+              .join('\n\n');
+            console.log('Successfully scraped school website content');
+          }
+        }
+      } catch (error) {
+        console.warn('Firecrawl scraping failed, continuing with AI-only generation:', error);
+      }
+    }
+
     // Generate AI-powered school research
     const schoolResearchPrompt = `
       Research and generate personalized school memories for ${schoolName} in ${city} for someone who graduated in ${graduationYear}.
+
+      ${scrapedContent ? `Here is some real information about the school from web sources:\n${scrapedContent}\n\nUse this information to make your response more accurate and specific to this actual school.` : ''}
 
       Create content in these categories:
       1. "What Happened at Your School That Year" - specific events, changes, or notable occurrences during ${graduationYear}
@@ -142,8 +180,9 @@ serve(async (req) => {
         shareable_content: shareableContent,
         research_sources: {
           generated_at: new Date().toISOString(),
-          method: 'ai_generated',
-          school_query: `${schoolName} ${city} ${graduationYear}`
+          method: firecrawlApiKey ? 'ai_with_web_scraping' : 'ai_generated',
+          school_query: `${schoolName} ${city} ${graduationYear}`,
+          scraped_content_available: !!scrapedContent
         }
       })
       .select()
