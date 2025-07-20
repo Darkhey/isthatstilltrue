@@ -65,12 +65,6 @@ Check out what other "facts" from your school days are total BS: https://isthats
     window.open(redditUrl, '_blank', 'width=550,height=420');
   };
 
-  const handleWhatsAppShare = () => {
-    const whatsappText = `${shortShareText}\n\n${shareUrl}`;
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(whatsappText)}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
   const handleCopyLink = async () => {
     try {
       await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
@@ -111,8 +105,8 @@ Check out what other "facts" from your school days are total BS: https://isthats
     <div className="pt-4 border-t border-border/20">
       <p className="text-sm text-muted-foreground mb-3">Share this mind-blowing fact:</p>
       
-      {/* Mobile-first sharing options */}
-      <div className="block md:hidden mb-3 space-y-2">
+      {/* Mobile-first native share button */}
+      <div className="block md:hidden mb-3">
         <Button
           variant="outline"
           size="sm"
@@ -122,28 +116,6 @@ Check out what other "facts" from your school days are total BS: https://isthats
           <Share2 className="h-4 w-4" />
           Share this fact
         </Button>
-        
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleWhatsAppShare}
-            className="flex-1 justify-center gap-2 min-h-[44px] hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-colors"
-          >
-            <MessageCircle className="h-4 w-4" />
-            WhatsApp
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleCopyLink}
-            className="flex-1 justify-center gap-2 min-h-[44px] hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors"
-          >
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            {copied ? "Copied!" : "Copy"}
-          </Button>
-        </div>
       </div>
       
       {/* Desktop share buttons */}
@@ -182,17 +154,6 @@ Check out what other "facts" from your school days are total BS: https://isthats
             <span>LinkedIn</span>
           </Button>
 
-          {/* WhatsApp */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleWhatsAppShare}
-            className="flex items-center gap-2 hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-colors"
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span>WhatsApp</span>
-          </Button>
-
           {/* Reddit */}
           <Button
             variant="outline"
@@ -209,7 +170,7 @@ Check out what other "facts" from your school days are total BS: https://isthats
             variant="outline"
             size="sm"
             onClick={handleCopyLink}
-            className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-colors"
+            className="flex items-center gap-2 hover:bg-green-50 hover:border-green-200 hover:text-green-600 transition-colors"
           >
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             <span>{copied ? "Copied!" : "Copy"}</span>
@@ -223,7 +184,7 @@ Check out what other "facts" from your school days are total BS: https://isthats
             className="flex items-center gap-2 hover:bg-primary/10 hover:border-primary/20 hover:text-primary transition-colors"
           >
             <Share2 className="h-4 w-4" />
-            <span>More</span>
+            <span>Share</span>
           </Button>
         </div>
       </div>
