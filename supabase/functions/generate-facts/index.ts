@@ -90,54 +90,56 @@ function getHistoricalContext(country: string, year: number): { region: string; 
   };
 }
 
-// Get knowledge domains appropriate for the historical period
-function getHistoricalKnowledgeDomains(year: number): string[] {
-  if (year < 1500) {
-    return [
-      "Vier-Säfte-Lehre (Medizin)",
-      "Alchemie und Naturphilosophie", 
-      "Ptolemäisches Weltbild",
-      "Scholastische Theologie",
-      "Handwerkszünfte und Gilden",
-      "Feudale Gesellschaftsordnung"
-    ];
-  } else if (year < 1650) {
-    return [
-      "Übergang von Alchemie zur Chemie",
-      "Kopernikanische Wende",
-      "Frühe Anatomie und Medizin",
-      "Humanistische Bildung",
-      "Konfessionelle Spaltung",
-      "Merkantilismus"
-    ];
-  } else if (year < 1800) {
-    return [
-      "Naturphilosophie und frühe Physik",
-      "Aufklärungsmedizin",
-      "Botanik und Taxonomie",
-      "Politische Philosophie",
-      "Experimentelle Methoden",
-      "Gesellschaftsvertrag-Theorien"
-    ];
-  } else if (year < 1900) {
-    return [
-      "Frühe moderne Chemie",
-      "Evolutionstheorie-Vorläufer",
-      "Industrielle Revolution",
-      "Nationalstaatsbildung",
-      "Kolonialismus",
-      "Dampfkraft und Mechanik"
-    ];
-  } else {
-    return [
-      "Moderne Wissenschaften",
-      "Psychologie und Soziologie", 
-      "Elektrizität und Magnetismus",
-      "Bakteriologie",
-      "Imperialismus",
-      "Massenmedien"
-    ];
+// Fixed category definitions for consistent fact generation
+const FIXED_CATEGORIES = {
+  modern: [
+    "Science",
+    "Medicine", 
+    "Technology",
+    "Astronomy",
+    "Geography",
+    "Politics",
+    "International Relations"
+  ],
+  historical: [
+    "Historical Science",
+    "Traditional Medicine",
+    "Early Technology", 
+    "Natural Philosophy",
+    "Historical Geography",
+    "Historical Politics",
+    "International Relations"
+  ],
+  ancient: [
+    "Ancient Natural Beliefs",
+    "Ancient Medicine",
+    "Ancient Astronomy",
+    "Ancient Geography", 
+    "Ancient Worldview",
+    "Ancient Politics",
+    "Ancient Society"
+  ]
+};
+
+// Get fixed categories for the historical period
+function getFixedCategories(year: number): string[] {
+  const factType = getFactGenerationType(year);
+  return FIXED_CATEGORIES[factType];
+}
+
+// Deduplicate facts by category to ensure variety
+function deduplicateByCategory(facts: OutdatedFact[]): OutdatedFact[] {
+  const seen = new Set<string>();
+  const result: OutdatedFact[] = [];
+  
+  for (const fact of facts) {
+    if (!seen.has(fact.category)) {
+      seen.add(fact.category);
+      result.push(fact);
+    }
   }
+  
+  return result;
 }
 
 // Generate fact hash for tracking and quality control
@@ -413,7 +415,7 @@ async function generateOutdatedFactsWithContext(country: string, year: number, e
   const currentYear = new Date().getFullYear();
   const factType = getFactGenerationType(year);
   const historicalContext = getHistoricalContext(country, year);
-  const knowledgeDomains = getHistoricalKnowledgeDomains(year);
+  const fixedCategories = getFixedCategories(year);
   
   let antiDuplicateSection = '';
   if (existingFacts.length > 0) {
@@ -428,17 +430,12 @@ async function generateOutdatedFactsWithContext(country: string, year: number, e
 Historical Context: ${historicalContext.culturalContext}
 Education System: ${historicalContext.educationSystem}
 
-Generate exactly 4-5 concrete scientific/medical facts that were taught in ${historicalContext.region} around ${year} but have since been proven wrong.
+Generate exactly 5 concrete scientific/medical facts that were taught in ${historicalContext.region} around ${year} but have since been proven wrong.
 
-IMPORTANT: Each fact MUST be from a DIFFERENT category. Use these categories and ensure variety:
-- Science (physics, chemistry, biology)
-- Medicine (medical treatments, anatomy, disease understanding)  
-- Technology (inventions, engineering, transportation)
-- Astronomy (space, celestial bodies, earth's place)
-- Geography (world knowledge, maps, natural phenomena)
+CRITICAL: Each fact MUST be from a DIFFERENT category. Use ONLY these exact categories:
+${fixedCategories.map(cat => `- "${cat}"`).join('\n')}
 
-Focus on knowledge areas relevant to ${year}:
-${knowledgeDomains.map(domain => `- **${domain}**`).join('\n')}
+You MUST use exactly these category names - no variations or alternatives allowed.
 
 ${antiDuplicateSection}
 
@@ -467,17 +464,12 @@ Return ONLY a valid JSON array with NO markdown:
 
 Historical Reality: This was during ${historicalContext.culturalContext}. The region was "${historicalContext.region}" and knowledge was transmitted through ${historicalContext.educationSystem}.
 
-Knowledge domains of that era:
-${knowledgeDomains.map(domain => `- ${domain}`).join('\n')}
+Generate exactly 5 scientific/natural beliefs that educated people in ${historicalContext.region} commonly held in ${year} but have been overturned.
 
-Generate exactly 4-5 scientific/natural beliefs that educated people in ${historicalContext.region} commonly held in ${year} but have been overturned.
+CRITICAL: Each fact MUST be from a DIFFERENT category. Use ONLY these exact categories:
+${fixedCategories.map(cat => `- "${cat}"`).join('\n')}
 
-IMPORTANT: Each fact MUST be from a DIFFERENT category. Use these categories and ensure variety:
-- Historical Science (early scientific theories)
-- Natural Philosophy (understanding of natural world)
-- Medicine (historical medical beliefs)
-- Astronomy (celestial understanding)
-- Geography (world knowledge of that era)
+You MUST use exactly these category names - no variations or alternatives allowed.
 
 Remember: Use period-appropriate terminology and concepts. Don't anachronistically refer to modern "${country}" - use "${historicalContext.region}".
 
@@ -507,17 +499,12 @@ Return ONLY a valid JSON array:
 
 Historical Reality: During ${historicalContext.culturalContext}, the modern nation "${country}" did not exist. People lived in ${historicalContext.region} and learned through ${historicalContext.educationSystem}.
 
-Ancient knowledge systems of that era:
-${knowledgeDomains.map(domain => `- ${domain}`).join('\n')}
+Generate exactly 5 beliefs about the natural world that people in ${historicalContext.region} commonly held in ${year} but have been transformed by modern knowledge.
 
-Generate exactly 4-5 beliefs about the natural world that people in ${historicalContext.region} commonly held in ${year} but have been transformed by modern knowledge.
+CRITICAL: Each fact MUST be from a DIFFERENT category. Use ONLY these exact categories:
+${fixedCategories.map(cat => `- "${cat}"`).join('\n')}
 
-IMPORTANT: Each fact MUST be from a DIFFERENT category. Use these categories and ensure variety:
-- Ancient Natural Beliefs (four elements, supernatural causation)
-- Ancient Medicine (humoral theory, medical treatments)  
-- Ancient Astronomy (geocentric cosmology, celestial beliefs)
-- Ancient Physics (Aristotelian physics, motion understanding)
-- Ancient Geography (world shape, distant lands knowledge)
+You MUST use exactly these category names - no variations or alternatives allowed.
 
 ${antiDuplicateSection}
 
@@ -550,6 +537,12 @@ async function generatePoliticalFactsWithContext(country: string, year: number, 
   const currentYear = new Date().getFullYear();
   const factType = getFactGenerationType(year);
   const historicalContext = getHistoricalContext(country, year);
+  const fixedCategories = getFixedCategories(year);
+  
+  // Filter categories to only political/international ones
+  const politicalCategories = fixedCategories.filter(cat => 
+    cat.includes('Politics') || cat.includes('International') || cat.includes('Worldview') || cat.includes('Society')
+  );
   
   let antiDuplicateSection = '';
   if (existingFacts.length > 0) {
@@ -564,12 +557,12 @@ async function generatePoliticalFactsWithContext(country: string, year: number, 
 Historical Context: ${historicalContext.culturalContext}
 Education System: ${historicalContext.educationSystem}
 
-Generate exactly 2-3 political/international relations facts that were commonly taught in ${historicalContext.region} around ${year} but have since been proven wrong, overly simplified, or significantly updated.
+Generate exactly 2 political/international relations facts that were commonly taught in ${historicalContext.region} around ${year} but have since been proven wrong, overly simplified, or significantly updated.
 
-IMPORTANT: Each fact MUST be from a DIFFERENT category. Use these categories and ensure variety:
-- Politics (political systems, ideologies, governance beliefs)
-- International Relations (diplomatic relations, foreign policy views)
-- Colonial Perspectives (imperial attitudes, colonial justifications)
+CRITICAL: Each fact MUST be from a DIFFERENT category. Use ONLY these exact categories:
+${politicalCategories.map(cat => `- "${cat}"`).join('\n')}
+
+You MUST use exactly these category names - no variations or alternatives allowed.
 
 ${antiDuplicateSection}
 
@@ -600,7 +593,12 @@ Focus on genuine political teachings from ${year} in ${historicalContext.region}
 Historical Context: ${historicalContext.culturalContext}
 Political Reality: People lived under ${historicalContext.educationSystem} and were influenced by the dominant powers of the time.
 
-Generate exactly 2-3 political/diplomatic beliefs that educated people in ${historicalContext.region} commonly held in ${year} but have since been proven wrong or dramatically changed.
+Generate exactly 2 political/diplomatic beliefs that educated people in ${historicalContext.region} commonly held in ${year} but have since been proven wrong or dramatically changed.
+
+CRITICAL: Each fact MUST be from a DIFFERENT category. Use ONLY these exact categories:
+${politicalCategories.map(cat => `- "${cat}"`).join('\n')}
+
+You MUST use exactly these category names - no variations or alternatives allowed.
 
 Consider the actual political realities of ${year}:
 - The region was called "${historicalContext.region}" not modern "${country}"
@@ -632,7 +630,12 @@ Return ONLY a valid JSON array:
 
 Historical Reality: This was during ${historicalContext.culturalContext}, when "${country}" as we know it today did not exist. The region was "${historicalContext.region}" and knowledge was transmitted through ${historicalContext.educationSystem}.
 
-Generate exactly 2-3 beliefs about politics/society that people in ${historicalContext.region} commonly held in ${year} but have been transformed by modern understanding.
+Generate exactly 2 beliefs about politics/society that people in ${historicalContext.region} commonly held in ${year} but have been transformed by modern understanding.
+
+CRITICAL: Each fact MUST be from a DIFFERENT category. Use ONLY these exact categories:
+${politicalCategories.map(cat => `- "${cat}"`).join('\n')}
+
+You MUST use exactly these category names - no variations or alternatives allowed.
 
 Remember the historical context:
 - No modern nation-states as we know them
@@ -1400,18 +1403,7 @@ serve(async (req) => {
         throw error;
       }
 
-      // Deduplicate facts by category to ensure variety
-      function deduplicateByCategory(facts: any[]): any[] {
-        const seenCategories = new Set<string>();
-        return facts.filter(fact => {
-          if (seenCategories.has(fact.category)) {
-            console.log(`Removing duplicate category: ${fact.category}`);
-            return false;
-          }
-          seenCategories.add(fact.category);
-          return true;
-        });
-      }
+      // Use the global deduplication function to ensure variety
       
       // Apply category deduplication
       const uniqueRegularFacts = deduplicateByCategory(regularFacts);
