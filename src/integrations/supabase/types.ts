@@ -113,6 +113,42 @@ export type Database = {
         }
         Relationships: []
       }
+      fact_variants: {
+        Row: {
+          country: string
+          created_at: string
+          education_system_problems: Json | null
+          facts_data: Json
+          graduation_year: number
+          id: string
+          quick_fun_fact: string | null
+          updated_at: string
+          variant_number: number
+        }
+        Insert: {
+          country: string
+          created_at?: string
+          education_system_problems?: Json | null
+          facts_data: Json
+          graduation_year: number
+          id?: string
+          quick_fun_fact?: string | null
+          updated_at?: string
+          variant_number: number
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          education_system_problems?: Json | null
+          facts_data?: Json
+          graduation_year?: number
+          id?: string
+          quick_fun_fact?: string | null
+          updated_at?: string
+          variant_number?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

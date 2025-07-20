@@ -408,6 +408,341 @@ Return ONLY a valid JSON array:
   return await makeAIRequest(prompt, 'education-problems');
 }
 
+// Generate regular academic facts with historical context and anti-duplicate logic
+async function generateOutdatedFactsWithContext(country: string, year: number, existingFacts: string[]): Promise<OutdatedFact[]> {
+  const currentYear = new Date().getFullYear();
+  const factType = getFactGenerationType(year);
+  const historicalContext = getHistoricalContext(country, year);
+  const knowledgeDomains = getHistoricalKnowledgeDomains(year);
+  
+  let antiDuplicateSection = '';
+  if (existingFacts.length > 0) {
+    antiDuplicateSection = `\n\nIMPORTANT: DO NOT repeat these already existing facts:\n${existingFacts.slice(0, 10).map(fact => `- ${fact.substring(0, 100)}...`).join('\n')}\n\nGenerate COMPLETELY DIFFERENT facts that cover different topics and areas.`;
+  }
+  
+  let prompt = '';
+  
+  if (factType === 'modern') {
+    prompt = `You are an educational historian analyzing what students in ${historicalContext.region} were taught in ${year} vs what we know today.
+
+Historical Context: ${historicalContext.culturalContext}
+Education System: ${historicalContext.educationSystem}
+
+Generate exactly 4-5 concrete scientific/medical facts that were taught in ${historicalContext.region} around ${year} but have since been proven wrong.
+
+Focus on knowledge areas relevant to ${year}:
+${knowledgeDomains.map(domain => `- **${domain}**`).join('\n')}
+
+${antiDuplicateSection}
+
+CRITICAL JSON FORMATTING RULES:
+- Use ONLY double quotes for strings
+- Escape any quotes inside strings with \\"
+- NO trailing commas anywhere
+- NO line breaks inside string values
+- Keep each string under 300 characters
+
+Return ONLY a valid JSON array with NO markdown:
+
+[
+  {
+    "category": "Science",
+    "fact": "In ${year}, students in ${historicalContext.region} were taught that [specific scientific belief]",
+    "correction": "Today we know that [modern understanding - 2-3 sentences]",
+    "yearDebunked": [year when overturned],
+    "mindBlowingFactor": "This discovery [significance - 2 sentences]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Scientific Institution"
+  }
+]`;
+  } else if (factType === 'historical') {
+    prompt = `You are a historian analyzing scientific beliefs in ${historicalContext.region} around ${year}.
+
+Historical Reality: This was during ${historicalContext.culturalContext}. The region was "${historicalContext.region}" and knowledge was transmitted through ${historicalContext.educationSystem}.
+
+Knowledge domains of that era:
+${knowledgeDomains.map(domain => `- ${domain}`).join('\n')}
+
+Generate exactly 4-5 scientific/natural beliefs that educated people in ${historicalContext.region} commonly held in ${year} but have been overturned.
+
+Remember: Use period-appropriate terminology and concepts. Don't anachronistically refer to modern "${country}" - use "${historicalContext.region}".
+
+${antiDuplicateSection}
+
+CRITICAL JSON FORMATTING RULES:
+- Use ONLY double quotes
+- Escape quotes inside strings with \\"
+- NO trailing commas
+- Keep strings under 300 characters
+
+Return ONLY a valid JSON array:
+
+[
+  {
+    "category": "Historical Science",
+    "fact": "In ${year}, educated people in ${historicalContext.region} believed that [scientific belief - under 150 chars]",
+    "correction": "Today we know that [modern understanding - 2-3 sentences max]",
+    "yearDebunked": [year when overturned],
+    "mindBlowingFactor": "This revolution [significance - 2 sentences max]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Historical Institution"
+  }
+]`;
+  } else {
+    prompt = `You are a historian analyzing beliefs about nature in ${historicalContext.region} around ${year}.
+
+Historical Reality: During ${historicalContext.culturalContext}, the modern nation "${country}" did not exist. People lived in ${historicalContext.region} and learned through ${historicalContext.educationSystem}.
+
+Ancient knowledge systems of that era:
+${knowledgeDomains.map(domain => `- ${domain}`).join('\n')}
+
+Generate exactly 4-5 beliefs about the natural world that people in ${historicalContext.region} commonly held in ${year} but have been transformed by modern knowledge.
+
+Focus on authentic ancient/medieval beliefs:
+- Four elements theory
+- Humoral medicine
+- Geocentric cosmology
+- Aristotelian physics
+- Alchemical theories
+- Supernatural causation
+
+${antiDuplicateSection}
+
+CRITICAL JSON FORMATTING RULES:
+- Use ONLY double quotes
+- Escape quotes with \\"
+- NO trailing commas
+- NO line breaks in strings
+
+Return ONLY a valid JSON array:
+
+[
+  {
+    "category": "Ancient Natural Beliefs", 
+    "fact": "In ${year}, people in ${historicalContext.region} believed that [belief - under 150 chars]",
+    "correction": "Today we understand that [modern knowledge - 2-3 sentences]",
+    "yearDebunked": [year when understanding shifted],
+    "mindBlowingFactor": "This transformation [significance - 2 sentences]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Historical Institution"
+  }
+]`;
+  }
+
+  return await makeAIRequest(prompt, 'outdated-facts');
+}
+
+// Generate politics/international relations facts with anti-duplicate logic
+async function generatePoliticalFactsWithContext(country: string, year: number, existingFacts: string[]): Promise<OutdatedFact[]> {
+  const currentYear = new Date().getFullYear();
+  const factType = getFactGenerationType(year);
+  const historicalContext = getHistoricalContext(country, year);
+  
+  let antiDuplicateSection = '';
+  if (existingFacts.length > 0) {
+    antiDuplicateSection = `\n\nIMPORTANT: DO NOT repeat these already existing facts:\n${existingFacts.slice(0, 10).map(fact => `- ${fact.substring(0, 100)}...`).join('\n')}\n\nGenerate COMPLETELY DIFFERENT political facts that cover different aspects and topics.`;
+  }
+  
+  let prompt = '';
+  
+  if (factType === 'modern') {
+    prompt = `You are an expert in international relations and political education. Analyze how students in ${historicalContext.region} were taught about politics and international relations in ${year} vs today in ${currentYear}.
+
+Historical Context: ${historicalContext.culturalContext}
+Education System: ${historicalContext.educationSystem}
+
+Generate exactly 2-3 political/international relations facts that were commonly taught in ${historicalContext.region} around ${year} but have since been proven wrong, overly simplified, or significantly updated.
+
+Focus on these areas:
+- **Views on other nations/empires** (how ${historicalContext.region} students were taught to view other powers)
+- **International conflicts** and how they were presented
+- **Political systems** and ideologies of the time
+- **Colonial attitudes** and imperial perspectives
+- **Diplomatic relations** that have dramatically changed
+- **Economic theories** prevalent at the time
+
+${antiDuplicateSection}
+
+CRITICAL JSON FORMATTING RULES:
+- Use double quotes for ALL strings
+- Escape quotes inside strings with backslash: \\"
+- No trailing commas
+- No line breaks inside string values
+
+Return ONLY a valid JSON array with NO markdown formatting:
+
+[
+  {
+    "category": "Politics",
+    "fact": "In ${year}, students in ${historicalContext.region} were taught that [specific political statement - keep under 150 characters]",
+    "correction": "Today we understand that [nuanced political reality - 2-3 sentences max]",
+    "yearDebunked": [year when understanding changed],
+    "mindBlowingFactor": "This evolution [significance - 2 sentences max]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Institution Name"
+  }
+]
+
+Focus on genuine political teachings from ${year} in ${historicalContext.region}.`;
+  } else if (factType === 'historical') {
+    prompt = `You are a historian analyzing political beliefs in ${historicalContext.region} around ${year}.
+
+Historical Context: ${historicalContext.culturalContext}
+Political Reality: People lived under ${historicalContext.educationSystem} and were influenced by the dominant powers of the time.
+
+Generate exactly 2-3 political/diplomatic beliefs that educated people in ${historicalContext.region} commonly held in ${year} but have since been proven wrong or dramatically changed.
+
+Consider the actual political realities of ${year}:
+- The region was called "${historicalContext.region}" not modern "${country}"
+- Education was through ${historicalContext.educationSystem}
+- Political worldview was shaped by ${historicalContext.culturalContext}
+
+${antiDuplicateSection}
+
+CRITICAL JSON FORMATTING RULES:
+- Use double quotes for ALL strings
+- Escape quotes inside strings with \\"
+- No trailing commas
+
+Return ONLY a valid JSON array:
+
+[
+  {
+    "category": "Historical Politics",
+    "fact": "In ${year}, educated people in ${historicalContext.region} commonly believed that [specific belief - under 150 chars]",
+    "correction": "Today we understand that [modern perspective - 2-3 sentences]",
+    "yearDebunked": [year when understanding changed],
+    "mindBlowingFactor": "This evolution [significance - 2 sentences]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Historical Institution"
+  }
+]`;
+  } else {
+    prompt = `You are a historian analyzing worldviews in ${historicalContext.region} around ${year}.
+
+Historical Reality: This was during ${historicalContext.culturalContext}, when "${country}" as we know it today did not exist. The region was "${historicalContext.region}" and knowledge was transmitted through ${historicalContext.educationSystem}.
+
+Generate exactly 2-3 beliefs about politics/society that people in ${historicalContext.region} commonly held in ${year} but have been transformed by modern understanding.
+
+Remember the historical context:
+- No modern nation-states as we know them
+- Different political structures (feudalism, tribal kingdoms, city-states)
+- Knowledge preserved in monasteries, courts, or oral traditions
+- Very different understanding of government, law, and society
+
+${antiDuplicateSection}
+
+CRITICAL JSON FORMATTING RULES:
+- Use double quotes for ALL strings
+- Escape quotes with \\"
+- No trailing commas
+
+Return ONLY a valid JSON array:
+
+[
+  {
+    "category": "Ancient Worldview",
+    "fact": "In ${year}, people in ${historicalContext.region} believed that [specific belief - under 150 chars]",
+    "correction": "Today we understand that [modern perspective - 2-3 sentences]",
+    "yearDebunked": [year when shift occurred],
+    "mindBlowingFactor": "This transformation [significance - 2 sentences]",
+    "sourceUrl": "https://credible-source.com",
+    "sourceName": "Historical Institution"
+  }
+]`;
+  }
+
+  return await makeAIRequest(prompt, 'political-facts');
+}
+
+// Generate education system problems with anti-duplicate logic
+async function generateEducationProblemsWithContext(country: string, year: number, existingProblems: string[]): Promise<EducationSystemProblem[]> {
+  const factType = getFactGenerationType(year);
+  const historicalContext = getHistoricalContext(country, year);
+  
+  let antiDuplicateSection = '';
+  if (existingProblems.length > 0) {
+    antiDuplicateSection = `\n\nIMPORTANT: DO NOT repeat these already existing problems:\n${existingProblems.slice(0, 10).map(problem => `- ${problem.substring(0, 80)}...`).join('\n')}\n\nGenerate COMPLETELY DIFFERENT education problems that cover different aspects and challenges.`;
+  }
+  
+  let prompt = '';
+  
+  if (factType === 'modern') {
+    prompt = `List 3-5 major problems that the education system in ${historicalContext.region} faced around ${year}.
+
+Historical Context: ${historicalContext.culturalContext}
+Education System: ${historicalContext.educationSystem}
+
+${antiDuplicateSection}
+
+CRITICAL JSON FORMATTING:
+- Use double quotes only
+- No trailing commas
+- Keep descriptions under 200 characters
+
+Return ONLY a valid JSON array:
+[
+  {
+    "problem": "Brief title",
+    "description": "2-3 sentence description",
+    "impact": "How this affected education quality"
+  }
+]`;
+  } else if (factType === 'historical') {
+    prompt = `List 3-5 challenges that education faced in ${historicalContext.region} around ${year}.
+
+Historical Context: This was during ${historicalContext.culturalContext}
+Education System: Knowledge was transmitted through ${historicalContext.educationSystem}
+
+Remember: "${country}" as a modern state did not exist. Focus on the actual educational challenges of ${historicalContext.region} in ${year}.
+
+${antiDuplicateSection}
+
+CRITICAL JSON FORMATTING:
+- Use double quotes only
+- Escape quotes with \\"
+- No trailing commas
+
+Return ONLY a valid JSON array:
+[
+  {
+    "problem": "Brief challenge title",
+    "description": "2-3 sentence description of the actual historical challenge",
+    "impact": "How this affected learning in that era"
+  }
+]`;
+  } else {
+    prompt = `List 3-5 challenges that knowledge and learning faced in ${historicalContext.region} around ${year}.
+
+Historical Reality: During ${historicalContext.culturalContext}, formal education was limited to ${historicalContext.educationSystem}. The modern concept of "${country}" did not exist.
+
+Focus on authentic challenges of that era:
+- Limited literacy
+- Knowledge preservation issues
+- Social/religious restrictions on learning
+- Lack of standardized curricula
+- Geographic/political fragmentation
+
+${antiDuplicateSection}
+
+CRITICAL JSON FORMATTING:
+- Use double quotes only
+- Escape quotes with \\"
+- No trailing commas
+
+Return ONLY a valid JSON array:
+[
+  {
+    "problem": "Brief historical challenge title",
+    "description": "2-3 sentence description of the actual challenge",
+    "impact": "How this affected knowledge sharing in that era"
+  }
+]`;
+  }
+
+  return await makeAIRequest(prompt, 'education-problems');
+}
+
 // Generate regular academic facts with historical context
 async function generateOutdatedFacts(country: string, year: number): Promise<OutdatedFact[]> {
   const currentYear = new Date().getFullYear();
@@ -932,126 +1267,165 @@ serve(async (req) => {
     
     console.log(`Processing request for country: ${country}, graduation year: ${graduationYear}`);
 
-    // Generate quick fun fact first and return it immediately
-    const quickFunFact = await generateQuickFunFact(country, graduationYear);
-    console.log(`Generated quick fun fact: ${quickFunFact}`);
-
-    // Check for cached data
-    const { data: cachedData, error: cacheError } = await supabase
-      .from('cached_facts')
-      .select('facts_data, education_system_problems, created_at')
+    // Check existing variants and count them
+    const { data: existingVariants, error: variantsError } = await supabase
+      .from('fact_variants')
+      .select('*')
       .eq('country', country)
       .eq('graduation_year', graduationYear)
-      .single();
+      .order('variant_number');
 
-    if (cacheError && cacheError.code !== 'PGRST116') {
-      console.error('Cache lookup error:', cacheError);
+    if (variantsError) {
+      console.error('Error checking existing variants:', variantsError);
     }
 
-    // Return cached data if it exists and is recent (within 6 months)
-    if (cachedData && cachedData.facts_data && cachedData.education_system_problems) {
-      const cacheAge = Date.now() - new Date(cachedData.created_at).getTime();
-      const sixMonthsInMs = 6 * 30 * 24 * 60 * 60 * 1000;
+    const existingCount = existingVariants?.length || 0;
+    console.log(`Found ${existingCount} existing variants for ${country} ${graduationYear}`);
+
+    // If we have variants, return a random one
+    if (existingVariants && existingVariants.length > 0) {
+      const randomVariant = existingVariants[Math.floor(Math.random() * existingVariants.length)];
+      console.log(`Returning existing variant ${randomVariant.variant_number}`);
       
-      if (cacheAge < sixMonthsInMs) {
-        console.log(`Returning cached data for ${country} ${graduationYear} (cached ${Math.round(cacheAge / (24 * 60 * 60 * 1000))} days ago)`);
-        return new Response(JSON.stringify({ 
-          quickFunFact,
-          facts: cachedData.facts_data,
-          educationProblems: cachedData.education_system_problems,
-          cached: true,
-          cacheAge: Math.round(cacheAge / (24 * 60 * 60 * 1000))
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
+      return new Response(JSON.stringify({
+        quickFunFact: randomVariant.quick_fun_fact,
+        facts: randomVariant.facts_data || [],
+        educationProblems: randomVariant.education_system_problems || [],
+        cached: true,
+        variant: randomVariant.variant_number
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    console.log(`Generating new data for ${country} ${graduationYear}`);
-
-    // Generate facts and education problems separately, with better error handling
-    let politicalFacts: any[] = [];
-    let regularFacts: any[] = [];
-    let educationProblems: any[] = [];
-
-    try {
-      // Try to generate regular facts first (science, etc.) as they are prioritized in display
-      console.log('Starting fact generation - prioritizing scientific facts...');
+    // If we have less than 3 variants, generate a new one
+    if (existingCount < 3) {
+      console.log(`Generating new variant ${existingCount + 1}/3`);
       
-      const results = await Promise.allSettled([
-        generateOutdatedFacts(country, graduationYear), // Scientific facts first
-        generatePoliticalFacts(country, graduationYear),
-        generateEducationProblems(country, graduationYear)
-      ]);
+      // Generate quick fun fact
+      const quickFunFact = await generateQuickFunFact(country, graduationYear);
+      console.log(`Generated quick fun fact: ${quickFunFact}`);
 
-      if (results[0].status === 'fulfilled') {
-        regularFacts = results[0].value;
-        console.log(`Successfully generated ${regularFacts.length} scientific/regular facts`);
-      } else {
-        console.error('Scientific facts generation failed:', results[0].reason);
-      }
-
-      if (results[1].status === 'fulfilled') {
-        politicalFacts = results[1].value;
-        console.log(`Successfully generated ${politicalFacts.length} political facts`);
-      } else {
-        console.error('Political facts generation failed:', results[1].reason);
-      }
-
-      if (results[2].status === 'fulfilled') {
-        educationProblems = results[2].value;
-        console.log(`Successfully generated ${educationProblems.length} education problems`);
-      } else {
-        console.error('Education problems generation failed:', results[2].reason);
-      }
-
-      // Ensure we have some content
-      if (regularFacts.length === 0 && politicalFacts.length === 0 && educationProblems.length === 0) {
-        console.log(`No facts generated for ${country} ${graduationYear}. This might be a very specific combination.`);
-        throw new Error('Failed to generate any content for this combination');
-      }
-
-    } catch (error) {
-      console.error('Error generating facts:', error);
-      throw error;
-    }
-
-    // Combine facts - prioritize scientific facts first
-    const allFacts = [...regularFacts, ...politicalFacts];
-    
-    console.log(`Final result: ${regularFacts.length} scientific facts, ${politicalFacts.length} political facts, ${educationProblems.length} education problems`);
-    console.log('Scientific fact categories:', regularFacts.map(f => f.category));
-
-    // Save the generated data to cache only if we have content
-    if (allFacts.length > 0 || educationProblems.length > 0) {
-      try {
-        const { error: insertError } = await supabase
-          .from('cached_facts')
-          .upsert({
-            country,
-            graduation_year: graduationYear,
-            facts_data: allFacts,
-            education_system_problems: educationProblems,
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'country,graduation_year'
-          });
-
-        if (insertError) {
-          console.error('Failed to cache data:', insertError);
-        } else {
-          console.log(`Successfully cached data for ${country} ${graduationYear}`);
+      // Collect existing facts to avoid duplicates
+      const existingFacts: string[] = [];
+      const existingEducationProblems: string[] = [];
+      
+      if (existingVariants && existingVariants.length > 0) {
+        for (const variant of existingVariants) {
+          if (variant.facts_data) {
+            variant.facts_data.forEach((fact: any) => {
+              if (fact.claim) existingFacts.push(fact.claim);
+              if (fact.outdatedInfo) existingFacts.push(fact.outdatedInfo);
+            });
+          }
+          if (variant.education_system_problems) {
+            variant.education_system_problems.forEach((problem: any) => {
+              if (problem.problem) existingEducationProblems.push(problem.problem);
+            });
+          }
         }
-      } catch (cacheError) {
-        console.error('Cache insertion error:', cacheError);
       }
+
+      console.log(`Found ${existingFacts.length} existing facts to avoid duplicating`);
+      console.log(`Found ${existingEducationProblems.length} existing education problems to avoid duplicating`);
+
+      // Generate facts with anti-duplicate prompts
+      let politicalFacts: any[] = [];
+      let regularFacts: any[] = [];
+      let educationProblems: any[] = [];
+
+      try {
+        console.log('Starting fact generation with anti-duplicate logic...');
+        
+        // Generate facts with existing content context for avoiding duplicates
+        const results = await Promise.allSettled([
+          generateOutdatedFactsWithContext(country, graduationYear, existingFacts),
+          generatePoliticalFactsWithContext(country, graduationYear, existingFacts),
+          generateEducationProblemsWithContext(country, graduationYear, existingEducationProblems)
+        ]);
+
+        if (results[0].status === 'fulfilled') {
+          regularFacts = results[0].value;
+          console.log(`Successfully generated ${regularFacts.length} new scientific/regular facts`);
+        } else {
+          console.error('Scientific facts generation failed:', results[0].reason);
+        }
+
+        if (results[1].status === 'fulfilled') {
+          politicalFacts = results[1].value;
+          console.log(`Successfully generated ${politicalFacts.length} new political facts`);
+        } else {
+          console.error('Political facts generation failed:', results[1].reason);
+        }
+
+        if (results[2].status === 'fulfilled') {
+          educationProblems = results[2].value;
+          console.log(`Successfully generated ${educationProblems.length} new education problems`);
+        } else {
+          console.error('Education problems generation failed:', results[2].reason);
+        }
+
+        // Ensure we have some content
+        if (regularFacts.length === 0 && politicalFacts.length === 0 && educationProblems.length === 0) {
+          console.log(`No new facts generated for ${country} ${graduationYear}. This might be challenging to create more variants.`);
+          throw new Error('Failed to generate new variant content');
+        }
+
+      } catch (error) {
+        console.error('Error generating facts:', error);
+        throw error;
+      }
+
+      // Combine facts - prioritize scientific facts first
+      const allFacts = [...regularFacts, ...politicalFacts];
+      
+      console.log(`New variant result: ${regularFacts.length} scientific facts, ${politicalFacts.length} political facts, ${educationProblems.length} education problems`);
+
+      // Save the new variant
+      if (allFacts.length > 0 || educationProblems.length > 0) {
+        try {
+          const { error: insertError } = await supabase
+            .from('fact_variants')
+            .insert({
+              country,
+              graduation_year: graduationYear,
+              variant_number: existingCount + 1,
+              facts_data: allFacts,
+              education_system_problems: educationProblems,
+              quick_fun_fact: quickFunFact
+            });
+
+          if (insertError) {
+            console.error('Failed to save new variant:', insertError);
+          } else {
+            console.log(`Successfully saved variant ${existingCount + 1} for ${country} ${graduationYear}`);
+          }
+        } catch (saveError) {
+          console.error('Variant save error:', saveError);
+        }
+      }
+
+      return new Response(JSON.stringify({ 
+        quickFunFact,
+        facts: allFacts,
+        educationProblems,
+        cached: false,
+        variant: existingCount + 1
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    return new Response(JSON.stringify({ 
-      quickFunFact,
-      facts: allFacts,
-      educationProblems,
-      cached: false
+    // If we already have 3 variants, just return a random one
+    const randomVariant = existingVariants[Math.floor(Math.random() * existingVariants.length)];
+    console.log(`Maximum variants reached, returning random variant ${randomVariant.variant_number}`);
+    
+    return new Response(JSON.stringify({
+      quickFunFact: randomVariant.quick_fun_fact,
+      facts: randomVariant.facts_data || [],
+      educationProblems: randomVariant.education_system_problems || [],
+      cached: true,
+      variant: randomVariant.variant_number
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
