@@ -29,16 +29,18 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
     });
   }, []);
 
-  // Generate options for last two digits (00-99)
+  // Generate options for last two digits (dynamic based on century)
   const lastDigitOptions: WheelPickerOption[] = useMemo(() => {
-    return Array.from({ length: 100 }, (_, i) => {
+    // For century 20 (2000s), limit to 00-23 (2023 max)
+    const maxDigit = firstTwoDigits === '20' ? 23 : 99;
+    return Array.from({ length: maxDigit + 1 }, (_, i) => {
       const value = i.toString().padStart(2, '0');
       return {
         value,
         label: value,
       };
     });
-  }, []);
+  }, [firstTwoDigits]);
 
   // Calculate the full year
   const fullYear = useMemo(() => {
@@ -47,17 +49,19 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
 
   // Update parent when selection changes
   useEffect(() => {
-    if (fullYear <= currentYear) {
+    if (fullYear <= 2023) {
       onValueChange(fullYear.toString());
     }
-  }, [fullYear, onValueChange, currentYear]);
+  }, [fullYear, onValueChange]);
 
   // Initialize from existing value
   useEffect(() => {
     if (value) {
       const yearValue = parseInt(value);
-      const first = Math.floor(yearValue / 100).toString();
-      const last = (yearValue % 100).toString().padStart(2, '0');
+      // Reset to 2023 if value is beyond our limit
+      const limitedYear = yearValue > 2023 ? 2023 : yearValue;
+      const first = Math.floor(limitedYear / 100).toString();
+      const last = (limitedYear % 100).toString().padStart(2, '0');
       
       if (parseInt(first) >= 16 && parseInt(first) <= 21) {
         setFirstTwoDigits(first);
@@ -74,9 +78,9 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
         <div className="mt-2 text-2xl font-bold text-primary">
           {fullYear}
         </div>
-        {fullYear > currentYear && (
+        {fullYear > 2023 && (
           <p className="text-xs text-destructive mt-1">
-            Year cannot be in the future
+            Year cannot be beyond 2023
           </p>
         )}
       </div>
@@ -107,7 +111,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
 
       {/* Quick Jump Buttons */}
       <div className="flex gap-2 flex-wrap justify-center">
-        {[1960, 1980, 1990, 2000, 2010, 2020].map(year => (
+        {[1960, 1980, 1990, 2000, 2010, 2023].map(year => (
           <button
             key={year}
             onClick={() => {
