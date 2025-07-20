@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle, ChevronDown, Flag } from "lucide-react";
+import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle, ChevronDown, Flag, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
 import { FactShare } from "./FactShare";
@@ -61,7 +61,7 @@ const getLocalGreeting = (country: string) => {
     "Switzerland": "Grüezi",
     "France": "Bonjour",
     "United Kingdom": "Hello",
-    "USA": "Hello", 
+    "USA": "Hello",
     "Canada": "Hello",
     "Australia": "G'day",
     "Netherlands": "Hallo",
@@ -81,7 +81,7 @@ const getLocalGreeting = (country: string) => {
 };
 
 const getCategoryIcon = (category: string) => {
-  const iconMap: Record<string, any> = {
+  const iconMap: Record<string, LucideIcon> = {
     "Politics": Flag,
     "International Relations": Flag,
     "Historical Politics": Flag,
@@ -538,7 +538,7 @@ export const FactsDebunker = () => {
                       <Lightbulb className="h-5 w-5 text-primary shrink-0 mt-0.5" />
                       <div>
                         <h4 className="font-semibold text-primary mb-1">Historical Fun Fact</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
+                        <p className="text-sm text-muted-foreground leading-relaxed break-words">
                           {quickFunFact}
                         </p>
                       </div>
@@ -558,7 +558,7 @@ export const FactsDebunker = () => {
                          <h3 className="text-lg md:text-xl font-bold leading-tight text-foreground">
                            Education System Challenges in {country} around {graduationYear}
                          </h3>
-                         <p className="text-sm md:text-base text-muted-foreground mt-2 leading-relaxed">
+                         <p className="text-sm md:text-base text-muted-foreground mt-2 leading-relaxed break-words">
                            Click to see what problems affected your education system during that era
                          </p>
                        </div>
@@ -575,11 +575,11 @@ export const FactsDebunker = () => {
                              </CardTitle>
                            </CardHeader>
                            <CardContent className="space-y-2 md:space-y-3 pt-0">
-                             <p className="text-xs md:text-sm text-orange-700 leading-relaxed">
+                             <p className="text-xs md:text-sm text-orange-700 leading-relaxed break-words">
                                {problem.description}
                              </p>
                              <div className="pt-2 border-t border-orange-200">
-                               <p className="text-xs font-medium text-orange-600 leading-relaxed">
+                               <p className="text-xs font-medium text-orange-600 leading-relaxed break-words">
                                  <strong>Impact:</strong> {problem.impact}
                                </p>
                              </div>
@@ -672,7 +672,7 @@ export const FactsDebunker = () => {
                                   : `What people believed in ${graduationYear}:`}
                               </span>
                             </h4>
-                            <p className="text-sm italic leading-relaxed">
+                            <p className="text-sm italic leading-relaxed break-words">
                               „{fact.fact.replace(`In ${graduationYear}, students in ${country} were taught that`, '')
                                         .replace(`In ${graduationYear}, ${country} students were taught that`, '')
                                         .replace(`In ${graduationYear}, educated people in ${country} commonly believed that`, '')
@@ -686,7 +686,7 @@ export const FactsDebunker = () => {
                               <BookOpen className="w-4 h-4 shrink-0 mt-0.5" />
                               <span>What we know now:</span>
                             </h4>
-                            <p className="text-sm leading-relaxed">
+                            <p className="text-sm leading-relaxed break-words">
                               {fact.correction}
                             </p>
                           </div>
@@ -697,7 +697,7 @@ export const FactsDebunker = () => {
                                 <Lightbulb className="w-4 h-4" />
                                 Why This Matters:
                               </h4>
-                              <p className="text-sm text-amber-800">
+                              <p className="text-sm text-amber-800 break-words">
                                 {fact.mindBlowingFactor}
                               </p>
                             </div>
@@ -720,7 +720,7 @@ export const FactsDebunker = () => {
                                   <ExternalLink className="w-3 h-3" />
                                 </a>
                               ) : (
-                                <p className="text-sm text-slate-600">{fact.sourceName}</p>
+                                <p className="text-sm text-slate-600 break-words">{fact.sourceName}</p>
                               )}
                             </div>
                           )}
