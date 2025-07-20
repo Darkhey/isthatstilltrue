@@ -632,6 +632,7 @@ export const FactsDebunker = () => {
               city={city}
               graduationYear={parseInt(graduationYear)}
               memoryData={schoolMemories}
+              shareableText={schoolShareableContent?.mainShare}
             />
             <SchoolShareCard
               schoolName={schoolName}
