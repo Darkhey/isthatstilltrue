@@ -17,7 +17,7 @@ import { SchoolModeToggle } from "./SchoolModeToggle";
 import { SchoolPicker } from "./SchoolPicker";
 import { SchoolMemoryCard } from "./SchoolMemoryCard";
 import { SchoolShareCard } from "./SchoolShareCard";
-
+import { HistoricalHeadlines } from "./HistoricalHeadlines";
 
 interface OutdatedFact {
   category: string;
@@ -52,12 +52,21 @@ interface SchoolMemoryData {
   shareableQuotes: string[];
 }
 
+interface HistoricalHeadline {
+  title: string;
+  date: string;
+  description: string;
+  category: 'world' | 'national' | 'local' | 'culture' | 'technology' | 'sports';
+  source?: string;
+}
+
 interface ShareableContent {
   mainShare: string;
   whatsappShare: string;
   instagramStory: string;
   twitterPost: string;
   variants: string[];
+  historicalHeadlines?: HistoricalHeadline[];
 }
 
 const countries = [
@@ -301,7 +310,8 @@ export const FactsDebunker = () => {
   const [quickFunFact, setQuickFunFact] = useState<string | null>(null);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [selectedFactForReport, setSelectedFactForReport] = useState<OutdatedFact | null>(null);
-  
+  const [historicalHeadlines, setHistoricalHeadlines] = useState<HistoricalHeadline[]>([]);
+
   const factsResultsRef = useRef<HTMLDivElement>(null);
 
   const handleNextStep = () => {
@@ -338,6 +348,7 @@ export const FactsDebunker = () => {
     setFacts([]);
     setSchoolMemories(null);
     setSchoolShareableContent(null);
+    setHistoricalHeadlines([]);
     setError(null);
     setSuccessMessage(null);
     
@@ -362,23 +373,29 @@ export const FactsDebunker = () => {
         });
 
         if (error) {
-          throw error;
+          console.error('School research error:', error);
+          setError("Fehler beim Recherchieren der Schulerinnerungen. Bitte versuche es erneut.");
+          setShowSkeletons(false);
+          return;
         }
 
-        if (!data.schoolMemories) {
-          setError("Could not research school memories. Please try different school information.");
+        if (!data || !data.schoolMemories) {
+          setError("Keine Schulerinnerungen gefunden. Bitte überprüfe die Schulinformationen.");
           setShowSkeletons(false);
           return;
         }
 
         setSchoolMemories(data.schoolMemories);
         setSchoolShareableContent(data.shareableContent);
+        if (data.historicalHeadlines) {
+          setHistoricalHeadlines(data.historicalHeadlines);
+        }
         setShowSkeletons(false);
         
         if (data.cached) {
-          setSuccessMessage(`Found school memories (researched ${data.cacheAge} days ago)`);
+          setSuccessMessage(`Schulerinnerungen gefunden (recherchiert vor ${data.cacheAge} Tagen)`);
         } else {
-          setSuccessMessage(`Successfully researched school memories for ${schoolName}!`);
+          setSuccessMessage(`Schulerinnerungen für ${schoolName} erfolgreich recherchiert!`);
         }
       } else {
         console.log(`Generating facts for ${country} ${graduationYear}`);
@@ -452,7 +469,7 @@ export const FactsDebunker = () => {
       }
     } catch (error) {
       console.error('Error researching facts:', error);
-      setError("Could not research facts. Please try again or select a different country/year combination.");
+      setError("Fehler beim Recherchieren. Bitte versuche es erneut.");
       setShowSkeletons(false);
     } finally {
       setIsLoading(false);
@@ -623,7 +640,6 @@ export const FactsDebunker = () => {
           )}
         </Card>
 
-
         {/* School Memory Results */}
         {isSchoolMode && schoolMemories && schoolShareableContent && (
           <div ref={factsResultsRef} className="max-w-4xl mx-auto space-y-6">
@@ -634,6 +650,15 @@ export const FactsDebunker = () => {
               memoryData={schoolMemories}
               shareableText={schoolShareableContent?.mainShare}
             />
+            
+            {/* Historical Headlines */}
+            {historicalHeadlines.length > 0 && (
+              <HistoricalHeadlines 
+                headlines={historicalHeadlines} 
+                year={parseInt(graduationYear)} 
+              />
+            )}
+            
             <SchoolShareCard
               schoolName={schoolName}
               city={city}
@@ -646,7 +671,7 @@ export const FactsDebunker = () => {
                 variant="outline"
                 className="px-8"
               >
-                Research Another School
+                Andere Schule recherchieren
               </Button>
             </div>
           </div>

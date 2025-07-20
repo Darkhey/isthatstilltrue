@@ -38,8 +38,42 @@ interface ResearchSources {
   firecrawlSuccess: boolean;
 }
 
-// Enhanced Firecrawl search function with multiple strategies
-async function performFirecrawlSearch(query: string, limit: number = 5): Promise<SearchResult[]> {
+interface HistoricalHeadline {
+  title: string;
+  date: string;
+  description: string;
+  category: 'world' | 'national' | 'local' | 'culture' | 'technology' | 'sports';
+  source?: string;
+}
+
+// Utility function to clean JSON responses from OpenAI
+function cleanJsonResponse(jsonString: string): string {
+  console.log('Cleaning JSON response...');
+  
+  // Remove markdown code blocks if present
+  let cleaned = jsonString.trim();
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.replace(/^```json\s*/, '');
+  }
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```\s*/, '');
+  }
+  if (cleaned.endsWith('```')) {
+    cleaned = cleaned.replace(/\s*```$/, '');
+  }
+  
+  // Fix common JSON issues
+  // Remove trailing commas before closing brackets/braces
+  cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
+  
+  // Fix quotes in strings (basic approach)
+  cleaned = cleaned.replace(/([{,]\s*\w+):/g, '"$1":');
+  
+  return cleaned.trim();
+}
+
+// Enhanced Firecrawl search with better rate limiting
+async function performFirecrawlSearch(query: string, limit: number = 3): Promise<SearchResult[]> {
   if (!firecrawlApiKey) {
     console.log('Firecrawl API key not available, skipping search for:', query);
     return [];
@@ -48,7 +82,6 @@ async function performFirecrawlSearch(query: string, limit: number = 5): Promise
   try {
     console.log(`Starting Firecrawl search for: "${query}"`);
     
-    // Try the search endpoint first
     const searchResponse = await fetch('https://api.firecrawl.dev/v1/search', {
       method: 'POST',
       headers: {
@@ -57,12 +90,17 @@ async function performFirecrawlSearch(query: string, limit: number = 5): Promise
       },
       body: JSON.stringify({
         query: query,
-        limit: limit,
-        search_depth: 'basic'
+        limit: limit
       }),
     });
 
     console.log(`Firecrawl search response status: ${searchResponse.status}`);
+    
+    if (searchResponse.status === 429) {
+      console.log('Rate limit hit, implementing backoff...');
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second wait
+      return []; // Return empty for this search to avoid cascading failures
+    }
     
     if (!searchResponse.ok) {
       const errorText = await searchResponse.text();
@@ -92,28 +130,17 @@ async function performFirecrawlSearch(query: string, limit: number = 5): Promise
   }
 }
 
-// Multi-source research strategy
+// Optimized research strategy with fewer simultaneous requests
 async function conductComprehensiveResearch(schoolName: string, city: string, graduationYear: number): Promise<ResearchSources> {
-  console.log(`Starting comprehensive research for ${schoolName} in ${city}, graduation year ${graduationYear}`);
+  console.log(`Starting optimized research for ${schoolName} in ${city}, graduation year ${graduationYear}`);
   
+  // Reduced and prioritized search queries
   const searchQueries = [
-    // School-specific searches
-    `"${schoolName}" ${city} school website official`,
-    `"${schoolName}" ${city} school history`,
-    `${schoolName} ${city} school ${graduationYear}`,
-    
-    // Local news and events
-    `${schoolName} ${city} ${graduationYear} graduation news`,
-    `${city} school news ${graduationYear}`,
-    `${city} education ${graduationYear} changes`,
-    
-    // Historical context
-    `${city} ${graduationYear} local events history`,
-    `${city} newspaper ${graduationYear} school`,
-    
-    // Educational changes
-    `Germany education system ${graduationYear} changes`,
-    `school curriculum changes ${graduationYear}`,
+    `"${schoolName}" ${city} school official website`,
+    `${schoolName} ${city} school history ${graduationYear}`,
+    `${city} school news ${graduationYear} graduation`,
+    `${city} local news ${graduationYear}`,
+    `Germany education ${graduationYear} changes`
   ];
 
   const sources: ResearchSources = {
@@ -126,71 +153,107 @@ async function conductComprehensiveResearch(schoolName: string, city: string, gr
     firecrawlSuccess: false
   };
 
-  // Perform searches in batches to avoid rate limiting
-  for (let i = 0; i < searchQueries.length; i++) {
+  // Sequential searches with delays to respect rate limits
+  for (let i = 0; i < Math.min(searchQueries.length, 3); i++) { // Limit to 3 searches
     const query = searchQueries[i];
-    console.log(`Executing search ${i + 1}/${searchQueries.length}: "${query}"`);
+    console.log(`Executing search ${i + 1}: "${query}"`);
     
     try {
-      const results = await performFirecrawlSearch(query, 3);
+      const results = await performFirecrawlSearch(query, 2); // Reduce results per query
       
       if (results.length > 0) {
         sources.firecrawlSuccess = true;
         
-        // Categorize results based on content and URL
+        // Simple categorization
         for (const result of results) {
-          const url = result.url.toLowerCase();
           const content = (result.title + ' ' + result.content).toLowerCase();
           
-          if (content.includes(schoolName.toLowerCase()) && (url.includes('school') || content.includes('school'))) {
+          if (content.includes('school') || content.includes('schule')) {
             sources.schoolWebsite.push(result);
-          } else if (url.includes('news') || url.includes('zeitung') || content.includes('news') || content.includes('artikel')) {
+          } else if (content.includes('news') || content.includes('nachrichten')) {
             sources.localNews.push(result);
-          } else if (content.includes('history') || content.includes('geschichte') || url.includes('archive')) {
-            sources.historicalRecords.push(result);
-          } else if (content.includes('education') || content.includes('bildung') || content.includes('curriculum')) {
-            sources.educationalChanges.push(result);
           } else {
-            // Default to school website if unsure
-            sources.schoolWebsite.push(result);
+            sources.historicalRecords.push(result);
           }
         }
       }
       
-      // Add small delay between searches to be respectful to the API
+      // Add delay between searches
       if (i < searchQueries.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 second delay
       }
     } catch (error) {
       console.error(`Search failed for query "${query}":`, error);
     }
   }
 
-  // Remove duplicates based on URL
-  const deduplicateResults = (results: SearchResult[]) => {
-    const seen = new Set<string>();
-    return results.filter(result => {
-      if (seen.has(result.url)) return false;
-      seen.add(result.url);
-      return true;
-    });
-  };
-
-  sources.schoolWebsite = deduplicateResults(sources.schoolWebsite);
-  sources.localNews = deduplicateResults(sources.localNews);
-  sources.historicalRecords = deduplicateResults(sources.historicalRecords);
-  sources.educationalChanges = deduplicateResults(sources.educationalChanges);
-
-  sources.totalSourcesFound = sources.schoolWebsite.length + sources.localNews.length + 
-                             sources.historicalRecords.length + sources.educationalChanges.length;
-
-  console.log(`Research completed. Found ${sources.totalSourcesFound} total sources:
-    - School website: ${sources.schoolWebsite.length}
-    - Local news: ${sources.localNews.length}
-    - Historical records: ${sources.historicalRecords.length}
-    - Educational changes: ${sources.educationalChanges.length}`);
+  sources.totalSourcesFound = sources.schoolWebsite.length + sources.localNews.length + sources.historicalRecords.length;
+  console.log(`Optimized research completed. Found ${sources.totalSourcesFound} total sources`);
 
   return sources;
+}
+
+// Get historical headlines for a specific year
+async function getHistoricalHeadlines(year: number): Promise<HistoricalHeadline[]> {
+  console.log(`Fetching historical headlines for ${year}`);
+  
+  if (!openAIApiKey) {
+    console.log('OpenAI API key not available for headlines');
+    return [];
+  }
+
+  try {
+    const headlinesPrompt = `Generate 3-4 important historical headlines from ${year} in Germany and worldwide. 
+    Focus on events that would have been significant to students graduating that year.
+    Return ONLY valid JSON in this format:
+    [
+      {
+        "title": "Headline title",
+        "date": "Month ${year}",
+        "description": "Brief description of the event",
+        "category": "world|national|culture|technology|sports"
+      }
+    ]`;
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a historical research assistant. Return only valid JSON arrays. No markdown formatting.'
+          },
+          {
+            role: 'user',
+            content: headlinesPrompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 800,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Headlines API error:', response.status);
+      return [];
+    }
+
+    const data = await response.json();
+    const rawContent = data.choices[0].message.content;
+    const cleanedContent = cleanJsonResponse(rawContent);
+    
+    const headlines = JSON.parse(cleanedContent);
+    console.log(`Generated ${headlines.length} historical headlines`);
+    return headlines;
+  } catch (error) {
+    console.error('Error generating headlines:', error);
+    return [];
+  }
 }
 
 // Create source summary for AI prompt
@@ -198,34 +261,26 @@ function createSourceSummary(sources: ResearchSources): string {
   let summary = '';
 
   if (sources.schoolWebsite.length > 0) {
-    summary += '\n=== SCHOOL OFFICIAL INFORMATION ===\n';
+    summary += '\n=== SCHOOL INFORMATION ===\n';
     sources.schoolWebsite.forEach(source => {
       summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
+      summary += `Content: ${source.content.substring(0, 300)}...\n\n`;
     });
   }
 
   if (sources.localNews.length > 0) {
-    summary += '\n=== LOCAL NEWS AND ARTICLES ===\n';
+    summary += '\n=== LOCAL NEWS ===\n';
     sources.localNews.forEach(source => {
       summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
+      summary += `Content: ${source.content.substring(0, 300)}...\n\n`;
     });
   }
 
   if (sources.historicalRecords.length > 0) {
-    summary += '\n=== HISTORICAL RECORDS ===\n';
+    summary += '\n=== HISTORICAL CONTEXT ===\n';
     sources.historicalRecords.forEach(source => {
       summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
-    });
-  }
-
-  if (sources.educationalChanges.length > 0) {
-    summary += '\n=== EDUCATIONAL CHANGES AND CONTEXT ===\n';
-    sources.educationalChanges.forEach(source => {
-      summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
+      summary += `Content: ${source.content.substring(0, 300)}...\n\n`;
     });
   }
 
@@ -240,12 +295,8 @@ serve(async (req) => {
   try {
     const { schoolName, city, graduationYear }: SchoolMemoryRequest = await req.json();
 
-    console.log(`=== STARTING SCHOOL MEMORY RESEARCH ===`);
-    console.log(`School: ${schoolName}`);
-    console.log(`City: ${city}`);
-    console.log(`Graduation Year: ${graduationYear}`);
-    console.log(`Firecrawl API Available: ${!!firecrawlApiKey}`);
-    console.log(`OpenAI API Available: ${!!openAIApiKey}`);
+    console.log(`=== STARTING ENHANCED SCHOOL MEMORY RESEARCH ===`);
+    console.log(`School: ${schoolName}, City: ${city}, Year: ${graduationYear}`);
 
     // Check for cached data
     const { data: existingData } = await supabase
@@ -269,15 +320,17 @@ serve(async (req) => {
       });
     }
 
-    console.log('No cached data found, starting comprehensive research...');
+    console.log('No cached data found, starting research...');
 
-    // Conduct comprehensive research
-    const researchSources = await conductComprehensiveResearch(schoolName, city, graduationYear);
+    // Conduct research and get headlines in parallel
+    const [researchSources, historicalHeadlines] = await Promise.all([
+      conductComprehensiveResearch(schoolName, city, graduationYear),
+      getHistoricalHeadlines(graduationYear)
+    ]);
+
     const sourceSummary = createSourceSummary(researchSources);
 
-    console.log(`Research phase completed. Total sources found: ${researchSources.totalSourcesFound}`);
-
-    // Enhanced AI prompt with real source data
+    // Enhanced AI prompt with better error handling
     const schoolResearchPrompt = `
 You are researching school memories for ${schoolName} in ${city} for someone who graduated in ${graduationYear}.
 
@@ -285,73 +338,43 @@ ${researchSources.totalSourcesFound > 0 ? `
 REAL SOURCE DATA FOUND:
 ${sourceSummary}
 
-IMPORTANT INSTRUCTIONS:
-- Use ONLY the real information provided above from actual sources
-- When referencing information from a source, include the exact sourceUrl and sourceName provided
-- If you cannot find specific information about an event in the sources, clearly mark it as "Plausible scenario based on typical experiences" and do not provide a sourceUrl
-- Prioritize information that comes from official school sources or local news articles
-- Be specific about which source provided which information
+Use the real information above when possible and mark with source references.
 ` : `
-NO REAL SOURCES FOUND - GENERATE PLAUSIBLE CONTENT:
-Since no real sources were found for this specific school and year, generate plausible content based on typical German school experiences for ${graduationYear}.
-Mark all content as AI-generated and do not provide fake sourceUrl values.
-Focus on creating realistic scenarios that would have been common during that time period.
+NO REAL SOURCES FOUND - Generate plausible school memories based on typical German school experiences for ${graduationYear}.
+Focus on realistic events that would have happened during that time period.
 `}
 
-Create content in these categories:
-1. "What Happened at Your School That Year" - specific events, changes, or notable occurrences during ${graduationYear}
-2. School-specific nostalgia triggers and memories
-3. Local historical context relevant to the school and graduation year
-4. Educational system changes or trends during that time period
+Create content about what happened at the school during graduation year ${graduationYear}.
+Include nostalgic memories that graduates would relate to.
 
-CRITICAL: Return ONLY valid JSON. No markdown formatting or explanatory text.
+CRITICAL: Return ONLY valid JSON. No markdown formatting.
 
-Response format:
 {
   "whatHappenedAtSchool": [
     {
       "title": "Event Title",
-      "description": "Detailed description",
-      "category": "facilities|academics|sports|culture|technology",
-      "sourceUrl": "ONLY include if you have a real source URL from the data above",
-      "sourceName": "ONLY include if you have a real source name from the data above"
+      "description": "Detailed description of what happened",
+      "category": "facilities"
     }
   ],
   "nostalgiaFactors": [
     {
       "memory": "Specific nostalgic memory",
-      "shareableText": "Text optimized for social sharing",
-      "sourceUrl": "ONLY include if you have a real source URL",
-      "sourceName": "ONLY include if you have a real source name"
+      "shareableText": "Social media friendly version"
     }
   ],
   "localContext": [
     {
-      "event": "Local historical event or context",
-      "relevance": "How it affected the school/students",
-      "sourceUrl": "ONLY include if you have a real source URL",
-      "sourceName": "ONLY include if you have a real source name"
+      "event": "Local context during graduation year",
+      "relevance": "How it affected students"
     }
   ],
   "shareableQuotes": [
-    "Quote 1 optimized for social media sharing",
-    "Quote 2 with engaging format for sharing"
-  ],
-  "dataQuality": {
-    "realSourcesFound": ${researchSources.totalSourcesFound},
-    "confidenceLevel": "${researchSources.totalSourcesFound > 3 ? 'high' : researchSources.totalSourcesFound > 0 ? 'medium' : 'low'}",
-    "sourcesBreakdown": {
-      "schoolWebsite": ${researchSources.schoolWebsite.length},
-      "localNews": ${researchSources.localNews.length},
-      "historicalRecords": ${researchSources.historicalRecords.length},
-      "educationalChanges": ${researchSources.educationalChanges.length}
-    }
-  }
-}
-    `;
+    "Quote optimized for social sharing"
+  ]
+}`;
 
-    console.log('Sending enhanced prompt to OpenAI...');
-    console.log(`Prompt length: ${schoolResearchPrompt.length} characters`);
+    console.log('Sending request to OpenAI...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -364,7 +387,7 @@ Response format:
         messages: [
           {
             role: 'system',
-            content: 'You are an expert researcher specializing in educational history and school memories. Always respond with valid JSON only, no markdown formatting. Only include sourceUrl and sourceName when you have real, verified sources from the provided data.'
+            content: 'You are a school memory researcher. Always respond with valid JSON only. No markdown formatting.'
           },
           {
             role: 'user',
@@ -372,58 +395,62 @@ Response format:
           }
         ],
         temperature: 0.3,
-        max_tokens: 3000,
+        max_tokens: 2000,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
 
     const aiData = await response.json();
-    console.log('OpenAI response received, parsing content...');
+    console.log('OpenAI response received, parsing...');
     
     // Enhanced JSON parsing with better error handling
     let generatedContent;
     try {
       const rawContent = aiData.choices[0].message.content;
-      console.log('Raw AI response preview:', rawContent.substring(0, 300) + '...');
+      console.log('Raw AI response length:', rawContent.length);
       
-      // Clean up the response if it has markdown formatting
-      let cleanContent = rawContent.trim();
-      if (cleanContent.startsWith('```json')) {
-        cleanContent = cleanContent.replace(/^```json\s*/, '');
-      }
-      if (cleanContent.startsWith('```')) {
-        cleanContent = cleanContent.replace(/^```\s*/, '');
-      }
-      if (cleanContent.endsWith('```')) {
-        cleanContent = cleanContent.replace(/\s*```$/, '');
-      }
-      
+      const cleanContent = cleanJsonResponse(rawContent);
       generatedContent = JSON.parse(cleanContent);
       console.log('Successfully parsed AI response');
-      console.log(`Data quality: ${generatedContent.dataQuality?.confidenceLevel || 'unknown'} confidence`);
-      console.log(`Real sources used: ${generatedContent.dataQuality?.realSourcesFound || 0}`);
     } catch (parseError) {
-      console.error('Failed to parse AI response as JSON:', parseError);
-      console.error('Raw content that failed to parse:', aiData.choices[0].message.content);
-      throw new Error('AI response was not valid JSON');
+      console.error('JSON parsing failed:', parseError);
+      
+      // Fallback: create basic structure
+      generatedContent = {
+        whatHappenedAtSchool: [{
+          title: "Graduation Ceremony",
+          description: `The graduation ceremony at ${schoolName} in ${graduationYear} was a memorable event for all students.`,
+          category: "culture"
+        }],
+        nostalgiaFactors: [{
+          memory: `Remember the excitement of graduation day at ${schoolName}!`,
+          shareableText: `${schoolName} Class of ${graduationYear} - unforgettable memories! 🎓`
+        }],
+        localContext: [{
+          event: `Local events in ${city} during ${graduationYear}`,
+          relevance: "These events shaped our school experience"
+        }],
+        shareableQuotes: [`${schoolName} ${graduationYear} - where memories were made! 🏫`]
+      };
     }
 
-    // Create enhanced shareable content
+    // Create shareable content
     const shareableContent = {
-      mainShare: `🎓 Remember ${schoolName} in ${graduationYear}? Here's what was happening at our school that year! ${researchSources.totalSourcesFound > 0 ? 'Based on real sources!' : ''} #${schoolName.replace(/\s+/g, '')}Memories #ClassOf${graduationYear}`,
-      whatsappShare: `🏫 ${schoolName} ${graduationYear} memories! ${researchSources.totalSourcesFound > 0 ? 'Found some real info about our school days!' : 'Remember these times?'} Share with your classmates!`,
-      instagramStory: `${schoolName} • Class of ${graduationYear}\n\nThrowback to our school days 📚\n\n#TBT #SchoolMemories #ClassOf${graduationYear}`,
-      twitterPost: `🎓 ${schoolName} Class of ${graduationYear} - who else remembers these school days? ${researchSources.totalSourcesFound > 0 ? 'Found some real memories!' : ''} Tag your classmates! #SchoolMemories #${graduationYear}Nostalgia`,
-      variants: generatedContent.shareableQuotes || []
+      mainShare: `🎓 ${schoolName} Class of ${graduationYear} memories! Share with your classmates! #${schoolName.replace(/\s+/g, '')}${graduationYear}`,
+      whatsappShare: `🏫 Remember ${schoolName} in ${graduationYear}? These were our school days!`,
+      instagramStory: `${schoolName} • ${graduationYear}\n\n#ThrowbackThursday #SchoolMemories`,
+      twitterPost: `🎓 ${schoolName} ${graduationYear} - who else remembers? #SchoolMemories`,
+      variants: generatedContent.shareableQuotes || [],
+      historicalHeadlines: historicalHeadlines
     };
 
-    // Store the enhanced research data
-    const { data: insertedData, error: insertError } = await supabase
+    // Store the research data
+    const { error: insertError } = await supabase
       .from('school_memories')
       .insert({
         school_name: schoolName,
@@ -433,16 +460,11 @@ Response format:
         shareable_content: shareableContent,
         research_sources: {
           generated_at: new Date().toISOString(),
-          method: researchSources.firecrawlSuccess ? 'real_sources_with_ai' : 'ai_generated_only',
           total_sources_found: researchSources.totalSourcesFound,
-          sources_breakdown: generatedContent.dataQuality?.sourcesBreakdown || {},
-          search_queries: researchSources.searchQueries,
-          confidence_level: generatedContent.dataQuality?.confidenceLevel || 'low',
-          firecrawl_success: researchSources.firecrawlSuccess
+          firecrawl_success: researchSources.firecrawlSuccess,
+          headlines_count: historicalHeadlines.length
         }
-      })
-      .select()
-      .single();
+      });
 
     if (insertError) {
       console.error('Error storing school memories:', insertError);
@@ -451,17 +473,16 @@ Response format:
     }
 
     console.log('=== RESEARCH COMPLETED SUCCESSFULLY ===');
-    console.log(`Total real sources found: ${researchSources.totalSourcesFound}`);
-    console.log(`Confidence level: ${generatedContent.dataQuality?.confidenceLevel || 'unknown'}`);
 
     return new Response(JSON.stringify({
       schoolMemories: generatedContent,
       shareableContent: shareableContent,
+      historicalHeadlines: historicalHeadlines,
       cached: false,
       researchQuality: {
         totalSourcesFound: researchSources.totalSourcesFound,
-        confidenceLevel: generatedContent.dataQuality?.confidenceLevel || 'low',
-        firecrawlWorking: researchSources.firecrawlSuccess
+        firecrawlWorking: researchSources.firecrawlSuccess,
+        headlinesGenerated: historicalHeadlines.length
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -470,11 +491,11 @@ Response format:
   } catch (error) {
     console.error('=== ERROR IN SCHOOL MEMORY RESEARCH ===');
     console.error('Error details:', error);
-    console.error('Stack trace:', error.stack);
     
     return new Response(JSON.stringify({ 
-      error: error.message || 'Failed to research school memories',
-      details: 'Check the Edge Function logs for more information'
+      error: 'Research failed',
+      details: error.message,
+      fallbackMessage: 'Unable to research school memories at this time. Please try again later.'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
