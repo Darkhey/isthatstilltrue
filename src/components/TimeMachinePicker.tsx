@@ -86,7 +86,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
     
     const container = ref.current;
     const itemHeight = 80;
-    const scrollTop = container.scrollTop;
+    const scrollTop = container.scrollTop + 40; // Add half item height for better centering
     const selectedIndex = Math.round(scrollTop / itemHeight);
     
     const clampedIndex = Math.max(0, Math.min(selectedIndex, options.length - 1));
@@ -110,7 +110,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
           className="w-24 h-60 overflow-y-scroll scrollbar-hide bg-background/50 border border-border rounded-xl"
           style={{
             scrollSnapType: 'y mandatory',
-            scrollPadding: '100px 0px'
+            scrollPadding: '80px 0px'
           }}
           onScroll={() => handleScroll(scrollRef, options, onValueChange)}
         >
