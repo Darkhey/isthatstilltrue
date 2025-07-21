@@ -149,6 +149,35 @@ export type Database = {
         }
         Relationships: []
       }
+      memory_likes: {
+        Row: {
+          created_at: string
+          id: string
+          memory_id: string
+          user_fingerprint: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          memory_id: string
+          user_fingerprint: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          memory_id?: string
+          user_fingerprint?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "memory_likes_memory_id_fkey"
+            columns: ["memory_id"]
+            isOneToOne: false
+            referencedRelation: "user_school_memories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_memories: {
         Row: {
           city: string
@@ -182,6 +211,93 @@ export type Database = {
           school_name?: string
           shareable_content?: Json
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_activity_limits: {
+        Row: {
+          city: string
+          created_at: string
+          daily_like_count: number | null
+          daily_memory_count: number | null
+          graduation_year: number
+          id: string
+          last_memory_posted: string | null
+          reset_date: string | null
+          school_name: string
+          updated_at: string
+          user_fingerprint: string
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          daily_like_count?: number | null
+          daily_memory_count?: number | null
+          graduation_year: number
+          id?: string
+          last_memory_posted?: string | null
+          reset_date?: string | null
+          school_name: string
+          updated_at?: string
+          user_fingerprint: string
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          daily_like_count?: number | null
+          daily_memory_count?: number | null
+          graduation_year?: number
+          id?: string
+          last_memory_posted?: string | null
+          reset_date?: string | null
+          school_name?: string
+          updated_at?: string
+          user_fingerprint?: string
+        }
+        Relationships: []
+      }
+      user_school_memories: {
+        Row: {
+          city: string
+          content: string
+          created_at: string
+          graduation_year: number
+          id: string
+          is_flagged: boolean | null
+          is_verified: boolean | null
+          like_count: number | null
+          memory_type: string | null
+          school_name: string
+          updated_at: string
+          user_fingerprint: string | null
+        }
+        Insert: {
+          city: string
+          content: string
+          created_at?: string
+          graduation_year: number
+          id?: string
+          is_flagged?: boolean | null
+          is_verified?: boolean | null
+          like_count?: number | null
+          memory_type?: string | null
+          school_name: string
+          updated_at?: string
+          user_fingerprint?: string | null
+        }
+        Update: {
+          city?: string
+          content?: string
+          created_at?: string
+          graduation_year?: number
+          id?: string
+          is_flagged?: boolean | null
+          is_verified?: boolean | null
+          like_count?: number | null
+          memory_type?: string | null
+          school_name?: string
+          updated_at?: string
+          user_fingerprint?: string | null
         }
         Relationships: []
       }
