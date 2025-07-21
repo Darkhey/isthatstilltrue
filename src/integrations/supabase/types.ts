@@ -214,6 +214,51 @@ export type Database = {
         }
         Relationships: []
       }
+      school_research_cache: {
+        Row: {
+          cache_expires_at: string
+          city: string
+          country: string
+          created_at: string
+          graduation_year: number
+          historical_headlines: Json | null
+          id: string
+          research_results: Json
+          research_sources: Json
+          school_name: string
+          shareable_content: Json
+          updated_at: string
+        }
+        Insert: {
+          cache_expires_at?: string
+          city: string
+          country?: string
+          created_at?: string
+          graduation_year: number
+          historical_headlines?: Json | null
+          id?: string
+          research_results: Json
+          research_sources?: Json
+          school_name: string
+          shareable_content: Json
+          updated_at?: string
+        }
+        Update: {
+          cache_expires_at?: string
+          city?: string
+          country?: string
+          created_at?: string
+          graduation_year?: number
+          historical_headlines?: Json | null
+          id?: string
+          research_results?: Json
+          research_sources?: Json
+          school_name?: string
+          shareable_content?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_activity_limits: {
         Row: {
           city: string

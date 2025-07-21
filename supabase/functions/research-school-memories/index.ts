@@ -1244,15 +1244,17 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
       historicalHeadlines: historicalHeadlines
     };
 
-    // Store the enhanced research data
+    // Store the enhanced research data in cache
     const { error: insertError } = await supabase
-      .from('school_memories')
+      .from('school_research_cache')
       .insert({
         school_name: schoolName,
         city: city,
         graduation_year: graduationYear,
-        school_memories_data: generatedContent,
+        country: country,
+        research_results: generatedContent,
         shareable_content: shareableContent,
+        historical_headlines: historicalHeadlines,
         research_sources: {
           generated_at: new Date().toISOString(),
           total_sources_found: researchSources.totalSourcesFound,

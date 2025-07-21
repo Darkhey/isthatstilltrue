@@ -424,13 +424,13 @@ export const FactsDebunker = () => {
 
         if (error) {
           console.error('School research error:', error);
-          setError("Fehler beim Recherchieren der Schulerinnerungen. Bitte versuche es erneut.");
+          setError("Error researching school memories. Please try again.");
           setShowSkeletons(false);
           return;
         }
 
         if (!data || !data.schoolMemories) {
-          setError("Keine Schulerinnerungen gefunden. Bitte überprüfe die Schulinformationen.");
+          setError("No school memories found. Please check the school information.");
           setShowSkeletons(false);
           return;
         }
@@ -447,9 +447,9 @@ export const FactsDebunker = () => {
         setShowSkeletons(false);
         
         if (data.cached) {
-          setSuccessMessage(`Schulerinnerungen gefunden (recherchiert vor ${data.cacheAge} Tagen)`);
+          setSuccessMessage(`School memories found (researched ${data.cacheAge} days ago)`);
         } else {
-          setSuccessMessage(`Schulerinnerungen für ${schoolName} erfolgreich recherchiert!`);
+          setSuccessMessage(`School memories for ${schoolName} successfully researched!`);
         }
       } else {
         console.log(`Generating facts for ${country} ${graduationYear}`);
@@ -523,7 +523,7 @@ export const FactsDebunker = () => {
       }
     } catch (error) {
       console.error('Error researching facts:', error);
-      setError("Fehler beim Recherchieren. Bitte versuche es erneut.");
+      setError("Research error. Please try again.");
       setShowSkeletons(false);
     } finally {
       clearInterval(messageInterval);
@@ -734,7 +734,7 @@ export const FactsDebunker = () => {
                 variant="outline"
                 className="px-8"
               >
-                Andere Schule recherchieren
+                Research Another School
               </Button>
             </div>
           </div>
