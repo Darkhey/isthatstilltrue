@@ -92,6 +92,35 @@ const countries = [
   { value: "Turkey", label: "Turkey" },
 ];
 
+// Sims-style loading messages for school research
+const simsLoadingMessages = [
+  "Reticulating splines...",
+  "Calibrating blue nexus...", 
+  "Gathering historical data...",
+  "Consulting the school archives...",
+  "Loading nostalgia coefficient...",
+  "Extracting memory fragments...",
+  "Analyzing educational wavelengths...",
+  "Compiling classroom chronicles...",
+  "Downloading graduation vibes...",
+  "Processing time capsule data...",
+  "Reconstructing cafeteria mysteries...",
+  "Decoding yearbook algorithms...",
+  "Synchronizing with the education matrix...",
+  "Fetching forgotten homework memories...",
+  "Loading teacher's pet protocols...",
+  "Calculating detention probability...",
+  "Accessing hall pass database...",
+  "Retrieving locker combination magic...",
+  "Scanning school spirit frequencies...",
+  "Initializing friendship subroutines...",
+  "Loading teenage drama protocols...",
+  "Compiling test anxiety data...",
+  "Processing sports day algorithms...",
+  "Extracting school trip coordinates...",
+  "Analyzing lunch break patterns..."
+];
+
 const getLocalGreeting = (country: string) => {
   const greetings: Record<string, string> = {
     "Germany": "Hallo",
@@ -292,7 +321,6 @@ const generateFunMessage = (year: number) => {
 export const FactsDebunker = () => {
   const [isSchoolMode, setIsSchoolMode] = useState(false);
   const [country, setCountry] = useState("germany");
-  const [language, setLanguage] = useState("de");
   const [graduationYear, setGraduationYear] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [city, setCity] = useState("");
@@ -313,8 +341,24 @@ export const FactsDebunker = () => {
   const [selectedFactForReport, setSelectedFactForReport] = useState<OutdatedFact | null>(null);
   const [historicalHeadlines, setHistoricalHeadlines] = useState<HistoricalHeadline[]>([]);
   const [schoolImage, setSchoolImage] = useState<string | null>(null);
+  const [loadingMessage, setLoadingMessage] = useState<string>("Researching...");
 
   const factsResultsRef = useRef<HTMLDivElement>(null);
+
+  // Function to get random Sims loading message
+  const getRandomLoadingMessage = () => {
+    return simsLoadingMessages[Math.floor(Math.random() * simsLoadingMessages.length)];
+  };
+
+  // Update loading message every 2 seconds during research
+  const startLoadingMessageRotation = () => {
+    const interval = setInterval(() => {
+      if (isLoading) {
+        setLoadingMessage(getRandomLoadingMessage());
+      }
+    }, 2000);
+    return interval;
+  };
 
   const handleNextStep = () => {
     if (isSchoolMode) {
@@ -346,13 +390,16 @@ export const FactsDebunker = () => {
     }
 
     setIsLoading(true);
+    setError(null);
+    setSuccessMessage(null);
     setShowSkeletons(true);
+    setLoadingMessage(getRandomLoadingMessage());
+    
+    const messageInterval = startLoadingMessageRotation();
     setFacts([]);
     setSchoolMemories(null);
     setSchoolShareableContent(null);
     setHistoricalHeadlines([]);
-    setError(null);
-    setSuccessMessage(null);
     
     // Scroll to facts section after a short delay to allow the UI to update
     setTimeout(() => {
@@ -371,8 +418,7 @@ export const FactsDebunker = () => {
             schoolName,
             city,
             graduationYear: parseInt(graduationYear),
-            country,
-            language
+            country
           }
         });
 
@@ -480,7 +526,9 @@ export const FactsDebunker = () => {
       setError("Fehler beim Recherchieren. Bitte versuche es erneut.");
       setShowSkeletons(false);
     } finally {
+      clearInterval(messageInterval);
       setIsLoading(false);
+      setShowSkeletons(false);
     }
   };
 
@@ -526,7 +574,7 @@ export const FactsDebunker = () => {
 
         <SchoolModeToggle isSchoolMode={isSchoolMode} onToggle={setIsSchoolMode} />
 
-        <Card className="max-w-md mx-auto mb-8 shadow-glow">
+        <Card className="max-w-lg mx-auto mb-8 shadow-glow">{/*Increased width for better responsive display*/}
           {step === 1 ? (
             <>
               <CardHeader>
@@ -547,31 +595,31 @@ export const FactsDebunker = () => {
                     city={city}
                     schoolType={schoolType}
                     country={country}
-                    language={language}
                     onSchoolNameChange={setSchoolName}
                     onCityChange={setCity}
                     onSchoolTypeChange={setSchoolType}
                     onCountryChange={setCountry}
-                    onLanguageChange={setLanguage}
                   />
                 ) : (
-                  <Select value={country} onValueChange={setCountry}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select country..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countries.map((c) => (
-                        <SelectItem key={c.value} value={c.value}>
-                          {c.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Select value={country} onValueChange={setCountry}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60 overflow-y-auto bg-background border shadow-lg z-50">
+                        {countries.map((c) => (
+                          <SelectItem key={c.value} value={c.value}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 )}
                 {error && (
-                  <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
-                    <AlertCircle className="h-4 w-4" />
-                    {error}
+                  <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md border border-destructive/20">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span className="break-words">{error}</span>
                   </div>
                 )}
                 <Button 
@@ -585,16 +633,18 @@ export const FactsDebunker = () => {
           ) : (
             <>
               <CardHeader>
-                <CardTitle className="text-center">Step 2: Enter Graduation Year</CardTitle>
-                <CardDescription className="text-center">
-                  {isSchoolMode 
-                    ? `${schoolName} in ${city} • We'll research what happened during your graduation year`
-                    : `${country} • We'll analyze your school curriculum from that era`
-                  }
+                <CardTitle className="text-center text-lg sm:text-xl">Step 2: Enter Graduation Year</CardTitle>
+                <CardDescription className="text-center text-sm sm:text-base">
+                  <div className="break-words">
+                    {isSchoolMode 
+                      ? `${schoolName} in ${city} • We'll research what happened during your graduation year`
+                      : `${country} • We'll analyze your school curriculum from that era`
+                    }
+                  </div>
                 </CardDescription>
                 {!isSchoolMode && (
                   <div className="text-center mt-3">
-                    <span className="text-2xl font-bold text-primary">
+                    <span className="text-xl sm:text-2xl font-bold text-primary">
                       {getLocalGreeting(country)}!
                     </span>
                   </div>
@@ -607,44 +657,44 @@ export const FactsDebunker = () => {
                   placeholder="Select graduation year..."
                 />
                 {funMessage && (
-                  <div className="flex items-center gap-2 text-primary text-sm bg-primary/10 p-3 rounded-md">
-                    <Lightbulb className="h-4 w-4" />
-                    {funMessage}
+                  <div className="flex items-start gap-2 text-primary text-sm bg-primary/10 p-3 rounded-md border border-primary/20">
+                    <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span className="break-words">{funMessage}</span>
                   </div>
                 )}
                 {error && (
-                  <div className="flex items-center gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md">
-                    <AlertCircle className="h-4 w-4" />
-                    {error}
+                  <div className="flex items-start gap-2 text-destructive text-sm bg-destructive/10 p-3 rounded-md border border-destructive/20">
+                    <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span className="break-words">{error}</span>
                   </div>
                 )}
                 {successMessage && (
-                  <div className="flex items-center gap-2 text-green-700 text-sm bg-green-50 p-3 rounded-md">
-                    <Lightbulb className="h-4 w-4" />
-                    {successMessage}
+                  <div className="flex items-start gap-2 text-green-700 text-sm bg-green-50 p-3 rounded-md border border-green-200">
+                    <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
+                    <span className="break-words">{successMessage}</span>
                   </div>
                 )}
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button 
                     onClick={resetForm}
                     variant="outline"
-                    className="flex-1"
+                    className="flex-1 order-2 sm:order-1"
                   >
                     Back
                   </Button>
                    <Button 
                      onClick={generateFacts}
                      disabled={isLoading}
-                      className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity"
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          {isSchoolMode ? "Researching..." : "Researching..."}
-                        </>
-                      ) : (
-                        isSchoolMode ? "Research My School!" : "Research My Education!"
-                      )}
+                      className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity order-1 sm:order-2"
+                     >
+                       {isLoading ? (
+                         <div className="flex items-center justify-center min-w-0">
+                           <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" />
+                           <span className="animate-fade-in truncate text-xs sm:text-sm">{loadingMessage}</span>
+                         </div>
+                       ) : (
+                         isSchoolMode ? "Research My School!" : "Research My Education!"
+                       )}
                    </Button>
                 </div>
               </CardContent>
