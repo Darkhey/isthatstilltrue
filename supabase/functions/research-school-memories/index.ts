@@ -28,18 +28,53 @@ interface SearchResult {
   title: string;
   content: string;
   description?: string;
+  source_type?: 'local_pack' | 'maps' | 'knowledge_graph' | 'web' | 'firecrawl';
+  place_id?: string;
+  data_cid?: string;
+  kgmid?: string;
+}
+
+interface LocalPackResult {
+  title: string;
+  address: string;
+  phone?: string;
+  website?: string;
+  place_id: string;
+  data_cid?: string;
+  rating?: number;
+  reviews?: number;
+  description?: string;
+}
+
+interface MapsResult {
+  title: string;
+  address: string;
+  phone?: string;
+  website?: string;
+  description?: string;
+  rating?: number;
+  reviews?: number;
+  hours?: string;
+  data_cid: string;
+  kgmid?: string;
 }
 
 interface ResearchSources {
-  schoolWebsite: SearchResult[];
-  localNews: SearchResult[];
-  historicalRecords: SearchResult[];
-  educationalChanges: SearchResult[];
-  schoolSearch: SearchResult[];
+  localPack: SearchResult[];
+  mapsDetails: SearchResult[];
+  knowledgeGraph: SearchResult[];
+  webSearch: SearchResult[];
+  firecrawlResults: SearchResult[];
   totalSourcesFound: number;
   searchQueries: string[];
-  firecrawlSuccess: boolean;
-  serpApiSuccess: boolean;
+  serpApiEnginesUsed: string[];
+  researchSuccess: {
+    localPack: boolean;
+    maps: boolean;
+    knowledgeGraph: boolean;
+    webSearch: boolean;
+    firecrawl: boolean;
+  };
 }
 
 interface HistoricalHeadline {
@@ -54,7 +89,6 @@ interface HistoricalHeadline {
 function cleanJsonResponse(jsonString: string): string {
   console.log('Cleaning JSON response...');
   
-  // Remove markdown code blocks if present
   let cleaned = jsonString.trim();
   if (cleaned.startsWith('```json')) {
     cleaned = cleaned.replace(/^```json\s*/, '');
@@ -66,82 +100,309 @@ function cleanJsonResponse(jsonString: string): string {
     cleaned = cleaned.replace(/\s*```$/, '');
   }
   
-  // Fix common JSON issues
-  // Remove trailing commas before closing brackets/braces
   cleaned = cleaned.replace(/,(\s*[}\]])/g, '$1');
-  
-  // Fix quotes in strings (basic approach)
   cleaned = cleaned.replace(/([{,]\s*\w+):/g, '"$1":');
   
   return cleaned.trim();
 }
 
-// International SerpApi Google search for real school data
-async function performSerpApiSearch(query: string, limit: number = 5, country?: string, language?: string): Promise<SearchResult[]> {
+// Get country-specific SerpApi parameters
+function getCountrySettings(country?: string, language?: string): { gl: string, hl: string } {
+  const countryMap: Record<string, { gl: string, hl: string }> = {
+    'germany': { gl: 'de', hl: 'de' },
+    'deutschland': { gl: 'de', hl: 'de' },
+    'usa': { gl: 'us', hl: 'en' },
+    'uk': { gl: 'uk', hl: 'en' },
+    'united kingdom': { gl: 'uk', hl: 'en' },
+    'france': { gl: 'fr', hl: 'fr' },
+    'spain': { gl: 'es', hl: 'es' },
+    'italy': { gl: 'it', hl: 'it' },
+    'netherlands': { gl: 'nl', hl: 'nl' },
+    'austria': { gl: 'at', hl: 'de' },
+    'switzerland': { gl: 'ch', hl: 'de' }
+  };
+  
+  const countryKey = country?.toLowerCase() || 'international';
+  const settings = countryMap[countryKey] || { gl: 'us', hl: 'en' };
+  
+  if (language) {
+    settings.hl = language;
+  }
+  
+  return settings;
+}
+
+// Phase 1: Local Pack Search for school locations
+async function performLocalPackSearch(schoolName: string, city: string, country?: string, language?: string): Promise<{ results: SearchResult[], placeIds: string[], dataCids: string[] }> {
   if (!serpApiKey) {
-    console.log('SerpApi API key not available, skipping search for:', query);
-    return [];
+    console.log('SerpApi key not available for Local Pack search');
+    return { results: [], placeIds: [], dataCids: [] };
   }
 
   try {
-    console.log(`Starting SerpApi Google search for: "${query}" (${country || 'international'})`);
+    const settings = getCountrySettings(country, language);
+    const query = `"${schoolName}" ${city} school`;
     
-    // Determine language and country codes based on input
-    const countryMap: Record<string, { gl: string, hl: string }> = {
-      'germany': { gl: 'de', hl: 'de' },
-      'deutschland': { gl: 'de', hl: 'de' },
-      'usa': { gl: 'us', hl: 'en' },
-      'uk': { gl: 'uk', hl: 'en' },
-      'united kingdom': { gl: 'uk', hl: 'en' },
-      'france': { gl: 'fr', hl: 'fr' },
-      'spain': { gl: 'es', hl: 'es' },
-      'italy': { gl: 'it', hl: 'it' },
-      'netherlands': { gl: 'nl', hl: 'nl' },
-      'austria': { gl: 'at', hl: 'de' },
-      'switzerland': { gl: 'ch', hl: 'de' }
-    };
+    console.log(`Phase 1: Local Pack search for "${query}" (${country || 'international'})`);
     
-    const countryKey = country?.toLowerCase() || 'international';
-    const settings = countryMap[countryKey] || { gl: 'us', hl: 'en' }; // Default to US/English
-    
-    const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(query)}&num=${limit}&hl=${language || settings.hl}&gl=${settings.gl}`;
+    const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(query)}&tbm=lcl&hl=${settings.hl}&gl=${settings.gl}&num=10`;
     
     const response = await fetch(url);
-    console.log(`SerpApi search response status: ${response.status}`);
+    console.log(`Local Pack search response: ${response.status}`);
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`SerpApi search failed: ${response.status} - ${errorText}`);
-      return [];
+      console.error(`Local Pack search failed: ${response.status} - ${errorText}`);
+      return { results: [], placeIds: [], dataCids: [] };
     }
 
     const data = await response.json();
-    console.log(`SerpApi search returned ${data.organic_results?.length || 0} results`);
+    console.log(`Local Pack search returned ${data.local_results?.length || 0} results`);
     
     const results: SearchResult[] = [];
+    const placeIds: string[] = [];
+    const dataCids: string[] = [];
     
-    if (data.organic_results && Array.isArray(data.organic_results)) {
-      for (const result of data.organic_results) {
-        if (result.link && result.title && result.snippet) {
-          results.push({
-            url: result.link,
+    if (data.local_results && Array.isArray(data.local_results)) {
+      for (const result of data.local_results) {
+        if (result.title && result.address) {
+          const searchResult: SearchResult = {
+            url: result.website || `https://maps.google.com/search/${encodeURIComponent(result.title + ' ' + result.address)}`,
             title: result.title,
-            content: result.snippet,
-            description: result.snippet
-          });
+            content: `${result.address}. ${result.description || ''} Rating: ${result.rating || 'N/A'}/5 (${result.reviews || 0} reviews)`,
+            description: result.description,
+            source_type: 'local_pack',
+            place_id: result.place_id,
+            data_cid: result.data_cid
+          };
+          
+          results.push(searchResult);
+          
+          if (result.place_id) placeIds.push(result.place_id);
+          if (result.data_cid) dataCids.push(result.data_cid);
         }
       }
     }
     
-    console.log(`Processed ${results.length} valid results from SerpApi`);
+    console.log(`Local Pack processed: ${results.length} results, ${placeIds.length} place IDs, ${dataCids.length} data CIDs`);
+    return { results, placeIds, dataCids };
+  } catch (error) {
+    console.error('Local Pack search error:', error);
+    return { results: [], placeIds: [], dataCids: [] };
+  }
+}
+
+// Phase 2: Maps Detail Search using found CIDs
+async function performMapsDetailSearch(dataCids: string[], country?: string, language?: string): Promise<SearchResult[]> {
+  if (!serpApiKey || dataCids.length === 0) {
+    console.log('No data CIDs available for Maps detail search');
+    return [];
+  }
+
+  try {
+    const settings = getCountrySettings(country, language);
+    const results: SearchResult[] = [];
+    
+    console.log(`Phase 2: Maps detail search for ${dataCids.length} locations`);
+    
+    for (const dataCid of dataCids.slice(0, 3)) { // Limit to 3 to avoid rate limits
+      const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google_maps&data_cid=${dataCid}&hl=${settings.hl}&gl=${settings.gl}`;
+      
+      const response = await fetch(url);
+      console.log(`Maps detail search for CID ${dataCid}: ${response.status}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.place_results) {
+          const place = data.place_results;
+          const searchResult: SearchResult = {
+            url: place.website || `https://maps.google.com/search/?data_cid=${dataCid}`,
+            title: place.title || 'School Details',
+            content: `${place.address || ''}. ${place.description || ''} Hours: ${place.hours || 'N/A'} Rating: ${place.rating || 'N/A'}/5 (${place.reviews || 0} reviews)`,
+            description: place.description,
+            source_type: 'maps',
+            data_cid: dataCid,
+            kgmid: place.kgmid
+          };
+          
+          results.push(searchResult);
+        }
+      }
+      
+      // Rate limiting
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    console.log(`Maps detail search processed: ${results.length} results`);
     return results;
   } catch (error) {
-    console.error(`SerpApi search error for "${query}":`, error);
+    console.error('Maps detail search error:', error);
     return [];
   }
 }
 
-// Enhanced Firecrawl search with better rate limiting
+// Phase 3: Knowledge Graph Search using KGMIDs
+async function performKnowledgeGraphSearch(kgmids: string[], schoolName: string, city: string, country?: string, language?: string): Promise<SearchResult[]> {
+  if (!serpApiKey) {
+    console.log('SerpApi key not available for Knowledge Graph search');
+    return [];
+  }
+
+  try {
+    const settings = getCountrySettings(country, language);
+    const results: SearchResult[] = [];
+    
+    console.log(`Phase 3: Knowledge Graph search for ${kgmids.length} KGMIDs + general search`);
+    
+    // Search with KGMIDs if available
+    for (const kgmid of kgmids.slice(0, 2)) { // Limit to avoid rate limits
+      const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&kgmid=${kgmid}&hl=${settings.hl}&gl=${settings.gl}`;
+      
+      const response = await fetch(url);
+      console.log(`Knowledge Graph search for KGMID ${kgmid}: ${response.status}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.knowledge_graph) {
+          const kg = data.knowledge_graph;
+          const searchResult: SearchResult = {
+            url: kg.website || kg.source?.link || `https://www.google.com/search?kgmid=${kgmid}`,
+            title: kg.title || 'Knowledge Graph Entry',
+            content: `${kg.description || ''} ${kg.type || ''} Founded: ${kg.founded || 'N/A'}`,
+            description: kg.description,
+            source_type: 'knowledge_graph',
+            kgmid: kgmid
+          };
+          
+          results.push(searchResult);
+        }
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    // General Knowledge Graph search for the school
+    const generalQuery = `"${schoolName}" ${city} school wikipedia`;
+    const generalUrl = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(generalQuery)}&hl=${settings.hl}&gl=${settings.gl}`;
+    
+    const generalResponse = await fetch(generalUrl);
+    console.log(`General Knowledge Graph search: ${generalResponse.status}`);
+    
+    if (generalResponse.ok) {
+      const generalData = await generalResponse.json();
+      
+      if (generalData.knowledge_graph) {
+        const kg = generalData.knowledge_graph;
+        const searchResult: SearchResult = {
+          url: kg.website || kg.source?.link || generalData.search_metadata?.google_url || '',
+          title: kg.title || 'General Knowledge Graph',
+          content: `${kg.description || ''} ${kg.type || ''}`,
+          description: kg.description,
+          source_type: 'knowledge_graph'
+        };
+        
+        results.push(searchResult);
+      }
+    }
+    
+    console.log(`Knowledge Graph search processed: ${results.length} results`);
+    return results;
+  } catch (error) {
+    console.error('Knowledge Graph search error:', error);
+    return [];
+  }
+}
+
+// Phase 4: Enhanced Web Search for historical context
+async function performEnhancedWebSearch(schoolName: string, city: string, graduationYear: number, country?: string, language?: string): Promise<SearchResult[]> {
+  if (!serpApiKey) {
+    console.log('SerpApi key not available for web search');
+    return [];
+  }
+
+  try {
+    const settings = getCountrySettings(country, language);
+    const results: SearchResult[] = [];
+    
+    // Country-specific historical queries
+    const webQueries = generateHistoricalQueries(schoolName, city, graduationYear, country);
+    
+    console.log(`Phase 4: Enhanced web search with ${webQueries.length} queries`);
+    
+    for (const query of webQueries.slice(0, 4)) { // Limit to 4 queries
+      const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(query)}&hl=${settings.hl}&gl=${settings.gl}&num=5`;
+      
+      const response = await fetch(url);
+      console.log(`Web search for "${query}": ${response.status}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.organic_results && Array.isArray(data.organic_results)) {
+          for (const result of data.organic_results.slice(0, 3)) {
+            if (result.link && result.title && result.snippet) {
+              const searchResult: SearchResult = {
+                url: result.link,
+                title: result.title,
+                content: result.snippet,
+                description: result.snippet,
+                source_type: 'web'
+              };
+              
+              results.push(searchResult);
+            }
+          }
+        }
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    console.log(`Enhanced web search processed: ${results.length} results`);
+    return results;
+  } catch (error) {
+    console.error('Enhanced web search error:', error);
+    return [];
+  }
+}
+
+// Generate country-specific historical queries
+function generateHistoricalQueries(schoolName: string, city: string, graduationYear: number, country?: string): string[] {
+  if (country?.toLowerCase().includes('germany') || country?.toLowerCase().includes('deutschland')) {
+    return [
+      `"${schoolName}" ${city} geschichte chronik ${graduationYear}`,
+      `"${schoolName}" ${city} abitur jahrbuch ${graduationYear}`,
+      `${city} schulgeschichte bildung ${graduationYear} gymnasium`,
+      `"${schoolName}" ${city} alumni ehemaliger schüler ${graduationYear}`
+    ];
+  } else if (country?.toLowerCase().includes('usa') || country?.toLowerCase().includes('america')) {
+    return [
+      `"${schoolName}" ${city} history yearbook ${graduationYear}`,
+      `"${schoolName}" ${city} graduation class ${graduationYear}`,
+      `${city} school district history ${graduationYear}`,
+      `"${schoolName}" ${city} alumni reunion ${graduationYear}`
+    ];
+  } else if (country?.toLowerCase().includes('uk') || country?.toLowerCase().includes('britain')) {
+    return [
+      `"${schoolName}" ${city} history ${graduationYear} school`,
+      `"${schoolName}" ${city} pupils graduation ${graduationYear}`,
+      `${city} education history ${graduationYear}`,
+      `"${schoolName}" ${city} former pupils ${graduationYear}`
+    ];
+  } else {
+    // International default
+    return [
+      `"${schoolName}" ${city} history ${graduationYear} school`,
+      `"${schoolName}" ${city} graduation ${graduationYear}`,
+      `${city} education ${graduationYear} students`,
+      `"${schoolName}" ${city} alumni ${graduationYear}`
+    ];
+  }
+}
+
+// Enhanced Firecrawl search (unchanged from previous version)
 async function performFirecrawlSearch(query: string, limit: number = 3): Promise<SearchResult[]> {
   if (!firecrawlApiKey) {
     console.log('Firecrawl API key not available, skipping search for:', query);
@@ -149,7 +410,7 @@ async function performFirecrawlSearch(query: string, limit: number = 3): Promise
   }
 
   try {
-    console.log(`Starting Firecrawl search for: "${query}"`);
+    console.log(`Firecrawl search for: "${query}"`);
     
     const searchResponse = await fetch('https://api.firecrawl.dev/v1/search', {
       method: 'POST',
@@ -167,8 +428,8 @@ async function performFirecrawlSearch(query: string, limit: number = 3): Promise
     
     if (searchResponse.status === 429) {
       console.log('Rate limit hit, implementing backoff...');
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second wait
-      return []; // Return empty for this search to avoid cascading failures
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return [];
     }
     
     if (!searchResponse.ok) {
@@ -185,7 +446,8 @@ async function performFirecrawlSearch(query: string, limit: number = 3): Promise
         url: result.url || '',
         title: result.title || 'Untitled',
         content: result.content || result.description || '',
-        description: result.description || ''
+        description: result.description || '',
+        source_type: 'firecrawl' as const
       })).filter((result: SearchResult) => result.url && result.content);
 
       console.log(`Processed ${results.length} valid results from Firecrawl`);
@@ -199,136 +461,95 @@ async function performFirecrawlSearch(query: string, limit: number = 3): Promise
   }
 }
 
-// Enhanced research strategy focusing on real local data
-async function conductComprehensiveResearch(schoolName: string, city: string, graduationYear: number, country?: string, language?: string): Promise<ResearchSources> {
-  console.log(`Starting enhanced research for ${schoolName} in ${city}, graduation year ${graduationYear}`);
+// Master research function implementing the 4-phase strategy
+async function conductMultiEngineResearch(schoolName: string, city: string, graduationYear: number, country?: string, language?: string): Promise<ResearchSources> {
+  console.log(`=== STARTING MULTI-ENGINE SERPAPI RESEARCH ===`);
+  console.log(`School: ${schoolName}, City: ${city}, Year: ${graduationYear}, Country: ${country || 'international'}`);
   
-  // Real data source searches for authentic school information
-  const searchQueries = [
-    // Wayback Machine archived school websites
-    `site:web.archive.org "${schoolName}" ${city} school website ${graduationYear}`,
-    // School yearbooks and alumni sites  
-    `"${schoolName}" ${city} yearbook ${graduationYear} classmates reunion alumni`,
-    // Local newspapers and archives
-    `site:newspapers.com "${schoolName}" ${city} ${graduationYear} graduation local news`,
-    // State education archives and curriculum data
-    `"${schoolName}" ${city} curriculum ${graduationYear} education department germany`,
-    // NCES equivalent for Germany - statistical offices
-    `"${schoolName}" ${city} school statistics profile bildung statistik`,
-    // Local school district archives and newsletters
-    `"${schoolName}" ${city} school district newsletter ${graduationYear} archive chronik`,
-    // Regional historical context and local events
-    `${city} ${graduationYear} local news events history regional chronik`,
-    // Authentic local business and economic context
-    `${city} region wirtschaft unternehmen ${graduationYear} local industry jobs`,
-    // Real cultural and social context
-    `${city} ${graduationYear} kultur veranstaltungen events festivals local`
-  ];
-
   const sources: ResearchSources = {
-    schoolWebsite: [],
-    localNews: [],
-    historicalRecords: [],
-    educationalChanges: [],
-    schoolSearch: [],
+    localPack: [],
+    mapsDetails: [],
+    knowledgeGraph: [],
+    webSearch: [],
+    firecrawlResults: [],
     totalSourcesFound: 0,
-    searchQueries: searchQueries,
-    firecrawlSuccess: false,
-    serpApiSuccess: false
-  };
-
-  // Generate international search queries based on country/language context
-  const generateSchoolQueries = (schoolName: string, city: string, graduationYear: number, country?: string) => {
-    if (country?.toLowerCase().includes('germany') || country?.toLowerCase().includes('deutschland')) {
-      return [
-        `"${schoolName}" ${city} schule website`,
-        `"${schoolName}" ${city} alumni jahrbuch ${graduationYear}`,
-        `"${schoolName}" ${city} graduation abitur ${graduationYear}`
-      ];
-    } else if (country?.toLowerCase().includes('usa') || country?.toLowerCase().includes('america')) {
-      return [
-        `"${schoolName}" ${city} school website`,
-        `"${schoolName}" ${city} alumni yearbook ${graduationYear}`,
-        `"${schoolName}" ${city} graduation class ${graduationYear}`
-      ];
-    } else if (country?.toLowerCase().includes('uk') || country?.toLowerCase().includes('britain')) {
-      return [
-        `"${schoolName}" ${city} school website`,
-        `"${schoolName}" ${city} alumni ${graduationYear}`,
-        `"${schoolName}" ${city} graduation ${graduationYear}`
-      ];
-    } else {
-      // Default international queries
-      return [
-        `"${schoolName}" ${city} school website`,
-        `"${schoolName}" ${city} alumni ${graduationYear}`,
-        `"${schoolName}" ${city} graduation ${graduationYear}`
-      ];
+    searchQueries: [],
+    serpApiEnginesUsed: [],
+    researchSuccess: {
+      localPack: false,
+      maps: false,
+      knowledgeGraph: false,
+      webSearch: false,
+      firecrawl: false
     }
   };
 
-  const serpApiQueries = generateSchoolQueries(schoolName, city, graduationYear, country);
-
-  for (const query of serpApiQueries) {
-    console.log(`Executing SerpApi search: "${query}" (${country || 'international'})`);
-    try {
-      const results = await performSerpApiSearch(query, 5, country, language);
-      if (results.length > 0) {
-        sources.serpApiSuccess = true;
-        sources.schoolSearch.push(...results);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Rate limiting
-      }
-    } catch (error) {
-      console.error(`SerpApi search failed for "${query}":`, error);
-    }
-  }
-
-  // Then supplement with Firecrawl for additional context
-  for (let i = 0; i < Math.min(searchQueries.length, 4); i++) { // Reduced to 4 since SerpApi provides better data
-    const query = searchQueries[i];
-    console.log(`Executing Firecrawl search ${i + 1}: "${query}"`);
+  try {
+    // Phase 1: Local Pack Search
+    console.log('\n--- PHASE 1: LOCAL PACK SEARCH ---');
+    const localPackResult = await performLocalPackSearch(schoolName, city, country, language);
+    sources.localPack = localPackResult.results;
+    sources.researchSuccess.localPack = localPackResult.results.length > 0;
+    if (sources.researchSuccess.localPack) sources.serpApiEnginesUsed.push('google_local');
     
-    try {
-      const results = await performFirecrawlSearch(query, 2); // Reduced since SerpApi is primary
-      
-      if (results.length > 0) {
-        sources.firecrawlSuccess = true;
-        
-        // Enhanced categorization for better source attribution
-        for (const result of results) {
-          const content = (result.title + ' ' + result.content + ' ' + result.url).toLowerCase();
-          
-          if (content.includes('school') || content.includes('schule') || content.includes('gymnasium') || content.includes('realschule')) {
-            sources.schoolWebsite.push(result);
-          } else if (content.includes('news') || content.includes('nachrichten') || content.includes('zeitung') || content.includes('presse')) {
-            sources.localNews.push(result);
-          } else if (content.includes('stadt') || content.includes('gemeinde') || content.includes('city') || content.includes('wikipedia')) {
-            sources.historicalRecords.push(result);
-          } else if (content.includes('unternehmen') || content.includes('wirtschaft') || content.includes('business') || content.includes('company')) {
-            sources.educationalChanges.push(result);
-          } else {
-            sources.historicalRecords.push(result);
-          }
-        }
-      }
-      
-      // Add delay between searches to respect rate limits
-      if (i < searchQueries.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
-      }
-    } catch (error) {
-      console.error(`Search failed for query "${query}":`, error);
-    }
+    await new Promise(resolve => setTimeout(resolve, 1500)); // Rate limiting between phases
+
+    // Phase 2: Maps Detail Search using found CIDs
+    console.log('\n--- PHASE 2: MAPS DETAIL SEARCH ---');
+    const mapsResults = await performMapsDetailSearch(localPackResult.dataCids, country, language);
+    sources.mapsDetails = mapsResults;
+    sources.researchSuccess.maps = mapsResults.length > 0;
+    if (sources.researchSuccess.maps) sources.serpApiEnginesUsed.push('google_maps');
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Phase 3: Knowledge Graph Search using KGMIDs
+    console.log('\n--- PHASE 3: KNOWLEDGE GRAPH SEARCH ---');
+    const kgmids = mapsResults.map(r => r.kgmid).filter(Boolean) as string[];
+    const knowledgeResults = await performKnowledgeGraphSearch(kgmids, schoolName, city, country, language);
+    sources.knowledgeGraph = knowledgeResults;
+    sources.researchSuccess.knowledgeGraph = knowledgeResults.length > 0;
+    if (sources.researchSuccess.knowledgeGraph) sources.serpApiEnginesUsed.push('google_knowledge');
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Phase 4: Enhanced Web Search
+    console.log('\n--- PHASE 4: ENHANCED WEB SEARCH ---');
+    const webResults = await performEnhancedWebSearch(schoolName, city, graduationYear, country, language);
+    sources.webSearch = webResults;
+    sources.researchSuccess.webSearch = webResults.length > 0;
+    if (sources.researchSuccess.webSearch) sources.serpApiEnginesUsed.push('google_web');
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Phase 5: Supplementary Firecrawl Search
+    console.log('\n--- PHASE 5: FIRECRAWL SUPPLEMENT ---');
+    const firecrawlQuery = `"${schoolName}" ${city} school ${graduationYear} history`;
+    const firecrawlResults = await performFirecrawlSearch(firecrawlQuery, 2);
+    sources.firecrawlResults = firecrawlResults;
+    sources.researchSuccess.firecrawl = firecrawlResults.length > 0;
+
+    // Calculate totals
+    sources.totalSourcesFound = sources.localPack.length + sources.mapsDetails.length + 
+                               sources.knowledgeGraph.length + sources.webSearch.length + 
+                               sources.firecrawlResults.length;
+
+    sources.searchQueries = generateHistoricalQueries(schoolName, city, graduationYear, country);
+
+    console.log('\n=== MULTI-ENGINE RESEARCH COMPLETED ===');
+    console.log(`Total sources found: ${sources.totalSourcesFound}`);
+    console.log(`Local Pack: ${sources.localPack.length}, Maps: ${sources.mapsDetails.length}, Knowledge: ${sources.knowledgeGraph.length}, Web: ${sources.webSearch.length}, Firecrawl: ${sources.firecrawlResults.length}`);
+    console.log(`Engines used: ${sources.serpApiEnginesUsed.join(', ')}`);
+    console.log(`Research success: ${Object.entries(sources.researchSuccess).filter(([_, success]) => success).map(([engine, _]) => engine).join(', ')}`);
+
+    return sources;
+  } catch (error) {
+    console.error('Multi-engine research error:', error);
+    return sources;
   }
-
-  sources.totalSourcesFound = sources.schoolWebsite.length + sources.localNews.length + sources.historicalRecords.length + sources.educationalChanges.length + sources.schoolSearch.length;
-  console.log(`Enhanced research completed. Found ${sources.totalSourcesFound} total sources (Google: ${sources.schoolSearch.length}, Schools: ${sources.schoolWebsite.length}, News: ${sources.localNews.length}, Historical: ${sources.historicalRecords.length}, Business: ${sources.educationalChanges.length})`);
-  console.log(`Research success: SerpApi=${sources.serpApiSuccess}, Firecrawl=${sources.firecrawlSuccess}`);
-
-  return sources;
 }
 
-// Get historical headlines for a specific year
+// Get historical headlines for a specific year (unchanged)
 async function getHistoricalHeadlines(year: number): Promise<HistoricalHeadline[]> {
   console.log(`Fetching historical headlines for ${year}`);
   
@@ -391,45 +612,53 @@ async function getHistoricalHeadlines(year: number): Promise<HistoricalHeadline[
   }
 }
 
-// Create enhanced source summary with attribution
+// Create enhanced source summary with multi-engine attribution
 function createSourceSummary(sources: ResearchSources): string {
   let summary = '';
 
-  if (sources.schoolSearch.length > 0) {
-    summary += '\n=== GOOGLE SEARCH RESULTS (SerpApi) ===\n';
-    sources.schoolSearch.forEach(source => {
+  if (sources.localPack.length > 0) {
+    summary += '\n=== LOCAL PACK RESULTS (Google Local) ===\n';
+    sources.localPack.forEach(source => {
+      summary += `Source: ${source.title} (${source.url})\n`;
+      summary += `Content: ${source.content.substring(0, 400)}...\n`;
+      if (source.place_id) summary += `Place ID: ${source.place_id}\n`;
+      if (source.data_cid) summary += `Data CID: ${source.data_cid}\n`;
+      summary += '\n';
+    });
+  }
+
+  if (sources.mapsDetails.length > 0) {
+    summary += '\n=== MAPS DETAIL RESULTS (Google Maps) ===\n';
+    sources.mapsDetails.forEach(source => {
+      summary += `Source: ${source.title} (${source.url})\n`;
+      summary += `Content: ${source.content.substring(0, 400)}...\n`;
+      if (source.data_cid) summary += `Data CID: ${source.data_cid}\n`;
+      if (source.kgmid) summary += `KGMID: ${source.kgmid}\n`;
+      summary += '\n';
+    });
+  }
+
+  if (sources.knowledgeGraph.length > 0) {
+    summary += '\n=== KNOWLEDGE GRAPH RESULTS (Google Knowledge) ===\n';
+    sources.knowledgeGraph.forEach(source => {
+      summary += `Source: ${source.title} (${source.url})\n`;
+      summary += `Content: ${source.content.substring(0, 400)}...\n`;
+      if (source.kgmid) summary += `KGMID: ${source.kgmid}\n`;
+      summary += '\n';
+    });
+  }
+
+  if (sources.webSearch.length > 0) {
+    summary += '\n=== WEB SEARCH RESULTS (Google Web) ===\n';
+    sources.webSearch.forEach(source => {
       summary += `Source: ${source.title} (${source.url})\n`;
       summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
     });
   }
 
-  if (sources.schoolWebsite.length > 0) {
-    summary += '\n=== SCHOOL INFORMATION ===\n';
-    sources.schoolWebsite.forEach(source => {
-      summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
-    });
-  }
-
-  if (sources.localNews.length > 0) {
-    summary += '\n=== LOCAL NEWS & MEDIA ===\n';
-    sources.localNews.forEach(source => {
-      summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
-    });
-  }
-
-  if (sources.historicalRecords.length > 0) {
-    summary += '\n=== HISTORICAL & MUNICIPAL CONTEXT ===\n';
-    sources.historicalRecords.forEach(source => {
-      summary += `Source: ${source.title} (${source.url})\n`;
-      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
-    });
-  }
-
-  if (sources.educationalChanges.length > 0) {
-    summary += '\n=== LOCAL BUSINESS & ECONOMY ===\n';
-    sources.educationalChanges.forEach(source => {
+  if (sources.firecrawlResults.length > 0) {
+    summary += '\n=== FIRECRAWL SUPPLEMENT ===\n';
+    sources.firecrawlResults.forEach(source => {
       summary += `Source: ${source.title} (${source.url})\n`;
       summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
     });
@@ -438,19 +667,19 @@ function createSourceSummary(sources: ResearchSources): string {
   return summary;
 }
 
-// Create source attribution object for JSON response
+// Create enhanced source attribution object for JSON response
 function createSourceAttributions(sources: ResearchSources): any {
   const attributions = [];
   
-  [...sources.schoolSearch, ...sources.schoolWebsite, ...sources.localNews, ...sources.historicalRecords, ...sources.educationalChanges]
+  [...sources.localPack, ...sources.mapsDetails, ...sources.knowledgeGraph, ...sources.webSearch, ...sources.firecrawlResults]
     .forEach(source => {
       attributions.push({
         title: source.title,
         url: source.url,
-        type: sources.schoolSearch.includes(source) ? 'google' :
-              sources.schoolWebsite.includes(source) ? 'school' :
-              sources.localNews.includes(source) ? 'news' :
-              sources.historicalRecords.includes(source) ? 'historical' : 'business'
+        type: source.source_type || 'unknown',
+        place_id: source.place_id,
+        data_cid: source.data_cid,
+        kgmid: source.kgmid
       });
     });
     
@@ -465,8 +694,8 @@ serve(async (req) => {
   try {
     const { schoolName, city, graduationYear, country, language }: SchoolMemoryRequest = await req.json();
 
-    console.log(`=== STARTING ENHANCED SCHOOL MEMORY RESEARCH ===`);
-    console.log(`School: ${schoolName}, City: ${city}, Year: ${graduationYear}`);
+    console.log(`=== STARTING ENHANCED MULTI-ENGINE SCHOOL RESEARCH ===`);
+    console.log(`School: ${schoolName}, City: ${city}, Year: ${graduationYear}, Country: ${country || 'international'}, Language: ${language || 'auto'}`);
 
     // Check for cached data
     const { data: existingData } = await supabase
@@ -490,29 +719,32 @@ serve(async (req) => {
       });
     }
 
-    console.log('No cached data found, starting research...');
+    console.log('No cached data found, starting multi-engine research...');
 
-    // Conduct research and get headlines in parallel
+    // Conduct multi-engine research and get headlines in parallel
     const [researchSources, historicalHeadlines] = await Promise.all([
-      conductComprehensiveResearch(schoolName, city, graduationYear, country, language),
+      conductMultiEngineResearch(schoolName, city, graduationYear, country, language),
       getHistoricalHeadlines(graduationYear)
     ]);
 
     const sourceSummary = createSourceSummary(researchSources);
     const sourceAttributions = createSourceAttributions(researchSources);
 
-    // Enhanced AI prompt with proper source attribution
+    // Enhanced AI prompt with multi-engine source attribution
     const schoolResearchPrompt = `
 You are researching school memories for ${schoolName} in ${city} for someone who graduated in ${graduationYear}.
 
 ${researchSources.totalSourcesFound > 0 ? `
-REAL SOURCE DATA FOUND (${researchSources.totalSourcesFound} sources):
+MULTI-ENGINE REAL SOURCE DATA FOUND (${researchSources.totalSourcesFound} sources from ${researchSources.serpApiEnginesUsed.length} engines):
+Engines used: ${researchSources.serpApiEnginesUsed.join(', ')}
+
 ${sourceSummary}
 
 IMPORTANT: When using real information from the sources above, you MUST include source attribution in the JSON response.
-Use the exact URLs and titles provided. Focus on factual, verifiable information from real sources.
+Use the exact URLs and titles provided. Prioritize data from Local Pack and Maps results as they are most accurate for location-specific information.
+Knowledge Graph results provide official/authoritative information. Web search provides historical context.
 ` : `
-NO REAL SOURCES FOUND - Generate plausible school memories based on typical German school experiences for ${graduationYear}.
+NO REAL SOURCES FOUND - Generate plausible school memories based on typical school experiences for ${graduationYear} in ${country || 'international context'}.
 Focus on realistic events that would have happened during that time period.
 Mark these as generated content without source attribution.
 `}
@@ -529,7 +761,8 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
       "description": "Detailed description of what happened",
       "category": "facilities|academics|sports|culture|technology",
       "sourceUrl": "http://example.com",
-      "sourceName": "Source Name"
+      "sourceName": "Source Name",
+      "sourceType": "local_pack|maps|knowledge_graph|web|firecrawl"
     }
   ],
   "nostalgiaFactors": [
@@ -537,7 +770,8 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
       "memory": "Specific nostalgic memory",
       "shareableText": "Social media friendly version",
       "sourceUrl": "http://example.com",
-      "sourceName": "Source Name"
+      "sourceName": "Source Name",
+      "sourceType": "local_pack|maps|knowledge_graph|web|firecrawl"
     }
   ],
   "localContext": [
@@ -545,7 +779,8 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
       "event": "Local historical context during graduation year",
       "relevance": "How it affected students and the local community",
       "sourceUrl": "http://example.com",
-      "sourceName": "Source Name"
+      "sourceName": "Source Name",
+      "sourceType": "local_pack|maps|knowledge_graph|web|firecrawl"
     }
   ],
   "shareableQuotes": [
@@ -553,7 +788,7 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
   ]
 }`;
 
-    console.log('Sending request to OpenAI...');
+    console.log('Sending enhanced multi-engine request to OpenAI...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -566,7 +801,7 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
         messages: [
           {
             role: 'system',
-            content: 'You are a school memory researcher. Always respond with valid JSON only. No markdown formatting.'
+            content: 'You are a school memory researcher with access to multi-engine search data. Always respond with valid JSON only. No markdown formatting.'
           },
           {
             role: 'user',
@@ -628,7 +863,7 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
       historicalHeadlines: historicalHeadlines
     };
 
-    // Store the research data
+    // Store the enhanced research data
     const { error: insertError } = await supabase
       .from('school_memories')
       .insert({
@@ -640,7 +875,13 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
         research_sources: {
           generated_at: new Date().toISOString(),
           total_sources_found: researchSources.totalSourcesFound,
-          firecrawl_success: researchSources.firecrawlSuccess,
+          engines_used: researchSources.serpApiEnginesUsed,
+          research_success: researchSources.researchSuccess,
+          local_pack_results: researchSources.localPack.length,
+          maps_results: researchSources.mapsDetails.length,
+          knowledge_graph_results: researchSources.knowledgeGraph.length,
+          web_results: researchSources.webSearch.length,
+          firecrawl_results: researchSources.firecrawlResults.length,
           headlines_count: historicalHeadlines.length
         }
       });
@@ -648,10 +889,10 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
     if (insertError) {
       console.error('Error storing school memories:', insertError);
     } else {
-      console.log('Successfully stored school memories data');
+      console.log('Successfully stored enhanced school memories data');
     }
 
-    console.log('=== RESEARCH COMPLETED SUCCESSFULLY ===');
+    console.log('=== MULTI-ENGINE RESEARCH COMPLETED SUCCESSFULLY ===');
 
     return new Response(JSON.stringify({
       schoolMemories: generatedContent,
@@ -660,7 +901,15 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
       cached: false,
       researchQuality: {
         totalSourcesFound: researchSources.totalSourcesFound,
-        firecrawlWorking: researchSources.firecrawlSuccess,
+        enginesUsed: researchSources.serpApiEnginesUsed,
+        researchSuccess: researchSources.researchSuccess,
+        sourceBreakdown: {
+          localPack: researchSources.localPack.length,
+          maps: researchSources.mapsDetails.length,
+          knowledgeGraph: researchSources.knowledgeGraph.length,
+          web: researchSources.webSearch.length,
+          firecrawl: researchSources.firecrawlResults.length
+        },
         headlinesGenerated: historicalHeadlines.length
       }
     }), {
@@ -668,11 +917,11 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
     });
 
   } catch (error) {
-    console.error('=== ERROR IN SCHOOL MEMORY RESEARCH ===');
+    console.error('=== ERROR IN MULTI-ENGINE SCHOOL RESEARCH ===');
     console.error('Error details:', error);
     
     return new Response(JSON.stringify({ 
-      error: 'Research failed',
+      error: 'Multi-engine research failed',
       details: error.message,
       fallbackMessage: 'Unable to research school memories at this time. Please try again later.'
     }), {
