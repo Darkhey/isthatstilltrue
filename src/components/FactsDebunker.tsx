@@ -291,7 +291,8 @@ const generateFunMessage = (year: number) => {
 
 export const FactsDebunker = () => {
   const [isSchoolMode, setIsSchoolMode] = useState(false);
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState("germany");
+  const [language, setLanguage] = useState("de");
   const [graduationYear, setGraduationYear] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [city, setCity] = useState("");
@@ -368,7 +369,9 @@ export const FactsDebunker = () => {
           body: {
             schoolName,
             city,
-            graduationYear: parseInt(graduationYear)
+            graduationYear: parseInt(graduationYear),
+            country,
+            language
           }
         });
 
@@ -538,9 +541,13 @@ export const FactsDebunker = () => {
                     schoolName={schoolName}
                     city={city}
                     schoolType={schoolType}
+                    country={country}
+                    language={language}
                     onSchoolNameChange={setSchoolName}
                     onCityChange={setCity}
                     onSchoolTypeChange={setSchoolType}
+                    onCountryChange={setCountry}
+                    onLanguageChange={setLanguage}
                   />
                 ) : (
                   <Select value={country} onValueChange={setCountry}>

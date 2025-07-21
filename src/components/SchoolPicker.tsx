@@ -7,9 +7,13 @@ interface SchoolPickerProps {
   schoolName: string;
   city: string;
   schoolType: string;
+  country: string;
+  language: string;
   onSchoolNameChange: (value: string) => void;
   onCityChange: (value: string) => void;
   onSchoolTypeChange: (value: string) => void;
+  onCountryChange: (value: string) => void;
+  onLanguageChange: (value: string) => void;
 }
 
 const schoolTypes = [
@@ -26,16 +30,76 @@ const schoolTypes = [
   { value: "other", label: "Other" }
 ];
 
+const countries = [
+  { value: "germany", label: "🇩🇪 Germany" },
+  { value: "usa", label: "🇺🇸 United States" },
+  { value: "uk", label: "🇬🇧 United Kingdom" },
+  { value: "france", label: "🇫🇷 France" },
+  { value: "spain", label: "🇪🇸 Spain" },
+  { value: "italy", label: "🇮🇹 Italy" },
+  { value: "netherlands", label: "🇳🇱 Netherlands" },
+  { value: "austria", label: "🇦🇹 Austria" },
+  { value: "switzerland", label: "🇨🇭 Switzerland" },
+  { value: "other", label: "🌍 Other" }
+];
+
+const languages = [
+  { value: "de", label: "Deutsch" },
+  { value: "en", label: "English" },
+  { value: "fr", label: "Français" },
+  { value: "es", label: "Español" },
+  { value: "it", label: "Italiano" },
+  { value: "nl", label: "Nederlands" }
+];
+
 export const SchoolPicker = ({ 
   schoolName, 
   city, 
-  schoolType, 
+  schoolType,
+  country,
+  language,
   onSchoolNameChange, 
   onCityChange, 
-  onSchoolTypeChange 
+  onSchoolTypeChange,
+  onCountryChange,
+  onLanguageChange
 }: SchoolPickerProps) => {
   return (
     <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="country">Country</Label>
+          <Select value={country} onValueChange={onCountryChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select country..." />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((country) => (
+                <SelectItem key={country.value} value={country.value}>
+                  {country.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="language">Language</Label>
+          <Select value={language} onValueChange={onLanguageChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select language..." />
+            </SelectTrigger>
+            <SelectContent>
+              {languages.map((lang) => (
+                <SelectItem key={lang.value} value={lang.value}>
+                  {lang.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="school-name">School Name</Label>
         <Input
