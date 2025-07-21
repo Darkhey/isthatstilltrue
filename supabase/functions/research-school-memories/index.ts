@@ -9,6 +9,7 @@ const corsHeaders = {
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
+const serpApiKey = Deno.env.get('SERPAPI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -32,9 +33,11 @@ interface ResearchSources {
   localNews: SearchResult[];
   historicalRecords: SearchResult[];
   educationalChanges: SearchResult[];
+  schoolSearch: SearchResult[];
   totalSourcesFound: number;
   searchQueries: string[];
   firecrawlSuccess: boolean;
+  serpApiSuccess: boolean;
 }
 
 interface HistoricalHeadline {
@@ -69,6 +72,53 @@ function cleanJsonResponse(jsonString: string): string {
   cleaned = cleaned.replace(/([{,]\s*\w+):/g, '"$1":');
   
   return cleaned.trim();
+}
+
+// SerpApi Google search for real school data
+async function performSerpApiSearch(query: string, limit: number = 5): Promise<SearchResult[]> {
+  if (!serpApiKey) {
+    console.log('SerpApi API key not available, skipping search for:', query);
+    return [];
+  }
+
+  try {
+    console.log(`Starting SerpApi Google search for: "${query}"`);
+    
+    const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(query)}&num=${limit}&hl=de&gl=de`;
+    
+    const response = await fetch(url);
+    console.log(`SerpApi search response status: ${response.status}`);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`SerpApi search failed: ${response.status} - ${errorText}`);
+      return [];
+    }
+
+    const data = await response.json();
+    console.log(`SerpApi search returned ${data.organic_results?.length || 0} results`);
+    
+    const results: SearchResult[] = [];
+    
+    if (data.organic_results && Array.isArray(data.organic_results)) {
+      for (const result of data.organic_results) {
+        if (result.link && result.title && result.snippet) {
+          results.push({
+            url: result.link,
+            title: result.title,
+            content: result.snippet,
+            description: result.snippet
+          });
+        }
+      }
+    }
+    
+    console.log(`Processed ${results.length} valid results from SerpApi`);
+    return results;
+  } catch (error) {
+    console.error(`SerpApi search error for "${query}":`, error);
+    return [];
+  }
 }
 
 // Enhanced Firecrawl search with better rate limiting
@@ -160,18 +210,41 @@ async function conductComprehensiveResearch(schoolName: string, city: string, gr
     localNews: [],
     historicalRecords: [],
     educationalChanges: [],
+    schoolSearch: [],
     totalSourcesFound: 0,
     searchQueries: searchQueries,
-    firecrawlSuccess: false
+    firecrawlSuccess: false,
+    serpApiSuccess: false
   };
 
-  // Sequential searches with better coverage for local data
-  for (let i = 0; i < Math.min(searchQueries.length, 6); i++) { // Increase to 6 searches for better coverage
+  // First, try SerpApi for real Google results - most reliable for German schools
+  const serpApiQueries = [
+    `"${schoolName}" ${city} schule website`,
+    `"${schoolName}" ${city} alumni jahrbuch ${graduationYear}`,
+    `"${schoolName}" ${city} graduation abitur ${graduationYear}`
+  ];
+
+  for (const query of serpApiQueries) {
+    console.log(`Executing SerpApi search: "${query}"`);
+    try {
+      const results = await performSerpApiSearch(query, 5);
+      if (results.length > 0) {
+        sources.serpApiSuccess = true;
+        sources.schoolSearch.push(...results);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Rate limiting
+      }
+    } catch (error) {
+      console.error(`SerpApi search failed for "${query}":`, error);
+    }
+  }
+
+  // Then supplement with Firecrawl for additional context
+  for (let i = 0; i < Math.min(searchQueries.length, 4); i++) { // Reduced to 4 since SerpApi provides better data
     const query = searchQueries[i];
-    console.log(`Executing enhanced search ${i + 1}: "${query}"`);
+    console.log(`Executing Firecrawl search ${i + 1}: "${query}"`);
     
     try {
-      const results = await performFirecrawlSearch(query, 3); // Get more results per query
+      const results = await performFirecrawlSearch(query, 2); // Reduced since SerpApi is primary
       
       if (results.length > 0) {
         sources.firecrawlSuccess = true;
@@ -203,8 +276,9 @@ async function conductComprehensiveResearch(schoolName: string, city: string, gr
     }
   }
 
-  sources.totalSourcesFound = sources.schoolWebsite.length + sources.localNews.length + sources.historicalRecords.length + sources.educationalChanges.length;
-  console.log(`Enhanced research completed. Found ${sources.totalSourcesFound} total sources (Schools: ${sources.schoolWebsite.length}, News: ${sources.localNews.length}, Historical: ${sources.historicalRecords.length}, Business: ${sources.educationalChanges.length})`);
+  sources.totalSourcesFound = sources.schoolWebsite.length + sources.localNews.length + sources.historicalRecords.length + sources.educationalChanges.length + sources.schoolSearch.length;
+  console.log(`Enhanced research completed. Found ${sources.totalSourcesFound} total sources (Google: ${sources.schoolSearch.length}, Schools: ${sources.schoolWebsite.length}, News: ${sources.localNews.length}, Historical: ${sources.historicalRecords.length}, Business: ${sources.educationalChanges.length})`);
+  console.log(`Research success: SerpApi=${sources.serpApiSuccess}, Firecrawl=${sources.firecrawlSuccess}`);
 
   return sources;
 }
@@ -276,6 +350,14 @@ async function getHistoricalHeadlines(year: number): Promise<HistoricalHeadline[
 function createSourceSummary(sources: ResearchSources): string {
   let summary = '';
 
+  if (sources.schoolSearch.length > 0) {
+    summary += '\n=== GOOGLE SEARCH RESULTS (SerpApi) ===\n';
+    sources.schoolSearch.forEach(source => {
+      summary += `Source: ${source.title} (${source.url})\n`;
+      summary += `Content: ${source.content.substring(0, 400)}...\n\n`;
+    });
+  }
+
   if (sources.schoolWebsite.length > 0) {
     summary += '\n=== SCHOOL INFORMATION ===\n';
     sources.schoolWebsite.forEach(source => {
@@ -315,12 +397,13 @@ function createSourceSummary(sources: ResearchSources): string {
 function createSourceAttributions(sources: ResearchSources): any {
   const attributions = [];
   
-  [...sources.schoolWebsite, ...sources.localNews, ...sources.historicalRecords, ...sources.educationalChanges]
+  [...sources.schoolSearch, ...sources.schoolWebsite, ...sources.localNews, ...sources.historicalRecords, ...sources.educationalChanges]
     .forEach(source => {
       attributions.push({
         title: source.title,
         url: source.url,
-        type: sources.schoolWebsite.includes(source) ? 'school' :
+        type: sources.schoolSearch.includes(source) ? 'google' :
+              sources.schoolWebsite.includes(source) ? 'school' :
               sources.localNews.includes(source) ? 'news' :
               sources.historicalRecords.includes(source) ? 'historical' : 'business'
       });
