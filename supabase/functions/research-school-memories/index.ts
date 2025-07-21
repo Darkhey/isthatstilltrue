@@ -133,17 +133,26 @@ async function performFirecrawlSearch(query: string, limit: number = 3): Promise
 async function conductComprehensiveResearch(schoolName: string, city: string, graduationYear: number): Promise<ResearchSources> {
   console.log(`Starting enhanced research for ${schoolName} in ${city}, graduation year ${graduationYear}`);
   
-  // Enhanced and more specific search queries for better local results
+  // Real data source searches for authentic school information
   const searchQueries = [
-    `"${schoolName}" ${city} official school website contact`,
-    `${schoolName} ${city} gymnasium realschule hauptschule`,
-    `${city} Stadtzeitung lokale nachrichten ${graduationYear}`,
-    `${city} stadtrat gemeinde verwaltung ${graduationYear}`,
-    `${city} wirtschaft unternehmen ${graduationYear}`,
-    `${city} kultur veranstaltungen ${graduationYear}`,
-    `${schoolName} schulfest abitur ${graduationYear}`,
-    `${city} region local businesses companies ${graduationYear}`,
-    `"${city}" wikipedia stadtgeschichte`
+    // Wayback Machine archived school websites
+    `site:web.archive.org "${schoolName}" ${city} school website ${graduationYear}`,
+    // School yearbooks and alumni sites  
+    `"${schoolName}" ${city} yearbook ${graduationYear} classmates reunion alumni`,
+    // Local newspapers and archives
+    `site:newspapers.com "${schoolName}" ${city} ${graduationYear} graduation local news`,
+    // State education archives and curriculum data
+    `"${schoolName}" ${city} curriculum ${graduationYear} education department germany`,
+    // NCES equivalent for Germany - statistical offices
+    `"${schoolName}" ${city} school statistics profile bildung statistik`,
+    // Local school district archives and newsletters
+    `"${schoolName}" ${city} school district newsletter ${graduationYear} archive chronik`,
+    // Regional historical context and local events
+    `${city} ${graduationYear} local news events history regional chronik`,
+    // Authentic local business and economic context
+    `${city} region wirtschaft unternehmen ${graduationYear} local industry jobs`,
+    // Real cultural and social context
+    `${city} ${graduationYear} kultur veranstaltungen events festivals local`
   ];
 
   const sources: ResearchSources = {
