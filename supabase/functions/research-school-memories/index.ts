@@ -83,6 +83,7 @@ interface ComprehensiveResearchSources {
   answerBoxes: EnhancedSearchResult[];
   shoppingResults: EnhancedSearchResult[];
   firecrawlResults: EnhancedSearchResult[];
+  schoolImages: EnhancedSearchResult[];
   totalSourcesFound: number;
   searchQueries: string[];
   serpApiEnginesUsed: string[];
@@ -104,6 +105,7 @@ interface ComprehensiveResearchSources {
     answerBoxes: boolean;
     shopping: boolean;
     firecrawl: boolean;
+    schoolImages: boolean;
   };
 }
 
@@ -205,6 +207,54 @@ async function processSerpApiResponse(url: string, searchType: string, retryCoun
   } catch (error) {
     console.error(`SerpApi ${searchType} request error:`, error);
     return { success: false, error: error.message };
+  }
+}
+
+// Google Inline Images Search for school photos
+async function performSchoolImagesSearch(schoolName: string, city: string, country?: string, language?: string): Promise<EnhancedSearchResult[]> {
+  if (!serpApiKey) {
+    console.log('SerpApi key not available for Google Inline Images search');
+    return [];
+  }
+
+  try {
+    const settings = getCountrySettings(country, language);
+    const query = `"${schoolName}" ${city} school building campus`;
+    
+    console.log(`Google Inline Images search for "${query}" (${country || 'international'})`);
+    
+    const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(query)}&tbm=isch&hl=${settings.hl}&gl=${settings.gl}&num=6`;
+    
+    const apiResponse = await processSerpApiResponse(url, 'Google Inline Images');
+    
+    if (!apiResponse.success || !apiResponse.data) {
+      console.log('Google Inline Images search failed');
+      return [];
+    }
+
+    const data = apiResponse.data;
+    console.log(`Google Inline Images search returned ${data.images_results?.length || 0} image results`);
+    
+    if (data.images_results && Array.isArray(data.images_results)) {
+      const schoolImages = data.images_results.slice(0, 3).map((result: any, index: number) => ({
+        url: result.original || result.link || '',
+        title: result.title || `${schoolName} School Image`,
+        content: `School Image: ${result.title || schoolName} - ${city}`,
+        description: result.title || `Image of ${schoolName} school`,
+        result_type: 'images' as const,
+        source_type: 'web' as const,
+        thumbnail: result.thumbnail,
+        position: index + 1
+      })).filter(result => result.url);
+      
+      console.log(`Processed ${schoolImages.length} school images`);
+      return schoolImages;
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('Google Inline Images search error:', error);
+    return [];
   }
 }
 
@@ -706,6 +756,7 @@ async function conductComprehensiveMultiEngineResearch(schoolName: string, city:
     answerBoxes: [],
     shoppingResults: [],
     firecrawlResults: [],
+    schoolImages: [],
     totalSourcesFound: 0,
     searchQueries: [],
     serpApiEnginesUsed: [],
@@ -726,7 +777,8 @@ async function conductComprehensiveMultiEngineResearch(schoolName: string, city:
       videos: false,
       answerBoxes: false,
       shopping: false,
-      firecrawl: false
+      firecrawl: false,
+      schoolImages: false
     }
   };
 
@@ -762,8 +814,17 @@ async function conductComprehensiveMultiEngineResearch(schoolName: string, city:
     
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Phase 4: Comprehensive Web Search with all result types
-    console.log('\n--- PHASE 4: COMPREHENSIVE WEB SEARCH ---');
+    // Phase 4: Google Inline Images Search for school photos
+    console.log('\n--- PHASE 4: GOOGLE INLINE IMAGES SEARCH ---');
+    const schoolImages = await performSchoolImagesSearch(schoolName, city, country, language);
+    sources.schoolImages = schoolImages;
+    sources.researchSuccess.schoolImages = schoolImages.length > 0;
+    if (sources.researchSuccess.schoolImages) sources.serpApiEnginesUsed.push('google_images');
+    
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Phase 5: Comprehensive Web Search with all result types
+    console.log('\n--- PHASE 5: COMPREHENSIVE WEB SEARCH ---');
     const webResults = await performComprehensiveWebSearch(schoolName, city, graduationYear, country, language);
     sources.organicResults = webResults.organicResults;
     sources.newsResults = webResults.newsResults;
@@ -783,8 +844,8 @@ async function conductComprehensiveMultiEngineResearch(schoolName: string, city:
     
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Phase 5: Supplementary Firecrawl Search (unchanged)
-    console.log('\n--- PHASE 5: FIRECRAWL SUPPLEMENT ---');
+    // Phase 6: Supplementary Firecrawl Search (unchanged)
+    console.log('\n--- PHASE 6: FIRECRAWL SUPPLEMENT ---');
     const firecrawlQuery = `"${schoolName}" ${city} school ${graduationYear} history`;
     const firecrawlResults = await performFirecrawlSearch(firecrawlQuery, 2);
     sources.firecrawlResults = firecrawlResults.map(r => ({ ...r, result_type: 'firecrawl' as const }));
@@ -795,7 +856,8 @@ async function conductComprehensiveMultiEngineResearch(schoolName: string, city:
                                sources.mapsDetails.length + sources.knowledgeGraph.length + 
                                sources.newsResults.length + sources.imagesResults.length +
                                sources.videosResults.length + sources.answerBoxes.length +
-                               sources.shoppingResults.length + sources.firecrawlResults.length;
+                               sources.shoppingResults.length + sources.firecrawlResults.length +
+                               sources.schoolImages.length;
 
     sources.searchQueries = generateHistoricalQueries(schoolName, city, graduationYear, country);
 
@@ -803,6 +865,7 @@ async function conductComprehensiveMultiEngineResearch(schoolName: string, city:
     console.log(`Total sources found: ${sources.totalSourcesFound}`);
     console.log(`Organic: ${sources.organicResults.length}, Local: ${sources.localPack.length}, Maps: ${sources.mapsDetails.length}, Knowledge: ${sources.knowledgeGraph.length}`);
     console.log(`News: ${sources.newsResults.length}, Images: ${sources.imagesResults.length}, Videos: ${sources.videosResults.length}, Answers: ${sources.answerBoxes.length}, Shopping: ${sources.shoppingResults.length}`);
+    console.log(`School Images: ${sources.schoolImages.length}, Firecrawl: ${sources.firecrawlResults.length}`);
     console.log(`Engines used: ${sources.serpApiEnginesUsed.join(', ')}`);
 
     return sources;
@@ -1206,7 +1269,8 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
             videos: researchSources.videosResults.length,
             answer_boxes: researchSources.answerBoxes.length,
             shopping: researchSources.shoppingResults.length,
-            firecrawl: researchSources.firecrawlResults.length
+            firecrawl: researchSources.firecrawlResults.length,
+            schoolImages: researchSources.schoolImages.length
           },
           headlines_count: historicalHeadlines.length
         }
@@ -1225,6 +1289,9 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
       shareableContent: shareableContent,
       historicalHeadlines: historicalHeadlines,
       cached: false,
+      researchResults: {
+        schoolImages: researchSources.schoolImages
+      },
       researchQuality: {
         totalSourcesFound: researchSources.totalSourcesFound,
         enginesUsed: researchSources.serpApiEnginesUsed,
@@ -1240,7 +1307,8 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
           videos: researchSources.videosResults.length,
           answerBoxes: researchSources.answerBoxes.length,
           shopping: researchSources.shoppingResults.length,
-          firecrawl: researchSources.firecrawlResults.length
+          firecrawl: researchSources.firecrawlResults.length,
+          schoolImages: researchSources.schoolImages.length
         },
         headlinesGenerated: historicalHeadlines.length
       }

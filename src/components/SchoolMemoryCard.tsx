@@ -39,6 +39,7 @@ interface SchoolMemoryCardProps {
   graduationYear: number;
   memoryData: SchoolMemoryData;
   shareableText?: string;
+  schoolImage?: string;
 }
 
 const getCategoryIcon = (category: string): LucideIcon => {
@@ -63,7 +64,7 @@ const getCategoryColor = (category: string): string => {
   return colorMap[category] || "bg-primary";
 };
 
-export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData, shareableText }: SchoolMemoryCardProps) => {
+export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData, shareableText, schoolImage }: SchoolMemoryCardProps) => {
   const { toast } = useToast();
 
   const handleReportIssue = () => {
@@ -108,9 +109,9 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
         <div className="relative">
           <div className="h-48 bg-gradient-to-r from-primary/80 to-primary-glow/60 flex items-center justify-center relative">
             <img 
-              src={`https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=300&fit=crop&crop=center&auto=format&q=80`}
+              src={schoolImage || `https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=300&fit=crop&crop=center&auto=format&q=80`}
               alt={`${schoolName} school building`}
-              className="w-full h-full object-cover opacity-40"
+              className="w-full h-full object-cover opacity-60"
               onError={(e) => {
                 // Fallback to different school images if main one fails
                 const fallbackImages = [
@@ -122,7 +123,7 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
                 const currentImageId = currentSrc.match(/photo-([a-f0-9-]+)/)?.[1];
                 const currentIndex = fallbackImages.findIndex(id => currentSrc.includes(id));
                 const nextIndex = (currentIndex + 1) % fallbackImages.length;
-                if (nextIndex < fallbackImages.length) {
+                if (nextIndex < fallbackImages.length && !schoolImage) {
                   e.currentTarget.src = `https://images.unsplash.com/photo-${fallbackImages[nextIndex]}?w=800&h=300&fit=crop&crop=center&auto=format&q=80`;
                 }
               }}

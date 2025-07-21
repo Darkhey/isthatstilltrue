@@ -312,6 +312,7 @@ export const FactsDebunker = () => {
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [selectedFactForReport, setSelectedFactForReport] = useState<OutdatedFact | null>(null);
   const [historicalHeadlines, setHistoricalHeadlines] = useState<HistoricalHeadline[]>([]);
+  const [schoolImage, setSchoolImage] = useState<string | null>(null);
 
   const factsResultsRef = useRef<HTMLDivElement>(null);
 
@@ -392,6 +393,10 @@ export const FactsDebunker = () => {
         setSchoolShareableContent(data.shareableContent);
         if (data.historicalHeadlines) {
           setHistoricalHeadlines(data.historicalHeadlines);
+        }
+        // Set school image from research results if available
+        if (data.researchResults?.schoolImages?.length > 0) {
+          setSchoolImage(data.researchResults.schoolImages[0].url);
         }
         setShowSkeletons(false);
         
@@ -656,6 +661,7 @@ export const FactsDebunker = () => {
               graduationYear={parseInt(graduationYear)}
               memoryData={schoolMemories}
               shareableText={schoolShareableContent?.mainShare}
+              schoolImage={schoolImage || undefined}
             />
             
             {/* Historical Headlines */}
