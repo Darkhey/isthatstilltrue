@@ -19,6 +19,8 @@ interface SchoolMemoryRequest {
   schoolName: string;
   city: string;
   graduationYear: number;
+  country?: string;
+  language?: string;
 }
 
 interface SearchResult {
@@ -74,17 +76,35 @@ function cleanJsonResponse(jsonString: string): string {
   return cleaned.trim();
 }
 
-// SerpApi Google search for real school data
-async function performSerpApiSearch(query: string, limit: number = 5): Promise<SearchResult[]> {
+// International SerpApi Google search for real school data
+async function performSerpApiSearch(query: string, limit: number = 5, country?: string, language?: string): Promise<SearchResult[]> {
   if (!serpApiKey) {
     console.log('SerpApi API key not available, skipping search for:', query);
     return [];
   }
 
   try {
-    console.log(`Starting SerpApi Google search for: "${query}"`);
+    console.log(`Starting SerpApi Google search for: "${query}" (${country || 'international'})`);
     
-    const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(query)}&num=${limit}&hl=de&gl=de`;
+    // Determine language and country codes based on input
+    const countryMap: Record<string, { gl: string, hl: string }> = {
+      'germany': { gl: 'de', hl: 'de' },
+      'deutschland': { gl: 'de', hl: 'de' },
+      'usa': { gl: 'us', hl: 'en' },
+      'uk': { gl: 'uk', hl: 'en' },
+      'united kingdom': { gl: 'uk', hl: 'en' },
+      'france': { gl: 'fr', hl: 'fr' },
+      'spain': { gl: 'es', hl: 'es' },
+      'italy': { gl: 'it', hl: 'it' },
+      'netherlands': { gl: 'nl', hl: 'nl' },
+      'austria': { gl: 'at', hl: 'de' },
+      'switzerland': { gl: 'ch', hl: 'de' }
+    };
+    
+    const countryKey = country?.toLowerCase() || 'international';
+    const settings = countryMap[countryKey] || { gl: 'us', hl: 'en' }; // Default to US/English
+    
+    const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(query)}&num=${limit}&hl=${language || settings.hl}&gl=${settings.gl}`;
     
     const response = await fetch(url);
     console.log(`SerpApi search response status: ${response.status}`);
@@ -180,7 +200,7 @@ async function performFirecrawlSearch(query: string, limit: number = 3): Promise
 }
 
 // Enhanced research strategy focusing on real local data
-async function conductComprehensiveResearch(schoolName: string, city: string, graduationYear: number): Promise<ResearchSources> {
+async function conductComprehensiveResearch(schoolName: string, city: string, graduationYear: number, country?: string, language?: string): Promise<ResearchSources> {
   console.log(`Starting enhanced research for ${schoolName} in ${city}, graduation year ${graduationYear}`);
   
   // Real data source searches for authentic school information
@@ -217,17 +237,42 @@ async function conductComprehensiveResearch(schoolName: string, city: string, gr
     serpApiSuccess: false
   };
 
-  // First, try SerpApi for real Google results - most reliable for German schools
-  const serpApiQueries = [
-    `"${schoolName}" ${city} schule website`,
-    `"${schoolName}" ${city} alumni jahrbuch ${graduationYear}`,
-    `"${schoolName}" ${city} graduation abitur ${graduationYear}`
-  ];
+  // Generate international search queries based on country/language context
+  const generateSchoolQueries = (schoolName: string, city: string, graduationYear: number, country?: string) => {
+    if (country?.toLowerCase().includes('germany') || country?.toLowerCase().includes('deutschland')) {
+      return [
+        `"${schoolName}" ${city} schule website`,
+        `"${schoolName}" ${city} alumni jahrbuch ${graduationYear}`,
+        `"${schoolName}" ${city} graduation abitur ${graduationYear}`
+      ];
+    } else if (country?.toLowerCase().includes('usa') || country?.toLowerCase().includes('america')) {
+      return [
+        `"${schoolName}" ${city} school website`,
+        `"${schoolName}" ${city} alumni yearbook ${graduationYear}`,
+        `"${schoolName}" ${city} graduation class ${graduationYear}`
+      ];
+    } else if (country?.toLowerCase().includes('uk') || country?.toLowerCase().includes('britain')) {
+      return [
+        `"${schoolName}" ${city} school website`,
+        `"${schoolName}" ${city} alumni ${graduationYear}`,
+        `"${schoolName}" ${city} graduation ${graduationYear}`
+      ];
+    } else {
+      // Default international queries
+      return [
+        `"${schoolName}" ${city} school website`,
+        `"${schoolName}" ${city} alumni ${graduationYear}`,
+        `"${schoolName}" ${city} graduation ${graduationYear}`
+      ];
+    }
+  };
+
+  const serpApiQueries = generateSchoolQueries(schoolName, city, graduationYear, country);
 
   for (const query of serpApiQueries) {
-    console.log(`Executing SerpApi search: "${query}"`);
+    console.log(`Executing SerpApi search: "${query}" (${country || 'international'})`);
     try {
-      const results = await performSerpApiSearch(query, 5);
+      const results = await performSerpApiSearch(query, 5, country, language);
       if (results.length > 0) {
         sources.serpApiSuccess = true;
         sources.schoolSearch.push(...results);
@@ -418,7 +463,7 @@ serve(async (req) => {
   }
 
   try {
-    const { schoolName, city, graduationYear }: SchoolMemoryRequest = await req.json();
+    const { schoolName, city, graduationYear, country, language }: SchoolMemoryRequest = await req.json();
 
     console.log(`=== STARTING ENHANCED SCHOOL MEMORY RESEARCH ===`);
     console.log(`School: ${schoolName}, City: ${city}, Year: ${graduationYear}`);
@@ -449,7 +494,7 @@ serve(async (req) => {
 
     // Conduct research and get headlines in parallel
     const [researchSources, historicalHeadlines] = await Promise.all([
-      conductComprehensiveResearch(schoolName, city, graduationYear),
+      conductComprehensiveResearch(schoolName, city, graduationYear, country, language),
       getHistoricalHeadlines(graduationYear)
     ]);
 
