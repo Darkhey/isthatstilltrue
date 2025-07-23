@@ -24,20 +24,28 @@ export const FactShare = ({ fact, country, graduationYear }: FactShareProps) => 
   const { toast } = useToast();
 
   const generateShareText = () => {
-    const shortFact = fact.fact.length > 80 ? fact.fact.substring(0, 80) + "..." : fact.fact;
-    return `🤯 I just discovered that what I learned in ${graduationYear} about ${fact.category.toLowerCase()} was COMPLETELY WRONG!
+    const maxFactLength = 120;
+    const maxCorrectionLength = 100;
+    
+    const shortFact = fact.fact.length > maxFactLength ? fact.fact.substring(0, maxFactLength) + "..." : fact.fact;
+    const shortCorrection = fact.correction.length > maxCorrectionLength ? fact.correction.substring(0, maxCorrectionLength) + "..." : fact.correction;
+    
+    return `🤯 SCHOOL TAUGHT ME: "${shortFact}"
 
-"${shortFact}"
+❌ DEBUNKED in ${fact.yearDebunked}!
 
-Turns out this was debunked in ${fact.yearDebunked}! 😱
+✅ ACTUALLY: ${shortCorrection}
 
-Check out what other "facts" from your school days are total BS: https://isthatstilltrue.com
+Mind = blown! What other school "facts" are complete BS? 
 
-#FactCheck #Education #Science #DidYouKnow #SchoolLies #Learning`;
+Find out: https://isthatstilltrue.com
+
+#FactCheck #Education #Science #SchoolLies #DidYouKnow #Learning`;
   };
 
   const generateShortShareText = () => {
-    return `🤯 What I learned in school about ${fact.category.toLowerCase()} was completely wrong! Debunked in ${fact.yearDebunked}. Check out isthatstilltrue.com to see what other school "facts" are BS! #FactCheck #Education`;
+    const shortFact = fact.fact.length > 60 ? fact.fact.substring(0, 60) + "..." : fact.fact;
+    return `🤯 SCHOOL: "${shortFact}" ❌ DEBUNKED ${fact.yearDebunked}! Check isthatstilltrue.com for more school lies! #FactCheck #Education`;
   };
 
   const shareUrl = "https://isthatstilltrue.com";
