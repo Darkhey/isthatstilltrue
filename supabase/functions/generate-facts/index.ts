@@ -117,7 +117,7 @@ serve(async (req) => {
     console.log('Phase 2: Generating facts with parallel requests...');
     
     const factPromises = [];
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       const factPrompt = await generateOptimizedFactPrompt(country, graduationYear, curriculumContent, i);
       
       const promise = fetchWithTimeout(
@@ -278,40 +278,56 @@ function parseFactResponse(rawContent: string, graduationYear: number) {
 // Generate fallback facts when AI fails
 function generateFallbackFacts(country: string, graduationYear: number) {
   const currentYear = new Date().getFullYear();
-  const debunkYear = Math.min(graduationYear + Math.floor(Math.random() * 10) + 1, currentYear);
+  const debunkYear = Math.min(graduationYear + Math.floor(Math.random() * 15) + 3, currentYear);
   
   return [
     {
       category: "Science",
-      fact: `In ${graduationYear}, students in ${country} were taught that certain scientific theories were absolute facts, before newer research provided different perspectives.`,
-      correction: "Scientific understanding continuously evolves with new research and technology.",
+      fact: `In ${graduationYear}, students in ${country} were confidently taught that the tongue had specific taste zones - sweet at the tip, sour on the sides, bitter at the back - as if this was absolute scientific fact.`,
+      correction: "Taste buds for all flavors are actually distributed across the entire tongue, making the 'tongue map' completely wrong.",
       yearDebunked: debunkYear,
-      mindBlowingFactor: "This shows how scientific knowledge is always advancing.",
-      sourceName: "General curriculum standards"
+      mindBlowingFactor: "Generations of students drew wrong tongue diagrams based on a mistranslated 1901 German study!",
+      sourceName: "Biology textbook standards"
     },
     {
       category: "Technology", 
-      fact: `In ${graduationYear}, students in ${country} learned about technology that was considered cutting-edge at the time.`,
-      correction: "Technology has advanced significantly since then with new innovations.",
+      fact: `In ${graduationYear}, students in ${country} were taught that computers would never be small enough for home use, and that 640KB of memory would be enough for anyone.`,
+      correction: "Today's smartphones have thousands of times more computing power than room-sized computers from that era.",
       yearDebunked: Math.min(graduationYear + 5, currentYear),
-      mindBlowingFactor: "Technology evolves at an incredible pace.",
-      sourceName: "Educational technology curriculum"
+      mindBlowingFactor: "Technology predictions from schools were laughably wrong - we now carry supercomputers in our pockets!",
+      sourceName: "Computer science curriculum"
     },
     {
       category: "Medicine",
-      fact: `In ${graduationYear}, health education in ${country} taught certain medical practices that were standard at the time.`,
-      correction: "Medical knowledge and best practices have improved with new research.",
+      fact: `In ${graduationYear}, health classes in ${country} confidently taught that stress caused stomach ulcers, and the solution was bland food and stress management.`,
+      correction: "Most stomach ulcers are actually caused by H. pylori bacteria and can be cured with antibiotics in a week.",
       yearDebunked: Math.min(graduationYear + 8, currentYear),
-      mindBlowingFactor: "Medical science constantly improves patient care.",
-      sourceName: "Health education standards"
+      mindBlowingFactor: "Doctors were prescribing lifestyle changes for a bacterial infection - the real cure was discovered by drinking bacteria cultures!",
+      sourceName: "Health education textbooks"
     },
     {
       category: "Geography",
-      fact: `In ${graduationYear}, geography classes in ${country} used maps and data that reflected the world understanding of that time.`,
-      correction: "Geographic data and mapping technology have become much more accurate.",
+      fact: `In ${graduationYear}, geography students in ${country} were taught that there were only 7 continents, and that was an unchangeable fact of nature.`,
+      correction: "The number of continents is actually a cultural convention - some countries teach 5, 6, 7, or even 8 continents depending on their perspective.",
       yearDebunked: Math.min(graduationYear + 3, currentYear),
-      mindBlowingFactor: "Our understanding of the world keeps getting more precise.",
-      sourceName: "Geography curriculum"
+      mindBlowingFactor: "What seemed like basic geography was actually just one cultural perspective - there's no 'correct' number of continents!",
+      sourceName: "Geography standards"
+    },
+    {
+      category: "History",
+      fact: `In ${graduationYear}, history students in ${country} were taught that people in medieval times believed the Earth was flat, and Columbus proved them wrong.`,
+      correction: "Educated people knew the Earth was round since ancient Greece - the flat Earth myth was invented much later.",
+      yearDebunked: Math.min(graduationYear + 10, currentYear),
+      mindBlowingFactor: "Schools taught a completely made-up story about medieval people being ignorant - they actually knew more than we gave them credit for!",
+      sourceName: "History curriculum"
+    },
+    {
+      category: "Nutrition",
+      fact: `In ${graduationYear}, students in ${country} were taught the food pyramid with bread and grains at the base as the most important food group.`,
+      correction: "The food pyramid was heavily influenced by agricultural lobbying and has been replaced with more balanced dietary guidelines.",
+      yearDebunked: Math.min(graduationYear + 12, currentYear),
+      mindBlowingFactor: "What we learned as 'scientific nutrition' was actually shaped more by politics and lobbying than health research!",
+      sourceName: "Health education standards"
     }
   ];
 }
@@ -335,43 +351,47 @@ Focus on authentic educational content from that era, not speculation. Keep resp
 async function generateOptimizedFactPrompt(country: string, year: number, curriculumContent: string, variation: number): Promise<string> {
   const currentYear = new Date().getFullYear();
   const focusAreas = [
-    'Science and Medicine',
-    'Technology and Geography'
+    'Science and Medicine - Focus on dramatically wrong medical/scientific "facts"',
+    'Technology and Geography - Focus on laughably outdated tech/world knowledge'
   ];
   
-  return `Based on educational research for ${country} around ${year}, generate facts about what students learned that has since been updated or corrected.
+  return `Based on educational research for ${country} around ${year}, generate DRAMATICALLY WRONG facts that students learned which have since been completely debunked or proven hilariously outdated.
 
 **Research Context**: ${curriculumContent}
 
 **Focus**: ${focusAreas[variation] || 'General Education'}
 
-Generate 4-6 facts in this EXACT JSON format (no markdown, no code blocks):
+Generate 6-8 facts in this EXACT JSON format (no markdown, no code blocks):
 
 {
   "facts": [
     {
       "category": "[Science/Medicine/Technology/Geography/History]",
-      "fact": "In ${year}, students in ${country} were taught that [specific educational content]",
-      "correction": "[What we know now]", 
+      "fact": "In ${year}, students in ${country} were confidently taught that [specific educational content that was completely wrong]",
+      "correction": "[What we know now - make the contrast shocking]", 
       "yearDebunked": [MUST be > ${year} and <= ${currentYear}],
-      "mindBlowingFactor": "[Why this matters]",
+      "mindBlowingFactor": "[Emphasize how embarrassingly wrong this was]",
       "sourceName": "[Educational source]"
     }
   ],
   "educationProblems": [
     {
-      "problem": "[Educational issue from that era]",
+      "problem": "[Educational system issue from that era]",
       "description": "[How it affected learning]",
       "impact": "[Consequences]"
     }
   ]
 }
 
-Requirements:
-- Every yearDebunked must be > ${year}
-- Focus on authentic educational content
-- Make facts specific and interesting
-- Avoid speculation, use realistic scenarios`;
+CRITICAL REQUIREMENTS:
+- Every yearDebunked must be > ${year} and <= ${currentYear}
+- Make facts BLATANTLY wrong and embarrassing in hindsight
+- Use words like "confidently taught", "absolute certainty", "never questioned"
+- Show how ridiculously wrong the old knowledge was
+- Focus on facts that make people think "How could we have believed that?!"
+- Generate MORE facts (6-8) to increase success rate
+- Make corrections show dramatic progress in understanding
+- Emphasize the contrast between old ignorance and current knowledge`;
 }
 
 async function generateCurriculumResearchPrompt(country: string, year: number): Promise<string> {
