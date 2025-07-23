@@ -275,61 +275,81 @@ function parseFactResponse(rawContent: string, graduationYear: number) {
   }
 }
 
-// Generate fallback facts when AI fails
+// Generate fallback facts when AI fails - using documented Wikipedia misconceptions
 function generateFallbackFacts(country: string, graduationYear: number) {
   const currentYear = new Date().getFullYear();
-  const debunkYear = Math.min(graduationYear + Math.floor(Math.random() * 15) + 3, currentYear);
+  const baseDebunkYear = Math.min(graduationYear + Math.floor(Math.random() * 10) + 5, currentYear);
   
-  return [
+  const misconceptions = [
     {
-      category: "Science",
-      fact: `In ${graduationYear}, students in ${country} were confidently taught that the tongue had specific taste zones - sweet at the tip, sour on the sides, bitter at the back - as if this was absolute scientific fact.`,
-      correction: "Taste buds for all flavors are actually distributed across the entire tongue, making the 'tongue map' completely wrong.",
-      yearDebunked: debunkYear,
-      mindBlowingFactor: "Generations of students drew wrong tongue diagrams based on a mistranslated 1901 German study!",
-      sourceName: "Biology textbook standards"
+      category: "Biology",
+      fact: `In ${graduationYear}, biology students in ${country} were authoritatively taught that bats are completely blind and navigate only through echolocation - this was presented as absolute scientific fact in every textbook.`,
+      correction: "All bat species actually have eyes and can see. Many bats have excellent night vision, and only some species primarily use echolocation for navigation.",
+      yearDebunked: baseDebunkYear,
+      mindBlowingFactor: "Students spent years believing mammals could be completely blind when bats actually have better night vision than most animals!",
+      sourceName: "Standard biology textbooks"
     },
     {
-      category: "Technology", 
-      fact: `In ${graduationYear}, students in ${country} were taught that computers would never be small enough for home use, and that 640KB of memory would be enough for anyone.`,
-      correction: "Today's smartphones have thousands of times more computing power than room-sized computers from that era.",
-      yearDebunked: Math.min(graduationYear + 5, currentYear),
-      mindBlowingFactor: "Technology predictions from schools were laughably wrong - we now carry supercomputers in our pockets!",
-      sourceName: "Computer science curriculum"
+      category: "Physics",
+      fact: `In ${graduationYear}, science students in ${country} learned that Earth's seasons are caused by the planet being closer to the Sun in summer and farther away in winter - teachers presented this as basic astronomy.`,
+      correction: "Seasons are actually caused by Earth's 23.4-degree axial tilt. Earth is actually closest to the Sun in January (Northern Hemisphere winter) and farthest in July.",
+      yearDebunked: baseDebunkYear + 1,
+      mindBlowingFactor: "Schools taught the exact opposite of reality - summer happens when we're farther from the Sun, not closer!",
+      sourceName: "Physics and Earth science textbooks"
+    },
+    {
+      category: "Science",
+      fact: `In ${graduationYear}, students in ${country} confidently learned that the tongue had specific taste zones - sweet at the tip, sour on the sides, bitter at the back - and memorized these zones for biology tests.`,
+      correction: "Taste buds for all flavors are actually distributed across the entire tongue. The 'tongue map' was based on a mistranslation of a German study from 1901.",
+      yearDebunked: baseDebunkYear + 2,
+      mindBlowingFactor: "Generations of students drew completely wrong tongue diagrams because of a translation error from over 100 years ago!",
+      sourceName: "Biology and health textbooks"
+    },
+    {
+      category: "Geography", 
+      fact: `In ${graduationYear}, geography classes in ${country} proudly taught that the Great Wall of China is the only human-made structure visible from space with the naked eye - this was a standard 'amazing fact' in textbooks.`,
+      correction: "The Great Wall is NOT visible from space with the naked eye. No Apollo astronauts reported seeing any specific human structures from the Moon, and even from low Earth orbit it requires magnification.",
+      yearDebunked: baseDebunkYear + 3,
+      mindBlowingFactor: "One of the most repeated 'facts' in schools was completely false - astronauts couldn't see it even when they tried!",
+      sourceName: "Geography and social studies textbooks"
     },
     {
       category: "Medicine",
-      fact: `In ${graduationYear}, health classes in ${country} confidently taught that stress caused stomach ulcers, and the solution was bland food and stress management.`,
-      correction: "Most stomach ulcers are actually caused by H. pylori bacteria and can be cured with antibiotics in a week.",
-      yearDebunked: Math.min(graduationYear + 8, currentYear),
-      mindBlowingFactor: "Doctors were prescribing lifestyle changes for a bacterial infection - the real cure was discovered by drinking bacteria cultures!",
-      sourceName: "Health education textbooks"
-    },
-    {
-      category: "Geography",
-      fact: `In ${graduationYear}, geography students in ${country} were taught that there were only 7 continents, and that was an unchangeable fact of nature.`,
-      correction: "The number of continents is actually a cultural convention - some countries teach 5, 6, 7, or even 8 continents depending on their perspective.",
-      yearDebunked: Math.min(graduationYear + 3, currentYear),
-      mindBlowingFactor: "What seemed like basic geography was actually just one cultural perspective - there's no 'correct' number of continents!",
-      sourceName: "Geography standards"
+      fact: `In ${graduationYear}, health classes in ${country} definitively taught that stomach ulcers are caused by stress, spicy food, and acid - doctors prescribed bland diets and stress management as the cure.`,
+      correction: "Most stomach ulcers are actually caused by H. pylori bacteria and can be cured with antibiotics in about a week. The bacterial cause was proven in the 1980s.",
+      yearDebunked: Math.min(baseDebunkYear + 4, 1990),
+      mindBlowingFactor: "Medical textbooks were prescribing lifestyle changes for what turned out to be a simple bacterial infection - the discoverers even won a Nobel Prize!",
+      sourceName: "Health education and medical textbooks"
     },
     {
       category: "History",
-      fact: `In ${graduationYear}, history students in ${country} were taught that people in medieval times believed the Earth was flat, and Columbus proved them wrong.`,
-      correction: "Educated people knew the Earth was round since ancient Greece - the flat Earth myth was invented much later.",
-      yearDebunked: Math.min(graduationYear + 10, currentYear),
-      mindBlowingFactor: "Schools taught a completely made-up story about medieval people being ignorant - they actually knew more than we gave them credit for!",
-      sourceName: "History curriculum"
+      fact: `In ${graduationYear}, history students in ${country} learned that medieval people believed the Earth was flat until Columbus proved it was round by sailing to America.`,
+      correction: "Educated people knew the Earth was spherical since ancient Greek times. Medieval scholars, navigators, and even common people understood Earth's roundness - the flat Earth myth was largely invented in the 1800s.",
+      yearDebunked: baseDebunkYear + 5,
+      mindBlowingFactor: "Schools taught a completely fabricated story about medieval ignorance - they actually had better geographical knowledge than we gave them credit for!",
+      sourceName: "History and social studies curriculum"
     },
     {
-      category: "Nutrition",
-      fact: `In ${graduationYear}, students in ${country} were taught the food pyramid with bread and grains at the base as the most important food group.`,
-      correction: "The food pyramid was heavily influenced by agricultural lobbying and has been replaced with more balanced dietary guidelines.",
-      yearDebunked: Math.min(graduationYear + 12, currentYear),
-      mindBlowingFactor: "What we learned as 'scientific nutrition' was actually shaped more by politics and lobbying than health research!",
-      sourceName: "Health education standards"
+      category: "Zoology",
+      fact: `In ${graduationYear}, students in ${country} learned that bulls become enraged when they see the color red, which is why bullfighters use red capes - this was taught as animal behavior fact.`,
+      correction: "Bulls are actually red-green colorblind (dichromats), so red doesn't stand out to them. They charge at the movement of the cape, not its color.",
+      yearDebunked: baseDebunkYear + 6,
+      mindBlowingFactor: "The most famous example of animal color-rage was taught in schools when bulls literally cannot even see the color red properly!",
+      sourceName: "Animal behavior and biology textbooks"
+    },
+    {
+      category: "Space Science",
+      fact: `In ${graduationYear}, astronomy students in ${country} were taught that astronauts float in space because there's no gravity up there - this was the standard explanation for weightlessness.`,
+      correction: "Astronauts are weightless because they're in continuous free fall around Earth. Gravity at the International Space Station altitude is about 90% as strong as on Earth's surface.",
+      yearDebunked: baseDebunkYear + 7,
+      mindBlowingFactor: "Schools taught that gravity stops working in space, when astronauts are actually falling around Earth so fast they keep missing it!",
+      sourceName: "Physics and space science textbooks"
     }
   ];
+  
+  // Return 6 random misconceptions
+  const shuffled = misconceptions.sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, 6);
 }
 
 // Streamlined curriculum research prompt
@@ -351,15 +371,24 @@ Focus on authentic educational content from that era, not speculation. Keep resp
 async function generateOptimizedFactPrompt(country: string, year: number, curriculumContent: string, variation: number): Promise<string> {
   const currentYear = new Date().getFullYear();
   const focusAreas = [
-    'Science and Medicine - Focus on dramatically wrong medical/scientific "facts"',
-    'Technology and Geography - Focus on laughably outdated tech/world knowledge'
+    'Science and Medicine - Use documented misconceptions like "bats are blind", "tongue taste zones", "humans use 10% of brain"',
+    'Technology and Geography - Use misconceptions like "Great Wall visible from space", "seasons from Earth-sun distance"'
   ];
   
-  return `Based on educational research for ${country} around ${year}, generate DRAMATICALLY WRONG facts that students learned which have since been completely debunked or proven hilariously outdated.
+  return `Based on documented misconceptions from Wikipedia's List of Common Misconceptions, generate school facts that students in ${country} learned around ${year} which are now completely debunked.
 
 **Research Context**: ${curriculumContent}
 
-**Focus**: ${focusAreas[variation] || 'General Education'}
+**Focus**: ${focusAreas[variation] || 'General Education using documented misconceptions'}
+
+**Use these proven misconceptions as inspiration and adapt them to the era/topic:**
+
+DOCUMENTED MISCONCEPTIONS TO ADAPT:
+- Biology: "Bats are blind" (they have excellent vision), "Bulls enraged by red" (they're colorblind), "Camel humps store water" (actually fat), "Dogs age 7x human rate" (varies by breed)
+- Physics: "Seasons caused by Earth-sun distance" (actually axial tilt), "Great Wall visible from space" (not visible to naked eye), "Lightning never strikes twice" (frequently does)
+- History: "Pyramids built by slaves" (paid workers), "Vikings wore horned helmets" (no evidence), "Medieval flat Earth belief" (educated knew it was round)
+- Medicine: "Different tongue regions taste differently" (taste buds distributed everywhere), "You need 8 glasses water daily" (no scientific basis)
+- Space: "Astronauts weightless due to no gravity" (actually in free fall), "Dark side of Moon never lit" (gets same sunlight)
 
 Generate 6-8 facts in this EXACT JSON format (no markdown, no code blocks):
 
@@ -367,31 +396,30 @@ Generate 6-8 facts in this EXACT JSON format (no markdown, no code blocks):
   "facts": [
     {
       "category": "[Science/Medicine/Technology/Geography/History]",
-      "fact": "In ${year}, students in ${country} were confidently taught that [specific educational content that was completely wrong]",
-      "correction": "[What we know now - make the contrast shocking]", 
+      "fact": "In ${year}, students in ${country} were authoritatively taught that [adapt a documented misconception to sound like school curriculum from that era]",
+      "correction": "[The documented correct information that proves the school fact completely wrong]", 
       "yearDebunked": [MUST be > ${year} and <= ${currentYear}],
-      "mindBlowingFactor": "[Emphasize how embarrassingly wrong this was]",
-      "sourceName": "[Educational source]"
+      "mindBlowingFactor": "[Emphasize how this real misconception fooled entire generations of students]",
+      "sourceName": "[Educational source - textbook, curriculum, etc.]"
     }
   ],
   "educationProblems": [
     {
-      "problem": "[Educational system issue from that era]",
-      "description": "[How it affected learning]",
-      "impact": "[Consequences]"
+      "problem": "[Educational system issue that led to these misconceptions being taught]",
+      "description": "[How textbooks/teachers spread these wrong facts]",
+      "impact": "[How many students believed these false facts]"
     }
   ]
 }
 
 CRITICAL REQUIREMENTS:
+- ONLY use documented real misconceptions from the Wikipedia list, adapted to the school context
 - Every yearDebunked must be > ${year} and <= ${currentYear}
-- Make facts BLATANTLY wrong and embarrassing in hindsight
-- Use words like "confidently taught", "absolute certainty", "never questioned"
-- Show how ridiculously wrong the old knowledge was
-- Focus on facts that make people think "How could we have believed that?!"
+- Make facts sound like authoritative school knowledge that was confidently taught
+- Show the dramatic contrast with documented correct information
+- Focus on misconceptions that were actually taught in schools as facts
 - Generate MORE facts (6-8) to increase success rate
-- Make corrections show dramatic progress in understanding
-- Emphasize the contrast between old ignorance and current knowledge`;
+- Emphasize how embarrassing it is that schools taught these wrong facts as truth`;
 }
 
 async function generateCurriculumResearchPrompt(country: string, year: number): Promise<string> {
