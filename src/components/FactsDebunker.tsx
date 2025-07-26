@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle, ChevronDown, Flag, type LucideIcon } from "lucide-react";
+import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle, ChevronDown, Flag, Shield, CheckCircle, type LucideIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
 import { FactShare } from "./FactShare";
@@ -18,6 +18,8 @@ import { SchoolPicker } from "./SchoolPicker";
 import { SchoolMemoryCard } from "./SchoolMemoryCard";
 import { SchoolShareCard } from "./SchoolShareCard";
 import { HistoricalHeadlines } from "./HistoricalHeadlines";
+import { EnhancedProgressTracker } from "./EnhancedProgressTracker";
+import { LanguageSelector } from "./LanguageSelector";
 
 interface OutdatedFact {
   category: string;
@@ -27,6 +29,14 @@ interface OutdatedFact {
   mindBlowingFactor: string;
   sourceUrl?: string;
   sourceName?: string;
+  qualityScore?: number;
+  confidenceLevel?: 'high' | 'medium' | 'low';
+  validation?: {
+    isValid: boolean;
+    confidenceScore: number;
+    sources: string[];
+    wikipediaContext?: string;
+  };
 }
 
 interface EducationSystemProblem {
@@ -342,6 +352,11 @@ export const FactsDebunker = () => {
   const [historicalHeadlines, setHistoricalHeadlines] = useState<HistoricalHeadline[]>([]);
   const [schoolImage, setSchoolImage] = useState<string | null>(null);
   const [loadingMessage, setLoadingMessage] = useState<string>("Researching...");
+  const [language, setLanguage] = useState<'en' | 'de'>('en');
+  const [processingStage, setProcessingStage] = useState<string>('initialization');
+  const [useEnhancedAPI, setUseEnhancedAPI] = useState(true);
+  const [qualityMetrics, setQualityMetrics] = useState<any>(null);
+  const [cacheInfo, setCacheInfo] = useState<any>(null);
 
   const factsResultsRef = useRef<HTMLDivElement>(null);
 
@@ -452,35 +467,51 @@ export const FactsDebunker = () => {
           setSuccessMessage(`School memories for ${schoolName} successfully researched!`);
         }
       } else {
-        console.log(`Generating facts for ${country} ${graduationYear}`);
+        console.log(`Generating facts for ${country} ${graduationYear} (Enhanced: ${useEnhancedAPI})`);
         
-        // First, quickly get the fun fact and show it immediately
-        try {
-          const { data: quickFactData } = await supabase.functions.invoke('quick-fun-fact', {
-            body: {
-              country,
-              graduationYear: parseInt(graduationYear)
+        // Choose API endpoint based on enhancement setting
+        const apiEndpoint = useEnhancedAPI ? 'enhanced-fact-generator' : 'generate-facts';
+        
+        // First, quickly get the fun fact and show it immediately if not using enhanced API
+        if (!useEnhancedAPI) {
+          try {
+            const { data: quickFactData } = await supabase.functions.invoke('quick-fun-fact', {
+              body: {
+                country,
+                graduationYear: parseInt(graduationYear)
+              }
+            });
+            
+            if (quickFactData?.quickFunFact) {
+              setQuickFunFact(quickFactData.quickFunFact);
             }
-          });
-          
-          if (quickFactData?.quickFunFact) {
-            setQuickFunFact(quickFactData.quickFunFact);
+          } catch (quickFactError) {
+            console.warn('Failed to generate quick fun fact:', quickFactError);
           }
-        } catch (quickFactError) {
-          console.warn('Failed to generate quick fun fact:', quickFactError);
-          // Continue with main fact generation even if quick fact fails
         }
         
-        // Then get the main facts
-        const { data, error } = await supabase.functions.invoke('generate-facts', {
+        // Generate facts with enhanced or standard API
+        const { data, error } = await supabase.functions.invoke(apiEndpoint, {
           body: {
             country,
-            graduationYear: parseInt(graduationYear)
+            graduationYear: parseInt(graduationYear),
+            language
           }
         });
 
         if (error) {
-          throw error;
+          console.error('Fact generation error:', error);
+          
+          // Enhanced error handling
+          let errorMessage = "Error generating facts. Please try again.";
+          if (data?.stage) {
+            setProcessingStage(data.stage);
+            errorMessage = `Error during ${data.stage}: ${data.suggestion || errorMessage}`;
+          }
+          
+          setError(errorMessage);
+          setShowSkeletons(false);
+          return;
         }
 
         if (!data.facts || data.facts.length === 0) {
