@@ -1,5 +1,11 @@
 project_id = "hydphinynbbuflawpprs"
 
+[functions.enhanced-fact-generator]
+verify_jwt = false
+
+[functions.check-single-fact]
+verify_jwt = false
+
 [functions.generate-facts]
 verify_jwt = false
 
