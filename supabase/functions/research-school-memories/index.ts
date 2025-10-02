@@ -78,7 +78,7 @@ async function performSchoolSpecificWebSearch(
   graduationYear: number,
   country: string
 ): Promise<any[]> {
-  console.log('\n--- PERFORMING INTENSIVE SCHOOL-SPECIFIC WEB SEARCH ---');
+  console.log('\n--- PERFORMING SCHOOL-SPECIFIC WEB SEARCH ---');
   
   // Use Lovable AI to search for school-specific information
   const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -95,7 +95,7 @@ async function performSchoolSpecificWebSearch(
     `${city} ${graduationYear} local news events`,
   ];
 
-  console.log(`Performing ${searchQueries.length} intensive web searches...`);
+  console.log(`Performing ${searchQueries.length} web searches...`);
   
   // Since we don't have direct web search API, we'll simulate this by having AI generate
   // plausible sources based on the school and year
@@ -321,16 +321,14 @@ ${JSON.stringify({
 }, null, 2)}
 `;
 
-  const systemPrompt = `You are an expert in creating nostalgic, engaging school memories with MANDATORY verifiable sources.
+  const systemPrompt = `You are an expert in creating nostalgic, engaging school memories.
 
-CRITICAL SOURCE REQUIREMENTS - EVERY ITEM MUST HAVE:
-1. sourceUrl: A real, clickable URL from webSearchResults, newsResults, or organicResults
-2. sourceName: The name/title of the source
-3. NO ITEM without both sourceUrl AND sourceName will be accepted
-4. Match content with appropriate sources from the research data
-5. Use webSearchResults for school-specific events
-6. Use newsResults for local/regional events
-7. Create realistic, emotionally engaging content
+REQUIREMENTS:
+1. Create realistic, emotionally engaging content about the school experience
+2. When research data is available, use it and include sourceUrl and sourceName
+3. When no research data is available, create realistic generic school memories WITHOUT sources
+4. Focus on universal school experiences, local culture, and the graduation year context
+5. Make content shareable and nostalgic
 
 Return ONLY valid JSON with this exact structure (no markdown):
 {
@@ -339,30 +337,34 @@ Return ONLY valid JSON with this exact structure (no markdown):
       "title": "Event title",
       "description": "Detailed description",
       "category": "facilities|academics|sports|culture|technology",
-      "sourceUrl": "MANDATORY: https://actual-url.com",
-      "sourceName": "MANDATORY: Source name"
+      "sourceUrl": "https://actual-url.com (if available, otherwise omit)",
+      "sourceName": "Source name (if available, otherwise omit)"
     }
   ],
   "nostalgiaFactors": [
     {
       "memory": "Relatable memory trigger",
       "shareableText": "Personal quote",
-      "sourceUrl": "MANDATORY: https://actual-url.com",
-      "sourceName": "MANDATORY: Source name"
+      "sourceUrl": "https://actual-url.com (if available, otherwise omit)",
+      "sourceName": "Source name (if available, otherwise omit)"
     }
   ],
   "localContext": [
     {
-      "event": "Local event",
-      "relevance": "Impact on students",
-      "sourceUrl": "MANDATORY: https://actual-url.com",
-      "sourceName": "MANDATORY: Source name"
+      "event": "Local or world event from that year",
+      "relevance": "How it impacted students",
+      "sourceUrl": "https://actual-url.com (if available, otherwise omit)",
+      "sourceName": "Source name (if available, otherwise omit)"
     }
   ],
   "shareableQuotes": ["Personal quotes about the school year"]
 }`;
 
-    const userPrompt = `Create engaging school memories based on this data:\n${allSourcesContext}`;
+    const userPrompt = `Create engaging school memories for ${schoolName} in ${city}, ${country} from graduation year ${graduationYear}.
+    
+${researchResults.webSearchResults.length > 0 || researchResults.organicResults.length > 0 || researchResults.newsResults.length > 0 
+  ? `Use this research data and include sources:\n${allSourcesContext}` 
+  : `No specific research data available. Create realistic, universal school memories based on the location and year. Include what would have been typical for schools in ${country} during ${graduationYear}.`}`;
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {

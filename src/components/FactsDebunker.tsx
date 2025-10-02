@@ -23,6 +23,7 @@ import { LanguageSelector } from "./LanguageSelector";
 import { CityImagesGallery } from "./CityImagesGallery";
 import { HistoricalSourcesCard } from "./HistoricalSourcesCard";
 import { SchoolPhotoGallery } from "./SchoolPhotoGallery";
+import { AnimatedLoader } from "./AnimatedLoader";
 
 interface OutdatedFact {
   category: string;
@@ -105,8 +106,8 @@ const countries = [
   { value: "Turkey", label: "Turkey" },
 ];
 
-// Sims-style loading messages for school research
-const simsLoadingMessages = [
+// Animated loading messages for school research
+const loadingMessages = [
   "Reticulating splines...",
   "Calibrating blue nexus...", 
   "Gathering historical data...",
@@ -366,9 +367,9 @@ export const FactsDebunker = () => {
 
   const factsResultsRef = useRef<HTMLDivElement>(null);
 
-  // Function to get random Sims loading message
+  // Function to get random loading message
   const getRandomLoadingMessage = () => {
-    return simsLoadingMessages[Math.floor(Math.random() * simsLoadingMessages.length)];
+    return loadingMessages[Math.floor(Math.random() * loadingMessages.length)];
   };
 
   // Update loading message every 2 seconds during research
@@ -826,30 +827,27 @@ export const FactsDebunker = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 <div className="relative h-full flex items-center justify-center">
                   <div className="text-center space-y-6 p-8 max-w-2xl">
-                    <div className="animate-spin rounded-full h-24 w-24 border-b-4 border-t-4 border-primary mx-auto"></div>
+                    <AnimatedLoader messages={loadingMessages} />
                     <div className="space-y-4">
                       <h3 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                        Intensive Recherche läuft...
+                        Intensive Research in Progress...
                       </h3>
-                      <p className="text-xl font-medium text-foreground/90 animate-pulse">
-                        {loadingMessage}
-                      </p>
                       <div className="space-y-2 mt-6">
                         <p className="text-foreground/90 font-medium">
-                          🔍 Sammle Schulfotos und historische Quellen
+                          🔍 Collecting school photos and historical sources
                         </p>
                         <p className="text-foreground/90 font-medium">
-                          📰 Durchsuche Zeitungsarchive und lokale Berichte
+                          📰 Searching newspaper archives and local reports
                         </p>
                         <p className="text-foreground/90 font-medium">
-                          🏫 Recherchiere Schulevents mit verifizierten Quellen
+                          🏫 Researching school events with verified sources
                         </p>
                         <p className="text-foreground/90 font-medium">
-                          ✨ Erstelle nostalgische Erinnerungen
+                          ✨ Creating nostalgic memories
                         </p>
                       </div>
                       <p className="text-sm text-muted-foreground mt-6 bg-background/80 rounded-lg p-3">
-                        ⏱️ Dies kann 20-40 Sekunden dauern für akkurate Ergebnisse mit verifizierten Quellen
+                        ⏱️ This may take 20-40 seconds for accurate results with verified sources
                       </p>
                     </div>
                     <div className="flex justify-center gap-3 mt-8">

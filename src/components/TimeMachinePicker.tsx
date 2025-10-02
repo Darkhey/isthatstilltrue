@@ -92,8 +92,8 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
   onValueChange,
   placeholder = "Select graduation year..."
 }) => {
-  const [firstTwoDigits, setFirstTwoDigits] = useState<string>('19');
-  const [lastTwoDigits, setLastTwoDigits] = useState<string>('95');
+  const [firstTwoDigits, setFirstTwoDigits] = useState<string>('20');
+  const [lastTwoDigits, setLastTwoDigits] = useState<string>('00');
   
   const currentYear = new Date().getFullYear();
   
