@@ -811,6 +811,59 @@ export const FactsDebunker = () => {
           </div>
         )}
 
+        {/* School Mode Loading Screen */}
+        {isSchoolMode && isLoading && !schoolMemories && (
+          <div ref={factsResultsRef} className="max-w-4xl mx-auto">
+            <Card className="animate-fade-in overflow-hidden">
+              <div className="relative h-80 bg-gradient-to-br from-primary/80 via-primary-glow/60 to-primary/90">
+                {schoolImages.length > 0 && (
+                  <img 
+                    src={schoolImages[0].url} 
+                    alt="School building"
+                    className="w-full h-full object-cover opacity-40 absolute inset-0"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                <div className="relative h-full flex items-center justify-center">
+                  <div className="text-center space-y-6 p-8 max-w-2xl">
+                    <div className="animate-spin rounded-full h-24 w-24 border-b-4 border-t-4 border-primary mx-auto"></div>
+                    <div className="space-y-4">
+                      <h3 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                        Intensive Recherche läuft...
+                      </h3>
+                      <p className="text-xl font-medium text-foreground/90 animate-pulse">
+                        {loadingMessage}
+                      </p>
+                      <div className="space-y-2 mt-6">
+                        <p className="text-foreground/90 font-medium">
+                          🔍 Sammle Schulfotos und historische Quellen
+                        </p>
+                        <p className="text-foreground/90 font-medium">
+                          📰 Durchsuche Zeitungsarchive und lokale Berichte
+                        </p>
+                        <p className="text-foreground/90 font-medium">
+                          🏫 Recherchiere Schulevents mit verifizierten Quellen
+                        </p>
+                        <p className="text-foreground/90 font-medium">
+                          ✨ Erstelle nostalgische Erinnerungen
+                        </p>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-6 bg-background/80 rounded-lg p-3">
+                        ⏱️ Dies kann 20-40 Sekunden dauern für akkurate Ergebnisse mit verifizierten Quellen
+                      </p>
+                    </div>
+                    <div className="flex justify-center gap-3 mt-8">
+                      <div className="h-4 w-4 bg-primary rounded-full animate-bounce"></div>
+                      <div className="h-4 w-4 bg-primary rounded-full animate-bounce delay-100"></div>
+                      <div className="h-4 w-4 bg-primary rounded-full animate-bounce delay-200"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {/* Country Facts Results */}
         {!isSchoolMode && (showSkeletons || facts.length > 0) && (
           <div ref={factsResultsRef} className="max-w-4xl mx-auto">
