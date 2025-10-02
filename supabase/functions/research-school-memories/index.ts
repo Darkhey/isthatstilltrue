@@ -50,25 +50,33 @@ interface WebSearchResult {
 }
 
 function cleanJsonResponse(jsonString: string): string {
-  // Remove any surrounding whitespace
   let cleanedString = jsonString.trim();
 
-  // Remove any ```json or ``` block delimiters
+  // Remove markdown code blocks
   if (cleanedString.startsWith('```json')) {
-    cleanedString = cleanedString.slice(6);
+    cleanedString = cleanedString.slice(7);
+  } else if (cleanedString.startsWith('```')) {
+    cleanedString = cleanedString.slice(3);
   }
+  
   if (cleanedString.endsWith('```')) {
     cleanedString = cleanedString.slice(0, -3);
   }
-
-    // Remove any ``` or similar block delimiters without specifying json
-    if (cleanedString.startsWith('```')) {
-        cleanedString = cleanedString.slice(3);
-    }
-    
+  
   cleanedString = cleanedString.trim();
+  
+  // Remove any leading non-JSON characters (like 'n\n')
+  const firstBrace = cleanedString.indexOf('[');
+  const firstCurly = cleanedString.indexOf('{');
+  
+  if (firstBrace !== -1 || firstCurly !== -1) {
+    const startIndex = firstBrace !== -1 && firstCurly !== -1 
+      ? Math.min(firstBrace, firstCurly)
+      : Math.max(firstBrace, firstCurly);
+    cleanedString = cleanedString.substring(startIndex);
+  }
 
-  return cleanedString;
+  return cleanedString.trim();
 }
 
 // Enhanced web search for school-specific information with sources
@@ -321,44 +329,46 @@ ${JSON.stringify({
 }, null, 2)}
 `;
 
-  const systemPrompt = `You are an expert in creating nostalgic, engaging school memories.
+  const systemPrompt = `You are an expert researcher creating verifiable school memories.
 
-REQUIREMENTS:
-1. Create realistic, emotionally engaging content about the school experience
-2. When research data is available, use it and include sourceUrl and sourceName
-3. When no research data is available, create realistic generic school memories WITHOUT sources
-4. Focus on universal school experiences, local culture, and the graduation year context
-5. Make content shareable and nostalgic
+CRITICAL REQUIREMENTS:
+1. ONLY include items with verifiable sources - if you cannot cite a source, DO NOT include the item
+2. Every single item in whatHappenedAtSchool, nostalgiaFactors, and localContext MUST have both sourceUrl and sourceName
+3. Use the provided research data to create accurate, source-backed memories
+4. For local/world events, prefer well-documented historical events with reliable sources
+5. Focus on factual, verifiable information over generic assumptions
 
 Return ONLY valid JSON with this exact structure (no markdown):
 {
   "whatHappenedAtSchool": [
     {
       "title": "Event title",
-      "description": "Detailed description",
+      "description": "Detailed description based on source",
       "category": "facilities|academics|sports|culture|technology",
-      "sourceUrl": "https://actual-url.com (if available, otherwise omit)",
-      "sourceName": "Source name (if available, otherwise omit)"
+      "sourceUrl": "https://verifiable-url.com",
+      "sourceName": "Source name"
     }
   ],
   "nostalgiaFactors": [
     {
-      "memory": "Relatable memory trigger",
-      "shareableText": "Personal quote",
-      "sourceUrl": "https://actual-url.com (if available, otherwise omit)",
-      "sourceName": "Source name (if available, otherwise omit)"
+      "memory": "Relatable memory based on documented facts",
+      "shareableText": "Personal quote reflecting verified information",
+      "sourceUrl": "https://verifiable-url.com",
+      "sourceName": "Source name"
     }
   ],
   "localContext": [
     {
-      "event": "Local or world event from that year",
-      "relevance": "How it impacted students",
-      "sourceUrl": "https://actual-url.com (if available, otherwise omit)",
-      "sourceName": "Source name (if available, otherwise omit)"
+      "event": "Well-documented local or world event from that year",
+      "relevance": "How it impacted students (based on sources)",
+      "sourceUrl": "https://verifiable-url.com",
+      "sourceName": "Source name"
     }
   ],
-  "shareableQuotes": ["Personal quotes about the school year"]
-}`;
+  "shareableQuotes": ["Quotes reflecting documented experiences"]
+}
+
+If insufficient research data is available, include fewer items but ensure ALL items have proper sources.`;
 
     const userPrompt = `Create engaging school memories for ${schoolName} in ${city}, ${country} from graduation year ${graduationYear}.
     
