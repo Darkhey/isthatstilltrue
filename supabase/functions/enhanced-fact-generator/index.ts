@@ -56,21 +56,57 @@ async function fetchWithTimeout(url: string, options: any, timeoutMs: number = 1
   throw new Error('Max retries exceeded');
 }
 
-// Wikipedia RAG - Multi-source context retrieval
+// Enhanced Wikipedia RAG with targeted historical research
 async function getWikipediaContext(country: string, graduationYear: number, language: string = 'en'): Promise<string> {
   const wikiLang = language === 'de' ? 'de' : 'en';
-  const topics = [
-    `${country} education history`,
-    `${graduationYear} education`,
-    `List of common misconceptions`,
-    `Science education history`
-  ];
+  
+  // Determine historical period for targeted research
+  const isAncient = graduationYear < 500;
+  const isMedieval = graduationYear >= 500 && graduationYear < 1500;
+  const isEarlyModern = graduationYear >= 1500 && graduationYear < 1800;
+  const isModern = graduationYear >= 1800;
+  
+  let topics: string[] = [];
+  
+  if (isAncient) {
+    topics = [
+      `Ancient ${country} education`,
+      `Education in classical antiquity`,
+      `Ancient philosophy ${country}`,
+      `${graduationYear} history`,
+      `List of common misconceptions`
+    ];
+  } else if (isMedieval) {
+    topics = [
+      `Medieval education ${country}`,
+      `Medieval university`,
+      `Scholasticism`,
+      `Medieval science`,
+      `List of common misconceptions`
+    ];
+  } else if (isEarlyModern) {
+    topics = [
+      `Education in the ${Math.floor(graduationYear / 100)}th century`,
+      `${country} education history`,
+      `Renaissance education`,
+      `Scientific Revolution`,
+      `List of common misconceptions`
+    ];
+  } else {
+    topics = [
+      `${country} education history`,
+      `${graduationYear} education`,
+      `List of common misconceptions`,
+      `Science education history`,
+      `Educational misconceptions`
+    ];
+  }
   
   const contexts: string[] = [];
   
-  for (const topic of topics.slice(0, 3)) {
+  for (const topic of topics.slice(0, 4)) {
     try {
-      const searchUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(topic)}&format=json&origin=*&srlimit=1`;
+      const searchUrl = `https://${wikiLang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(topic)}&format=json&origin=*&srlimit=2`;
       const searchRes = await fetchWithTimeout(searchUrl, {}, 5000, 1);
       const searchData = await searchRes.json();
       
@@ -83,7 +119,7 @@ async function getWikipediaContext(country: string, graduationYear: number, lang
         const pages = contentData.query?.pages;
         const pageId = Object.keys(pages)[0];
         if (pages[pageId]?.extract) {
-          contexts.push(`[${pageTitle}]: ${pages[pageId].extract.substring(0, 400)}`);
+          contexts.push(`[${pageTitle}]: ${pages[pageId].extract.substring(0, 500)}`);
         }
       }
     } catch (err) {
@@ -91,9 +127,11 @@ async function getWikipediaContext(country: string, graduationYear: number, lang
     }
   }
   
-  return contexts.length > 0 
-    ? contexts.join('\n\n') 
-    : 'Limited Wikipedia context available';
+  if (contexts.length === 0) {
+    return 'No Wikipedia context available - MUST use only well-documented historical facts with verifiable sources';
+  }
+  
+  return contexts.join('\n\n');
 }
 
 // Validate fact against Wikipedia
@@ -262,6 +300,23 @@ serve(async (req) => {
     const prompt = generateEnhancedRAGPrompt(country, graduationYear, wikiContext, language);
     console.log('✓ Making Lovable AI call with RAG...');
     
+    const systemPrompt = `You are an expert educational historian specializing in debunked school facts.
+
+**CRITICAL RULES - ZERO TOLERANCE:**
+1. NEVER invent, fabricate, or make up any information
+2. ONLY use documented facts from Wikipedia with verifiable URLs
+3. Every sourceName MUST be a real, clickable Wikipedia URL
+4. If you cannot find 8 verifiable facts, generate fewer facts rather than inventing them
+5. All historical information must be accurate and based on scholarly consensus
+
+**VERIFICATION REQUIREMENT:**
+Before including any fact, you must mentally verify:
+- Does this fact appear in actual Wikipedia articles?
+- Can I provide a real Wikipedia URL for this?
+- Is this historically accurate for the time period?
+
+If the answer to any question is "no", DO NOT include that fact.`;
+    
     const response = await fetchWithTimeout(
       'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
@@ -275,18 +330,18 @@ serve(async (req) => {
           messages: [
             {
               role: 'system',
-              content: 'You are an expert educational historian specializing in debunked school facts. Generate only accurate, well-researched, verifiable content based on Wikipedia sources and documented misconceptions.'
+              content: systemPrompt
             },
             {
               role: 'user',
               content: prompt
             }
           ],
-          temperature: 0.2,
-          max_tokens: 3500,
+          temperature: 0.1,
+          max_tokens: 4000,
         })
       },
-      30000,
+      35000,
       2
     );
 
@@ -331,6 +386,16 @@ serve(async (req) => {
         continue;
       }
       
+      // Validate source URL format
+      const hasValidSource = fact.sourceName && 
+        (fact.sourceName.startsWith('https://') || fact.sourceName.startsWith('http://')) &&
+        fact.sourceName.includes('wikipedia.org');
+      
+      if (!hasValidSource) {
+        console.log('✗ Rejected (invalid Wikipedia source):', fact.sourceName);
+        continue;
+      }
+      
       // Assess quality
       const quality = await assessFactQuality(fact, graduationYear, language);
       fact.qualityScore = quality;
@@ -338,7 +403,7 @@ serve(async (req) => {
       
       if (quality.overall >= 0.5) {
         validatedFacts.push(fact);
-        console.log(`✓ Quality: ${(quality.overall * 100).toFixed(0)}% - ${fact.category}`);
+        console.log(`✓ Quality: ${(quality.overall * 100).toFixed(0)}% - ${fact.category} - Source: ${fact.sourceName}`);
       } else {
         console.log(`✗ Low quality (${(quality.overall * 100).toFixed(0)}%):`, fact.fact.substring(0, 50));
       }

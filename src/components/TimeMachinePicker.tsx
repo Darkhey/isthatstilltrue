@@ -10,16 +10,37 @@ interface TimeMachinePickerProps {
 
 const generateFunMessage = (year: number): string => {
   const messages = {
-    // Specific iconic years
-    1969: "The year of Woodstock and the moon landing! ✨",
-    1989: "When the Berlin Wall fell and history changed forever! 🎆",
-    1991: "The birth of the World Wide Web! 🌐",
-    2001: "Y2K survived, but then came September 11th... 📅",
+    // Ancient and medieval years
+    1: "The very first year of Anno Domini! 🕊️",
+    100: "Roman Empire at its peak under Trajan! 🏛️",
+    500: "Fall of the Western Roman Empire era! ⚔️",
+    1000: "The turn of the first millennium! ✨",
+    1066: "Norman Conquest of England! 👑",
+    1206: "Genghis Khan unites the Mongol tribes! 🐎",
+    1347: "Black Death begins devastating Europe... 💀",
+    1492: "Columbus reaches the Americas! ⛵",
+    
+    // Early modern period
+    1600: "Shakespeare was still writing masterpieces! 📜",
+    1700: "Bach was composing his greatest works! 🎼",
+    1776: "American Revolution and the Declaration! 🗽",
+    1789: "French Revolution begins! 🇫🇷",
+    1800: "Napoleon was conquering Europe! ⚔️",
+    
+    // Modern era
+    1900: "The dawn of the 20th century! 🌅",
+    1920: "The Roaring Twenties were just starting! 🥂",
+    1930: "The Great Depression era... tough times! 💰",
+    1940: "World War II was raging across the globe! 🌍",
     1945: "Victory in Europe Day - WWII finally ended! 🕊️",
     1963: "JFK's 'I Have a Dream' speech year! ✊",
+    1969: "The year of Woodstock and the moon landing! ✨",
     1977: "Star Wars premiered and changed cinema forever! ⭐",
     1985: "Back to the Future hit theaters - how meta! ⚡",
+    1989: "When the Berlin Wall fell and history changed forever! 🎆",
+    1991: "The birth of the World Wide Web! 🌐",
     1994: "The Lion King roared and Nelson Mandela became president! 🦁",
+    2001: "Y2K survived, but then came September 11th... 📅",
     2008: "Obama's 'Yes We Can' and the financial crisis! 📈",
     
     // Decades with character
@@ -31,15 +52,6 @@ const generateFunMessage = (year: number): string => {
     2000: "Millennium bug fears and flip phones! 📱",
     2010: "Social media explosion and smartphone revolution! 📲",
     2020: "Pandemic year that changed everything! 😷",
-    
-    // Early years with historical context
-    1600: "Shakespeare was still writing masterpieces! 📜",
-    1700: "Bach was composing his greatest works! 🎼",
-    1800: "Napoleon was conquering Europe! ⚔️",
-    1900: "The dawn of the 20th century! 🌅",
-    1920: "The Roaring Twenties were just starting! 🥂",
-    1930: "The Great Depression era... tough times! 💰",
-    1940: "World War II was raging across the globe! 🌍",
   };
 
   // Check for exact year matches first
@@ -47,10 +59,20 @@ const generateFunMessage = (year: number): string => {
     return messages[year as keyof typeof messages];
   }
 
-  // Fallback to decade-based messages
-  const decade = Math.floor(year / 10) * 10;
-  
-  if (year >= 1600 && year < 1700) {
+  // Fallback to period-based messages
+  if (year >= 1 && year < 100) {
+    return "Ancient Roman Empire era - gladiators and emperors! ⚔️";
+  } else if (year >= 100 && year < 500) {
+    return "Late Roman Empire - Christianity spreading! ✝️";
+  } else if (year >= 500 && year < 1000) {
+    return "Medieval Dark Ages - knights and castles! 🏰";
+  } else if (year >= 1000 && year < 1300) {
+    return "High Middle Ages - crusades and cathedrals! ⛪";
+  } else if (year >= 1300 && year < 1500) {
+    return "Late Medieval period - Renaissance dawning! 🎨";
+  } else if (year >= 1500 && year < 1600) {
+    return "Age of exploration and reformation! 🌍";
+  } else if (year >= 1600 && year < 1700) {
     return "The age of exploration and scientific revolution! 🔭";
   } else if (year >= 1700 && year < 1800) {
     return "Enlightenment era - reason and philosophy flourished! 💡";
@@ -92,15 +114,15 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
   onValueChange,
   placeholder = "Select graduation year..."
 }) => {
-  const [firstTwoDigits, setFirstTwoDigits] = useState<string>('20');
-  const [lastTwoDigits, setLastTwoDigits] = useState<string>('00');
+  const [firstTwoDigits, setFirstTwoDigits] = useState<string>('19');
+  const [lastTwoDigits, setLastTwoDigits] = useState<string>('95');
   
   const currentYear = new Date().getFullYear();
   
-  // Generate options for first two digits (16-20, removed 21)
+  // Generate options for first two digits (00-20 for years 1-2024)
   const firstDigitOptions: WheelPickerOption[] = useMemo(() => {
-    return Array.from({ length: 5 }, (_, i) => {
-      const value = (16 + i).toString();
+    return Array.from({ length: 21 }, (_, i) => {
+      const value = i.toString().padStart(2, '0');
       return {
         value,
         label: value,
@@ -110,8 +132,21 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
 
   // Generate options for last two digits (dynamic based on century)
   const lastDigitOptions: WheelPickerOption[] = useMemo(() => {
-    // For century 20 (2000s), limit to 00-23 (2023 max)
-    const maxDigit = firstTwoDigits === '20' ? 23 : 99;
+    const firstDigitNum = parseInt(firstTwoDigits);
+    
+    // For year 0 (0001-0099), allow 01-99
+    if (firstDigitNum === 0) {
+      return Array.from({ length: 99 }, (_, i) => {
+        const value = (i + 1).toString().padStart(2, '0');
+        return {
+          value,
+          label: value,
+        };
+      });
+    }
+    
+    // For century 20 (2000s), limit to 00-currentYear%100
+    const maxDigit = firstDigitNum === 20 ? (currentYear % 100) : 99;
     return Array.from({ length: maxDigit + 1 }, (_, i) => {
       const value = i.toString().padStart(2, '0');
       return {
@@ -119,42 +154,62 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
         label: value,
       };
     });
-  }, [firstTwoDigits]);
+  }, [firstTwoDigits, currentYear]);
 
-  // Calculate the full year
+  // Calculate the full year (handle year 0 specially as it represents 1-99)
   const fullYear = useMemo(() => {
+    const firstNum = parseInt(firstTwoDigits);
+    const lastNum = parseInt(lastTwoDigits);
+    
+    // For century 00, we represent years 1-99
+    if (firstNum === 0) {
+      return lastNum; // This gives us 1-99
+    }
+    
     return parseInt(`${firstTwoDigits}${lastTwoDigits}`);
   }, [firstTwoDigits, lastTwoDigits]);
 
-  // Auto-snap logic for century "20"
+  // Auto-snap logic for century "20" and century "00"
   useEffect(() => {
-    if (firstTwoDigits === '20' && parseInt(lastTwoDigits) > 23) {
-      setLastTwoDigits('23');
+    const firstNum = parseInt(firstTwoDigits);
+    const lastNum = parseInt(lastTwoDigits);
+    
+    if (firstNum === 20 && lastNum > (currentYear % 100)) {
+      setLastTwoDigits((currentYear % 100).toString().padStart(2, '0'));
     }
-  }, [firstTwoDigits, lastTwoDigits]);
+    
+    // For century 00, ensure we don't have 00 (which would be year 0)
+    if (firstNum === 0 && lastNum === 0) {
+      setLastTwoDigits('01');
+    }
+  }, [firstTwoDigits, lastTwoDigits, currentYear]);
 
   // Update parent when selection changes
   useEffect(() => {
-    if (fullYear <= 2023) {
+    if (fullYear >= 1 && fullYear <= currentYear) {
       onValueChange(fullYear.toString());
     }
-  }, [fullYear, onValueChange]);
+  }, [fullYear, onValueChange, currentYear]);
 
   // Initialize from existing value
   useEffect(() => {
     if (value) {
       const yearValue = parseInt(value);
-      // Reset to 2023 if value is beyond our limit
-      const limitedYear = yearValue > 2023 ? 2023 : yearValue;
-      const first = Math.floor(limitedYear / 100).toString();
-      const last = (limitedYear % 100).toString().padStart(2, '0');
       
-      if (parseInt(first) >= 16 && parseInt(first) <= 20) {
-        setFirstTwoDigits(first);
-        setLastTwoDigits(last);
+      if (yearValue >= 1 && yearValue <= currentYear) {
+        // Handle years 1-99
+        if (yearValue < 100) {
+          setFirstTwoDigits('00');
+          setLastTwoDigits(yearValue.toString().padStart(2, '0'));
+        } else {
+          const first = Math.floor(yearValue / 100).toString().padStart(2, '0');
+          const last = (yearValue % 100).toString().padStart(2, '0');
+          setFirstTwoDigits(first);
+          setLastTwoDigits(last);
+        }
       }
     }
-  }, [value]);
+  }, [value, currentYear]);
 
   const funMessage = generateFunMessage(fullYear);
 
@@ -164,11 +219,16 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
         <h3 className="text-lg font-semibold mb-2">Time Machine Year Selector</h3>
         <p className="text-sm text-muted-foreground">Scroll the wheels to select your graduation year</p>
         <div className="mt-2 text-2xl font-bold text-primary">
-          {fullYear}
+          {fullYear >= 1 && fullYear < 100 ? `Year ${fullYear}` : fullYear}
         </div>
-        {fullYear > 2023 && (
+        {fullYear > currentYear && (
           <p className="text-xs text-destructive mt-1">
-            Year cannot be beyond 2023
+            Year cannot be beyond {currentYear}
+          </p>
+        )}
+        {fullYear < 1 && (
+          <p className="text-xs text-destructive mt-1">
+            Please select a valid year from 1 onwards
           </p>
         )}
       </div>
@@ -199,14 +259,16 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
 
       {/* Quick Jump Buttons */}
       <div className="flex gap-2 flex-wrap justify-center">
-        {[1960, 1980, 1990, 2000, 2010, 2023].map(year => (
+        {[1, 100, 500, 1000, 1500, 1800, 1900, 1950, 1980, 2000, 2020].map(year => (
           <button
             key={year}
             onClick={() => {
-              const first = Math.floor(year / 100).toString();
-              const last = (year % 100).toString().padStart(2, '0');
-              
-              if (parseInt(first) >= 16 && parseInt(first) <= 20) {
+              if (year < 100) {
+                setFirstTwoDigits('00');
+                setLastTwoDigits(year.toString().padStart(2, '0'));
+              } else {
+                const first = Math.floor(year / 100).toString().padStart(2, '0');
+                const last = (year % 100).toString().padStart(2, '0');
                 setFirstTwoDigits(first);
                 setLastTwoDigits(last);
               }
@@ -217,7 +279,7 @@ export const TimeMachinePicker: React.FC<TimeMachinePickerProps> = ({
                 : "bg-background/60 text-muted-foreground border-border hover:bg-background hover:text-foreground"
             }`}
           >
-            {year}
+            {year < 100 ? `${year}` : year}
           </button>
         ))}
       </div>
