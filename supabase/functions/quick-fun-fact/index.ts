@@ -7,13 +7,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Wikipedia snippet fetch for quick validation
+async function getQuickWikipediaSnippet(topic: string): Promise<string> {
+  try {
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(topic)}&format=json&origin=*&srlimit=1`;
+    const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(3000) });
+    const searchData = await searchRes.json();
+    
+    if (searchData.query?.search?.[0]) {
+      return searchData.query.search[0].snippet.replace(/<[^>]*>/g, '').substring(0, 200);
+    }
+  } catch (err) {
+    console.log('Wikipedia snippet fetch failed:', err);
+  }
+  return '';
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { country, graduationYear } = await req.json();
+    const { country, graduationYear, language = 'en' } = await req.json();
     
     if (!country || !graduationYear) {
       return new Response(
@@ -22,62 +38,87 @@ serve(async (req) => {
       );
     }
 
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiApiKey) {
-      throw new Error('GEMINI_API_KEY is not configured');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY is not configured');
     }
 
+    // Quick Wikipedia context
+    const wikiSnippet = await getQuickWikipediaSnippet(`${country} education ${graduationYear}`);
+    
     const factType = getFactGenerationType(graduationYear);
+    const languageInstruction = language === 'de' ? 'Respond in German.' : 'Respond in English.';
     
     let prompt = '';
     if (factType === 'modern') {
-      prompt = `Generate a quick, interesting historical fact about education or daily life in ${country} around ${graduationYear}. Focus on what was actually taught in schools or commonly believed at that time. Keep it concise (1-2 sentences) and educational. Make it specifically about the educational system or curriculum of that era.
+      prompt = `${languageInstruction}
 
-Example format: "In ${graduationYear}, ${country} students were commonly taught that [educational fact], which was the standard understanding before [later development]."
+Wikipedia context: ${wikiSnippet}
 
-Make it engaging and specific to ${country}'s educational context in ${graduationYear}.`;
+Generate ONE quick, verifiable fact about education in ${country} around ${graduationYear}. Use documented information only.
+
+Format: "In ${graduationYear}, ${country} students were taught that [specific educational fact based on real curriculum]."
+
+Keep it 1-2 sentences, specific, and verifiable. Focus on real educational practices.`;
     } else if (factType === 'historical') {
-      prompt = `Generate a quick, interesting fact about education or knowledge in ${country} around ${graduationYear}. Focus on what educated people learned or believed during that historical period. Keep it concise (1-2 sentences) and educational.
+      prompt = `${languageInstruction}
 
-Example format: "In ${graduationYear}, educated people in ${country} commonly learned that [historical belief], reflecting the educational standards of that era."
+Wikipedia context: ${wikiSnippet}
 
-Make it engaging and specific to ${country}'s educational/intellectual context in ${graduationYear}.`;
+Generate ONE quick, verifiable historical fact about education in ${country} around ${graduationYear}.
+
+Format: "In ${graduationYear}, educated people in ${country} learned that [specific historical belief]."
+
+Keep it 1-2 sentences and based on documented history.`;
     } else {
-      prompt = `Generate a quick, interesting fact about worldviews or knowledge in ${country} around ${graduationYear}. Focus on what people believed or understood during that ancient/medieval period. Keep it concise (1-2 sentences) and educational.
+      prompt = `${languageInstruction}
 
-Example format: "In ${graduationYear}, people in ${country} believed that [ancient worldview], which was the prevailing understanding of that time."
+Generate ONE quick historical fact about knowledge in ${country} around ${graduationYear}.
 
-Make it engaging and specific to ${country}'s cultural/intellectual context in ${graduationYear}.`;
+Format: "In ${graduationYear}, people in ${country} believed that [documented historical worldview]."
+
+Keep it 1-2 sentences and historically accurate.`;
     }
 
-    console.log(`Generating quick fun fact for ${country} ${graduationYear}`);
+    console.log(`Generating RAG-based quick fact for ${country} ${graduationYear}`);
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${geminiApiKey}`, {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.8,
-          topK: 40,
-          topP: 0.9,
-          maxOutputTokens: 200,
-        }
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an educational historian. Generate only verifiable, documented facts. Keep responses concise.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.2, // LOW for accuracy
+        max_tokens: 150,
       })
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API request failed: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Lovable AI error:', response.status, errorText);
+      throw new Error(`Lovable AI request failed: ${response.status}`);
     }
 
     const data = await response.json();
-    const quickFunFact = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const quickFunFact = data.choices?.[0]?.message?.content;
     
     if (!quickFunFact) {
       throw new Error('No quick fun fact generated');
     }
 
-    console.log('Generated quick fun fact:', quickFunFact.substring(0, 100) + '...');
+    console.log('Generated RAG-based fact:', quickFunFact.substring(0, 100) + '...');
 
     return new Response(JSON.stringify({
       quickFunFact: quickFunFact.trim()
