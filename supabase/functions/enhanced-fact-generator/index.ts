@@ -304,16 +304,24 @@ serve(async (req) => {
 
 **CRITICAL RULES - ZERO TOLERANCE:**
 1. NEVER invent, fabricate, or make up any information
-2. ONLY use documented facts from Wikipedia with verifiable URLs
-3. Every sourceName MUST be a real, clickable Wikipedia URL
-4. If you cannot find 8 verifiable facts, generate fewer facts rather than inventing them
+2. ONLY use documented facts from trusted academic sources with verifiable URLs
+3. Every sourceName MUST be a real, clickable URL from trusted sources:
+   - Wikipedia (en.wikipedia.org, de.wikipedia.org, etc.)
+   - Encyclopedia Britannica (britannica.com)
+   - Educational institutions (.edu domains)
+   - Government archives (.gov domains)
+   - Internet Archive (archive.org)
+   - Academic journals (jstor.org, science.org, nature.com)
+   - Google Scholar or Google Books
+4. If you cannot find 8 verifiable facts with real URLs, generate fewer facts rather than inventing them
 5. All historical information must be accurate and based on scholarly consensus
 
 **VERIFICATION REQUIREMENT:**
 Before including any fact, you must mentally verify:
-- Does this fact appear in actual Wikipedia articles?
-- Can I provide a real Wikipedia URL for this?
+- Does this fact appear in actual academic/educational sources?
+- Can I provide a real, clickable URL for this?
 - Is this historically accurate for the time period?
+- Is the source trustworthy (educational, governmental, or academic)?
 
 If the answer to any question is "no", DO NOT include that fact.`;
     
@@ -386,13 +394,24 @@ If the answer to any question is "no", DO NOT include that fact.`;
         continue;
       }
       
-      // Validate source URL format
+      // Validate source URL format - accept multiple trusted sources
       const hasValidSource = fact.sourceName && 
         (fact.sourceName.startsWith('https://') || fact.sourceName.startsWith('http://')) &&
-        fact.sourceName.includes('wikipedia.org');
+        (
+          fact.sourceName.includes('wikipedia.org') ||
+          fact.sourceName.includes('britannica.com') ||
+          fact.sourceName.includes('archive.org') ||
+          fact.sourceName.includes('.edu') ||
+          fact.sourceName.includes('.gov') ||
+          fact.sourceName.includes('jstor.org') ||
+          fact.sourceName.includes('science.org') ||
+          fact.sourceName.includes('nature.com') ||
+          fact.sourceName.includes('scholar.google') ||
+          fact.sourceName.includes('books.google')
+        );
       
       if (!hasValidSource) {
-        console.log('✗ Rejected (invalid Wikipedia source):', fact.sourceName);
+        console.log('✗ Rejected (invalid or untrusted source):', fact.sourceName);
         continue;
       }
       
@@ -525,15 +544,20 @@ ${wikiContext}
 **CRITICAL REQUIREMENTS FOR HISTORICAL PERIODS (${year}):**
 - Focus on ACTUAL beliefs, teachings, and knowledge from ${year}
 - Reference REAL historical educational practices (monastery schools, Latin schools, apprenticeships)
-- Use VERIFIABLE Wikipedia articles as sources with actual URLs
+- Use VERIFIABLE URLs from trusted academic sources:
+  * Wikipedia: https://en.wikipedia.org/wiki/[Article_Title]
+  * Britannica: https://www.britannica.com/topic/[Topic]
+  * Educational institutions: university websites (.edu)
+  * Archive.org: https://archive.org/details/[Historical_Document]
+  * Academic sources: jstor.org, nature.com, science.org
 - For medieval/early modern periods: focus on cosmology, medicine, natural philosophy, alchemy, etc.
 - Include genuine historical texts or practices (e.g., Aristotelian physics, humoral theory, etc.)
 - DO NOT use modern misconceptions retrofitted to old periods
 - DO NOT reference "hypothetical textbooks" or invented sources
 
 **SOURCE REQUIREMENTS:**
-- Every fact MUST cite a real Wikipedia article URL (e.g., "https://en.wikipedia.org/wiki/Medieval_medicine")
-- sourceName should be the actual Wikipedia article title
+- Every fact MUST cite a real URL from a trusted academic source
+- sourceName should be the actual URL (e.g., "https://www.britannica.com/science/Four-humours")
 - Research medieval/historical education for the time period
 - Focus on documented historical beliefs from that era
 
@@ -544,7 +568,7 @@ ${wikiContext}
   "correction": "Modern medicine understands disease through germ theory, genetics, and biochemistry rather than bodily humors. The humoral theory has no scientific basis.",
   "yearDebunked": 1858,
   "mindBlowingFactor": "For over a millennium, European physicians treated patients by bloodletting and purging to 'balance humors' - causing more harm than good in most cases.",
-  "sourceName": "https://en.wikipedia.org/wiki/Humorism"
+  "sourceName": "https://www.britannica.com/science/Four-humours"
 }
 
 **OUTPUT FORMAT (NO markdown, NO code blocks, PURE JSON):**
@@ -556,7 +580,7 @@ ${wikiContext}
       "correction": "[Modern scientific understanding]",
       "yearDebunked": [realistic year when this was scientifically debunked],
       "mindBlowingFactor": "[Historical impact and how long this belief persisted]",
-      "sourceName": "https://en.wikipedia.org/wiki/[Actual_Wikipedia_Article_Title]"
+      "sourceName": "https://[trusted-source].com/[Path_To_Article]"
     }
   ],
   "educationProblems": [
@@ -568,7 +592,7 @@ ${wikiContext}
   ]
 }
 
-**GENERATE EXACTLY 8 HISTORICALLY ACCURATE FACTS WITH REAL WIKIPEDIA URLS.**`;
+**GENERATE EXACTLY 8 HISTORICALLY ACCURATE FACTS WITH REAL URLS FROM TRUSTED SOURCES.**`;
   }
   
   return `${languageInstruction}
@@ -579,13 +603,18 @@ ${wikiContext}
 ${wikiContext}
 
 **CRITICAL REQUIREMENTS:**
-- Use ONLY documented misconceptions from Wikipedia's "List of common misconceptions"
+- Use ONLY documented misconceptions from trusted academic sources
 - Every fact MUST be verifiable and historically accurate
 - Adapt misconceptions to ${country}'s educational context in ${year}
 - Be specific about curriculum, textbooks, and teaching methods
-- Provide REAL Wikipedia article URLs as sources
+- Provide REAL URLs from trusted sources:
+  * Wikipedia: https://en.wikipedia.org/wiki/List_of_common_misconceptions
+  * Britannica: https://www.britannica.com/
+  * Educational institutions (.edu)
+  * Scientific journals (nature.com, science.org)
+  * Archive.org for historical documents
 
-**DOCUMENTED WIKIPEDIA MISCONCEPTIONS (adapt to ${year} school context):**
+**DOCUMENTED MISCONCEPTIONS (adapt to ${year} school context):**
 
 Biology & Medicine:
 - "Bats are blind" → FALSE: Excellent vision + echolocation
@@ -616,11 +645,11 @@ History & Geography:
   "facts": [
     {
       "category": "[Science/Medicine/Technology/Geography/History]",
-      "fact": "In ${year}, students in ${country} were authoritatively taught in [specific textbook/curriculum] that [documented Wikipedia misconception adapted to school context with specific details about how it was taught]",
-      "correction": "[The documented scientifically correct information from Wikipedia, with specific details about when/how it was debunked]", 
+      "fact": "In ${year}, students in ${country} were authoritatively taught in [specific textbook/curriculum] that [documented misconception adapted to school context with specific details about how it was taught]",
+      "correction": "[The documented scientifically correct information, with specific details about when/how it was debunked]", 
       "yearDebunked": [realistic year between ${year + 5} and ${currentYear}],
       "mindBlowingFactor": "[Specific explanation of how this documented misconception fooled generations of students, with emotional impact]",
-      "sourceName": "https://en.wikipedia.org/wiki/[Relevant_Wikipedia_Article_Title]"
+      "sourceName": "https://[trusted-source].com/[Path_To_Article]"
     }
   ],
   "educationProblems": [
