@@ -190,8 +190,10 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
             return (
               <div 
                 key={index} 
-                className={`flex gap-4 p-4 bg-background/50 rounded-lg border transition-all duration-200 ${
-                  event.sourceUrl ? 'cursor-pointer hover:bg-background/70 hover:border-primary/40' : ''
+                className={`flex gap-4 p-4 bg-background/50 rounded-lg border-2 transition-all duration-200 ${
+                  event.sourceUrl 
+                    ? 'cursor-pointer hover:bg-background/70 hover:border-primary/60 border-primary/20' 
+                    : 'border-border'
                 }`}
                 onClick={handleEventClick}
               >
@@ -206,16 +208,19 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
                         {event.category}
                       </Badge>
                       {event.sourceUrl && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30">
                           <ExternalLink className="h-3 w-3 mr-1" />
-                          {event.sourceName || 'Source'}
+                          {event.sourceName || 'Verified Source'}
                         </Badge>
                       )}
                     </div>
                   </div>
                   <p className="text-sm text-muted-foreground">{event.description}</p>
                   {event.sourceUrl && (
-                    <p className="text-xs text-primary mt-2">Click to view source →</p>
+                    <div className="mt-3 flex items-center gap-2 text-xs text-primary font-medium">
+                      <ExternalLink className="h-3 w-3" />
+                      Click to view source and verify information →
+                    </div>
                   )}
                 </div>
               </div>
@@ -247,17 +252,19 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
               return (
                 <div 
                   key={index} 
-                  className={`p-4 bg-primary/5 rounded-lg border border-primary/20 transition-all duration-200 ${
-                    nostalgia.sourceUrl ? 'cursor-pointer hover:bg-primary/10 hover:border-primary/40' : ''
+                  className={`p-4 bg-primary/5 rounded-lg border-2 transition-all duration-200 ${
+                    nostalgia.sourceUrl 
+                      ? 'cursor-pointer hover:bg-primary/10 hover:border-primary/50 border-primary/30' 
+                      : 'border-primary/20'
                   }`}
                   onClick={handleNostalgiaClick}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <p className="font-medium flex-1">{nostalgia.memory}</p>
                     {nostalgia.sourceUrl && (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30">
                         <ExternalLink className="h-3 w-3 mr-1" />
-                        {nostalgia.sourceName || 'Source'}
+                        {nostalgia.sourceName || 'Verified Source'}
                       </Badge>
                     )}
                   </div>
@@ -265,7 +272,10 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
                     💬 "{nostalgia.shareableText}"
                   </p>
                   {nostalgia.sourceUrl && (
-                    <p className="text-xs text-primary mt-2">Click to view source →</p>
+                    <div className="mt-3 flex items-center gap-2 text-xs text-primary font-medium">
+                      <ExternalLink className="h-3 w-3" />
+                      Click to view source and verify →
+                    </div>
                   )}
                 </div>
               );
@@ -297,23 +307,28 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
               return (
                 <div 
                   key={index} 
-                  className={`p-4 bg-background/50 rounded-lg border transition-all duration-200 ${
-                    context.sourceUrl ? 'cursor-pointer hover:bg-background/70 hover:border-primary/40' : ''
+                  className={`p-4 bg-background/50 rounded-lg border-2 transition-all duration-200 ${
+                    context.sourceUrl 
+                      ? 'cursor-pointer hover:bg-background/70 hover:border-primary/60 border-primary/20' 
+                      : 'border-border'
                   }`}
                   onClick={handleContextClick}
                 >
                   <div className="flex items-start justify-between gap-2 mb-2">
                     <h4 className="font-semibold flex-1">{context.event}</h4>
                     {context.sourceUrl && (
-                      <Badge variant="outline" className="text-xs">
+                      <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30">
                         <ExternalLink className="h-3 w-3 mr-1" />
-                        {context.sourceName || 'Source'}
+                        {context.sourceName || 'Verified Source'}
                       </Badge>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">{context.relevance}</p>
                   {context.sourceUrl && (
-                    <p className="text-xs text-primary mt-2">Click to view source →</p>
+                    <div className="mt-3 flex items-center gap-2 text-xs text-primary font-medium">
+                      <ExternalLink className="h-3 w-3" />
+                      Click to view source and verify information →
+                    </div>
                   )}
                 </div>
               );

@@ -22,6 +22,7 @@ import { EnhancedProgressTracker } from "./EnhancedProgressTracker";
 import { LanguageSelector } from "./LanguageSelector";
 import { CityImagesGallery } from "./CityImagesGallery";
 import { HistoricalSourcesCard } from "./HistoricalSourcesCard";
+import { SchoolPhotoGallery } from "./SchoolPhotoGallery";
 
 interface OutdatedFact {
   category: string;
@@ -353,6 +354,7 @@ export const FactsDebunker = () => {
   const [selectedFactForReport, setSelectedFactForReport] = useState<OutdatedFact | null>(null);
   const [historicalHeadlines, setHistoricalHeadlines] = useState<HistoricalHeadline[]>([]);
   const [schoolImage, setSchoolImage] = useState<string | null>(null);
+  const [schoolImages, setSchoolImages] = useState<any[]>([]);
   const [cityImages, setCityImages] = useState<any[]>([]);
   const [historicalSources, setHistoricalSources] = useState<any[]>([]);
   const [loadingMessage, setLoadingMessage] = useState<string>("Researching...");
@@ -459,8 +461,9 @@ export const FactsDebunker = () => {
         if (data.historicalHeadlines) {
           setHistoricalHeadlines(data.historicalHeadlines);
         }
-        // Set school image from research results if available
+        // Set school images from research results if available
         if (data.researchResults?.schoolImages?.length > 0) {
+          setSchoolImages(data.researchResults.schoolImages);
           setSchoolImage(data.researchResults.schoolImages[0].url);
         }
         // Set city images from research results if available
@@ -748,6 +751,14 @@ export const FactsDebunker = () => {
         {/* School Memory Results */}
         {isSchoolMode && schoolMemories && schoolShareableContent && (
           <div ref={factsResultsRef} className="max-w-4xl mx-auto space-y-6">
+            {/* School Photo Gallery - PROMINENT AT TOP */}
+            {schoolImages.length > 0 && (
+              <SchoolPhotoGallery
+                schoolName={schoolName}
+                photos={schoolImages}
+              />
+            )}
+            
             <SchoolMemoryCard 
               schoolName={schoolName}
               city={city}

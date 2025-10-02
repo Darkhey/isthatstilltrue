@@ -211,7 +211,7 @@ async function processSerpApiResponse(url: string, searchType: string, retryCoun
   }
 }
 
-// Google Inline Images Search for school photos
+// Google Inline Images Search for school photos - INTENSIFIED
 async function performSchoolImagesSearch(schoolName: string, city: string, country?: string, language?: string): Promise<EnhancedSearchResult[]> {
   if (!serpApiKey) {
     console.log('SerpApi key not available for Google Inline Images search');
@@ -220,39 +220,48 @@ async function performSchoolImagesSearch(schoolName: string, city: string, count
 
   try {
     const settings = getCountrySettings(country, language);
-    const query = `"${schoolName}" ${city} school building campus`;
     
-    console.log(`Google Inline Images search for "${query}" (${country || 'international'})`);
+    // Multiple search queries for better coverage
+    const queries = [
+      `"${schoolName}" ${city} school building`,
+      `"${schoolName}" ${city} campus`,
+      `${schoolName} ${city} students graduation`,
+      `${schoolName} ${city} school history`,
+    ];
     
-    const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(query)}&tbm=isch&hl=${settings.hl}&gl=${settings.gl}&num=6`;
+    const allImages: EnhancedSearchResult[] = [];
     
-    const apiResponse = await processSerpApiResponse(url, 'Google Inline Images');
-    
-    if (!apiResponse.success || !apiResponse.data) {
-      console.log('Google Inline Images search failed');
-      return [];
-    }
-
-    const data = apiResponse.data;
-    console.log(`Google Inline Images search returned ${data.images_results?.length || 0} image results`);
-    
-    if (data.images_results && Array.isArray(data.images_results)) {
-      const schoolImages = data.images_results.slice(0, 3).map((result: any, index: number) => ({
-        url: result.original || result.link || '',
-        title: result.title || `${schoolName} School Image`,
-        content: `School Image: ${result.title || schoolName} - ${city}`,
-        description: result.title || `Image of ${schoolName} school`,
-        result_type: 'images' as const,
-        source_type: 'web' as const,
-        thumbnail: result.thumbnail,
-        position: index + 1
-      })).filter(result => result.url);
+    for (const query of queries) {
+      console.log(`Google Inline Images search for "${query}" (${country || 'international'})`);
       
-      console.log(`Processed ${schoolImages.length} school images`);
-      return schoolImages;
+      const url = `https://serpapi.com/search?api_key=${serpApiKey}&engine=google&q=${encodeURIComponent(query)}&tbm=isch&hl=${settings.hl}&gl=${settings.gl}&num=10`;
+      
+      const apiResponse = await processSerpApiResponse(url, 'Google Inline Images');
+      
+      if (apiResponse.success && apiResponse.data?.images_results) {
+        const images = apiResponse.data.images_results.slice(0, 5).map((result: any, index: number) => ({
+          url: result.original || result.link || '',
+          title: result.title || `${schoolName} - ${query}`,
+          content: `School Image: ${result.title || schoolName} - ${city}`,
+          description: result.title || `Image of ${schoolName} school`,
+          result_type: 'images' as const,
+          source_type: 'web' as const,
+          thumbnail: result.thumbnail,
+          position: allImages.length + index + 1
+        })).filter(result => result.url);
+        
+        allImages.push(...images);
+      }
+      
+      // Rate limiting between queries
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
-    return [];
+    // Remove duplicates based on URL
+    const uniqueImages = Array.from(new Map(allImages.map(img => [img.url, img])).values());
+    
+    console.log(`Processed ${uniqueImages.length} unique school images from ${queries.length} queries`);
+    return uniqueImages.slice(0, 15); // Return up to 15 unique images
   } catch (error) {
     console.error('Google Inline Images search error:', error);
     return [];
