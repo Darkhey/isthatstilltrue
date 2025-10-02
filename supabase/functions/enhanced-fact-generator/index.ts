@@ -447,6 +447,65 @@ function generateEnhancedRAGPrompt(country: string, year: number, wikiContext: s
     ? 'WICHTIG: Generiere ALLE Inhalte auf Deutsch. Antworte auf Deutsch.' 
     : 'IMPORTANT: Generate ALL content in English. Respond in English.';
   
+  const isHistoricalPeriod = year < 1800;
+  
+  if (isHistoricalPeriod) {
+    return `${languageInstruction}
+
+**Task:** Research and document 8 REAL educational beliefs and teachings from ${year} in ${country} that are now known to be incorrect, using VERIFIABLE historical sources.
+
+**Wikipedia Research Context:**
+${wikiContext}
+
+**CRITICAL REQUIREMENTS FOR HISTORICAL PERIODS (${year}):**
+- Focus on ACTUAL beliefs, teachings, and knowledge from ${year}
+- Reference REAL historical educational practices (monastery schools, Latin schools, apprenticeships)
+- Use VERIFIABLE Wikipedia articles as sources with actual URLs
+- For medieval/early modern periods: focus on cosmology, medicine, natural philosophy, alchemy, etc.
+- Include genuine historical texts or practices (e.g., Aristotelian physics, humoral theory, etc.)
+- DO NOT use modern misconceptions retrofitted to old periods
+- DO NOT reference "hypothetical textbooks" or invented sources
+
+**SOURCE REQUIREMENTS:**
+- Every fact MUST cite a real Wikipedia article URL (e.g., "https://en.wikipedia.org/wiki/Medieval_medicine")
+- sourceName should be the actual Wikipedia article title
+- Research medieval/historical education for the time period
+- Focus on documented historical beliefs from that era
+
+**EXAMPLE for year ${year}:**
+{
+  "category": "Medicine",
+  "fact": "In ${year}, medical students in ${country} learned the theory of four humors (blood, phlegm, yellow bile, black bile) as the foundation of all disease diagnosis and treatment, based on Galenic medicine that dominated European medical education for over 1,000 years.",
+  "correction": "Modern medicine understands disease through germ theory, genetics, and biochemistry rather than bodily humors. The humoral theory has no scientific basis.",
+  "yearDebunked": 1858,
+  "mindBlowingFactor": "For over a millennium, European physicians treated patients by bloodletting and purging to 'balance humors' - causing more harm than good in most cases.",
+  "sourceName": "https://en.wikipedia.org/wiki/Humorism"
+}
+
+**OUTPUT FORMAT (NO markdown, NO code blocks, PURE JSON):**
+{
+  "facts": [
+    {
+      "category": "Medicine|Natural Philosophy|Cosmology|Geography|History",
+      "fact": "In ${year}, [specific type of students/scholars] in ${country} learned [actual historical belief with specific details about the teaching context]",
+      "correction": "[Modern scientific understanding]",
+      "yearDebunked": [realistic year when this was scientifically debunked],
+      "mindBlowingFactor": "[Historical impact and how long this belief persisted]",
+      "sourceName": "https://en.wikipedia.org/wiki/[Actual_Wikipedia_Article_Title]"
+    }
+  ],
+  "educationProblems": [
+    {
+      "problem": "Historical limitation of educational system in ${year}",
+      "description": "Specific details about how knowledge was transmitted and why errors persisted",
+      "impact": "Historical scope of this educational practice"
+    }
+  ]
+}
+
+**GENERATE EXACTLY 8 HISTORICALLY ACCURATE FACTS WITH REAL WIKIPEDIA URLS.**`;
+  }
+  
   return `${languageInstruction}
 
 **Task:** Generate 8 highly accurate, verifiable educational facts that students in ${country} learned around ${year} which are now completely debunked, based on Wikipedia's documented misconceptions.
@@ -459,6 +518,7 @@ ${wikiContext}
 - Every fact MUST be verifiable and historically accurate
 - Adapt misconceptions to ${country}'s educational context in ${year}
 - Be specific about curriculum, textbooks, and teaching methods
+- Provide REAL Wikipedia article URLs as sources
 
 **DOCUMENTED WIKIPEDIA MISCONCEPTIONS (adapt to ${year} school context):**
 
@@ -495,7 +555,7 @@ History & Geography:
       "correction": "[The documented scientifically correct information from Wikipedia, with specific details about when/how it was debunked]", 
       "yearDebunked": [realistic year between ${year + 5} and ${currentYear}],
       "mindBlowingFactor": "[Specific explanation of how this documented misconception fooled generations of students, with emotional impact]",
-      "sourceName": "[Specific type of educational source: textbook name, curriculum document, teaching standard]"
+      "sourceName": "https://en.wikipedia.org/wiki/[Relevant_Wikipedia_Article_Title]"
     }
   ],
   "educationProblems": [
@@ -509,15 +569,17 @@ History & Geography:
 
 **ABSOLUTE REQUIREMENTS:**
 1. Use ONLY verified misconceptions from Wikipedia's documented list
-2. Every yearDebunked MUST be realistic: between ${year + 5} and ${currentYear}
-3. Make facts sound like authoritative school knowledge taught with absolute confidence
-4. Show dramatic contrast between what was taught vs. correct information
-5. Be specific about ${country}'s educational practices in ${year}
-6. Generate EXACTLY 8 facts (no more, no less)
-7. Each fact must be at least 80 characters long
-8. Each correction must be at least 50 characters long
-9. ${languageInstruction}
-10. Focus on misconceptions that were ACTUALLY taught in schools as established facts`;
+2. Every sourceName MUST be a real Wikipedia article URL (e.g., "https://en.wikipedia.org/wiki/List_of_common_misconceptions")
+3. Every yearDebunked MUST be realistic: between ${year + 5} and ${currentYear}
+4. Make facts sound like authoritative school knowledge taught with absolute confidence
+5. Show dramatic contrast between what was taught vs. correct information
+6. Be specific about ${country}'s educational practices in ${year}
+7. Generate EXACTLY 8 facts (no more, no less)
+8. Each fact must be at least 80 characters long
+9. Each correction must be at least 50 characters long
+10. ${languageInstruction}
+11. Focus on misconceptions that were ACTUALLY taught in schools as established facts
+12. NEVER use "hypothetical textbook" or invented sources - use REAL Wikipedia URLs`;
 }
 
 function parseFactResponse(rawContent: string, graduationYear: number) {
@@ -567,7 +629,7 @@ function generateEnhancedFallbackFacts(country: string, graduationYear: number, 
       mindBlowingFactor: isGerman
         ? "Schüler glaubten jahrelang, dass Säugetiere völlig blind sein könnten, obwohl Fledermäuse tatsächlich besseres Nachtsehen haben als die meisten Tiere!"
         : "Students spent years believing mammals could be completely blind when bats actually have better night vision than most animals!",
-      sourceName: isGerman ? "Standard-Biologielehrbücher" : "Standard biology textbooks",
+      sourceName: "https://en.wikipedia.org/wiki/List_of_common_misconceptions#Vertebrates",
       qualityScore: { accuracy: 0.95, specificity: 0.8, verifiability: 0.9, educational: 0.85, overall: 0.88 },
       validated: true
     },
@@ -583,7 +645,7 @@ function generateEnhancedFallbackFacts(country: string, graduationYear: number, 
       mindBlowingFactor: isGerman
         ? "Schulen lehrten das genaue Gegenteil der Realität - der Sommer findet statt, wenn wir weiter von der Sonne entfernt sind, nicht näher!"
         : "Schools taught the exact opposite of reality - summer happens when we're farther from the Sun, not closer!",
-      sourceName: isGerman ? "Physik- und Erdkundelehrbücher" : "Physics and Earth science textbooks",
+      sourceName: "https://en.wikipedia.org/wiki/List_of_common_misconceptions#Astronomy",
       qualityScore: { accuracy: 0.92, specificity: 0.85, verifiability: 0.88, educational: 0.9, overall: 0.89 },
       validated: true
     },
@@ -599,7 +661,7 @@ function generateEnhancedFallbackFacts(country: string, graduationYear: number, 
       mindBlowingFactor: isGerman
         ? "Generationen von Schülern zeichneten völlig falsche Zungendiagramme wegen eines Übersetzungsfehlers von vor über 100 Jahren!"
         : "Generations of students drew completely wrong tongue diagrams because of a translation error from over 100 years ago!",
-      sourceName: isGerman ? "Biologie- und Gesundheitslehrbücher" : "Biology and health textbooks",
+      sourceName: "https://en.wikipedia.org/wiki/List_of_common_misconceptions#Human_body_and_health",
       qualityScore: { accuracy: 0.9, specificity: 0.75, verifiability: 0.85, educational: 0.8, overall: 0.83 },
       validated: true
     },
@@ -615,7 +677,7 @@ function generateEnhancedFallbackFacts(country: string, graduationYear: number, 
       mindBlowingFactor: isGerman
         ? "Eine der am häufigsten wiederholten 'Fakten' in Schulen war völlig falsch - Astronauten konnten sie nicht einmal sehen, als sie es versuchten!"
         : "One of the most repeated 'facts' in schools was completely false - astronauts couldn't see it even when they tried!",
-      sourceName: isGerman ? "Geographie- und Sozialkundelehrbücher" : "Geography and social studies textbooks",
+      sourceName: "https://en.wikipedia.org/wiki/List_of_common_misconceptions#Structures_and_buildings",
       qualityScore: { accuracy: 0.93, specificity: 0.8, verifiability: 0.9, educational: 0.88, overall: 0.88 },
       validated: true
     },
@@ -631,7 +693,7 @@ function generateEnhancedFallbackFacts(country: string, graduationYear: number, 
       mindBlowingFactor: isGerman
         ? "Medizinische Lehrbücher verschrieben Lebensstiländerungen für das, was sich als einfache bakterielle Infektion herausstellte - die Entdecker gewannen sogar einen Nobelpreis!"
         : "Medical textbooks were prescribing lifestyle changes for what turned out to be a simple bacterial infection - the discoverers even won a Nobel Prize!",
-      sourceName: isGerman ? "Gesundheitserziehung und medizinische Lehrbücher" : "Health education and medical textbooks",
+      sourceName: "https://en.wikipedia.org/wiki/Helicobacter_pylori",
       qualityScore: { accuracy: 0.95, specificity: 0.9, verifiability: 0.92, educational: 0.85, overall: 0.91 },
       validated: true
     },
@@ -647,7 +709,7 @@ function generateEnhancedFallbackFacts(country: string, graduationYear: number, 
       mindBlowingFactor: isGerman
         ? "Schulen lehrten eine völlig erfundene Geschichte über mittelalterliche Unwissenheit - sie hatten tatsächlich besseres geographisches Wissen, als wir ihnen zugestanden!"
         : "Schools taught a completely fabricated story about medieval ignorance - they actually had better geographical knowledge than we gave them credit for!",
-      sourceName: isGerman ? "Geschichts- und Sozialkundelehrplan" : "History and social studies curriculum",
+      sourceName: "https://en.wikipedia.org/wiki/Myth_of_the_flat_Earth",
       qualityScore: { accuracy: 0.88, specificity: 0.75, verifiability: 0.82, educational: 0.85, overall: 0.83 },
       validated: true
     }
