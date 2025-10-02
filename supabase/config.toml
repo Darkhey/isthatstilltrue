@@ -1,16 +1,1 @@
-project_id = "hydphinynbbuflawpprs"
-
-[functions.enhanced-fact-generator]
-verify_jwt = false
-
-[functions.check-single-fact]
-verify_jwt = false
-
-[functions.generate-facts]
-verify_jwt = false
-
-[functions.quick-fun-fact]
-verify_jwt = false
-
-[functions.research-school-memories]
-verify_jwt = false
+project_id = "wyritonnqbjyfuuulcpm"
