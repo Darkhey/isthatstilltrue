@@ -20,6 +20,8 @@ import { SchoolShareCard } from "./SchoolShareCard";
 import { HistoricalHeadlines } from "./HistoricalHeadlines";
 import { EnhancedProgressTracker } from "./EnhancedProgressTracker";
 import { LanguageSelector } from "./LanguageSelector";
+import { CityImagesGallery } from "./CityImagesGallery";
+import { HistoricalSourcesCard } from "./HistoricalSourcesCard";
 
 interface OutdatedFact {
   category: string;
@@ -351,6 +353,8 @@ export const FactsDebunker = () => {
   const [selectedFactForReport, setSelectedFactForReport] = useState<OutdatedFact | null>(null);
   const [historicalHeadlines, setHistoricalHeadlines] = useState<HistoricalHeadline[]>([]);
   const [schoolImage, setSchoolImage] = useState<string | null>(null);
+  const [cityImages, setCityImages] = useState<any[]>([]);
+  const [historicalSources, setHistoricalSources] = useState<any[]>([]);
   const [loadingMessage, setLoadingMessage] = useState<string>("Researching...");
   const [language, setLanguage] = useState<'en' | 'de'>('en');
   const [processingStage, setProcessingStage] = useState<string>('initialization');
@@ -458,6 +462,14 @@ export const FactsDebunker = () => {
         // Set school image from research results if available
         if (data.researchResults?.schoolImages?.length > 0) {
           setSchoolImage(data.researchResults.schoolImages[0].url);
+        }
+        // Set city images from research results if available
+        if (data.researchResults?.cityImages?.length > 0) {
+          setCityImages(data.researchResults.cityImages);
+        }
+        // Set historical sources from research results if available
+        if (data.researchResults?.historicalSources?.length > 0) {
+          setHistoricalSources(data.researchResults.historicalSources);
         }
         setShowSkeletons(false);
         
@@ -744,6 +756,23 @@ export const FactsDebunker = () => {
               shareableText={schoolShareableContent?.mainShare}
               schoolImage={schoolImage || undefined}
             />
+            
+            {/* City Images Gallery */}
+            {cityImages.length > 0 && (
+              <CityImagesGallery
+                city={city}
+                year={parseInt(graduationYear)}
+                images={cityImages}
+              />
+            )}
+            
+            {/* Historical Sources */}
+            {historicalSources.length > 0 && (
+              <HistoricalSourcesCard
+                sources={historicalSources}
+                year={parseInt(graduationYear)}
+              />
+            )}
             
             {/* Historical Headlines */}
             {historicalHeadlines.length > 0 && (
