@@ -354,7 +354,7 @@ export const FactsDebunker = () => {
   const [loadingMessage, setLoadingMessage] = useState<string>("Researching...");
   const [language, setLanguage] = useState<'en' | 'de'>('en');
   const [processingStage, setProcessingStage] = useState<string>('initialization');
-  const [useEnhancedAPI, setUseEnhancedAPI] = useState(false);
+  const [useEnhancedAPI, setUseEnhancedAPI] = useState(true);
   const [qualityMetrics, setQualityMetrics] = useState<any>(null);
   const [cacheInfo, setCacheInfo] = useState<any>(null);
 

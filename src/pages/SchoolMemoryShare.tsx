@@ -13,7 +13,6 @@ interface SchoolMemoryData {
   school_name: string;
   city: string;
   graduation_year: number;
-  country: string;
   research_results: any;
   shareable_content: any;
   historical_headlines: any;
