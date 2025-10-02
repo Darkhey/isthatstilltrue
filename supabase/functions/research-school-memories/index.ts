@@ -7,7 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const firecrawlApiKey = Deno.env.get('FIRECRAWL_API_KEY');
 const serpApiKey = Deno.env.get('SERPAPI_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -938,12 +937,13 @@ async function conductComprehensiveMultiEngineResearch(schoolName: string, city:
   }
 }
 
-// Get historical headlines for a specific year (unchanged)
+// Get historical headlines for a specific year using Lovable AI
 async function getHistoricalHeadlines(year: number): Promise<HistoricalHeadline[]> {
   console.log(`Fetching historical headlines for ${year}`);
   
-  if (!openAIApiKey) {
-    console.log('OpenAI API key not available for headlines');
+  const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+  if (!lovableApiKey) {
+    console.log('Lovable API key not available for headlines');
     return [];
   }
 
@@ -960,14 +960,14 @@ async function getHistoricalHeadlines(year: number): Promise<HistoricalHeadline[
       }
     ]`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -979,7 +979,6 @@ async function getHistoricalHeadlines(year: number): Promise<HistoricalHeadline[
           }
         ],
         temperature: 0.3,
-        max_tokens: 800,
       }),
     });
 
@@ -1232,16 +1231,21 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
   ]
 }`;
 
-    console.log('Sending comprehensive multi-engine request to OpenAI...');
+    console.log('Sending comprehensive multi-engine request to Lovable AI...');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('Lovable API key not configured');
+    }
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -1253,18 +1257,17 @@ CRITICAL: Return ONLY valid JSON. No markdown formatting. Include source attribu
           }
         ],
         temperature: 0.3,
-        max_tokens: 2000,
       }),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
-      throw new Error(`OpenAI API error: ${response.status}`);
+      console.error('Lovable AI API error:', response.status, errorText);
+      throw new Error(`Lovable AI API error: ${response.status}`);
     }
 
     const aiData = await response.json();
-    console.log('OpenAI response received, parsing...');
+    console.log('Lovable AI response received, parsing...');
     
     // Enhanced JSON parsing with better error handling
     let generatedContent;
