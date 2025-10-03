@@ -370,15 +370,21 @@ export const FactsDebunker = () => {
   // Handle mode toggle with proper state reset
   const handleModeToggle = (newSchoolMode: boolean) => {
     setIsSchoolMode(newSchoolMode);
-    // Reset step and clear results when switching modes
+    // CRITICAL: Always reset to step 1 when switching modes
     setStep(1);
+    setGraduationYear(""); // Also reset year when switching
     setError(null);
     setSuccessMessage(null);
     setFacts([]);
     setSchoolMemories(null);
     setSchoolShareableContent(null);
     setHistoricalHeadlines([]);
-    // Keep country selection but clear school-specific fields
+    setSchoolImages([]);
+    setCityImages([]);
+    setHistoricalSources([]);
+    setSchoolImage(null);
+    setFunMessage(null);
+    // Keep country selection but clear school-specific fields when going back to country mode
     if (!newSchoolMode) {
       setSchoolName("");
       setCity("");
