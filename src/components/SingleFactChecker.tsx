@@ -14,7 +14,10 @@ interface FactCheckResult {
   yearDebunked?: number;
   explanation: string;
   confidence: 'high' | 'medium' | 'low';
-  sources?: string[];
+  sources?: Array<{
+    title: string;
+    url: string;
+  }>;
 }
 
 export const SingleFactChecker = () => {
@@ -182,21 +185,32 @@ export const SingleFactChecker = () => {
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">Confidence:</span>
-                        <Badge className={getConfidenceColor(result.confidence)}>
-                          {result.confidence}
-                        </Badge>
-                      </div>
-
-                      {result.sources && result.sources.length > 0 && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <ExternalLink className="h-3 w-3" />
-                          Sources available
-                        </div>
-                      )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-muted-foreground">Confidence:</span>
+                      <Badge className={getConfidenceColor(result.confidence)}>
+                        {result.confidence}
+                      </Badge>
                     </div>
+
+                    {result.sources && result.sources.length > 0 && (
+                      <div className="space-y-2">
+                        <span className="text-sm font-medium text-muted-foreground">Verified Sources:</span>
+                        <div className="flex flex-wrap gap-2">
+                          {result.sources.map((source, idx) => (
+                            <a
+                              key={idx}
+                              href={source.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-3 py-1 text-xs rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              {source.title}
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
