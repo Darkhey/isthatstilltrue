@@ -334,7 +334,7 @@ const generateFunMessage = (year: number) => {
 
 export const FactsDebunker = () => {
   const [isSchoolMode, setIsSchoolMode] = useState(false);
-  const [country, setCountry] = useState("germany");
+  const [country, setCountry] = useState("Germany");
   const [graduationYear, setGraduationYear] = useState("");
   const [schoolName, setSchoolName] = useState("");
   const [city, setCity] = useState("");
@@ -366,6 +366,25 @@ export const FactsDebunker = () => {
   const [cacheInfo, setCacheInfo] = useState<any>(null);
 
   const factsResultsRef = useRef<HTMLDivElement>(null);
+  
+  // Handle mode toggle with proper state reset
+  const handleModeToggle = (newSchoolMode: boolean) => {
+    setIsSchoolMode(newSchoolMode);
+    // Reset step and clear results when switching modes
+    setStep(1);
+    setError(null);
+    setSuccessMessage(null);
+    setFacts([]);
+    setSchoolMemories(null);
+    setSchoolShareableContent(null);
+    setHistoricalHeadlines([]);
+    // Keep country selection but clear school-specific fields
+    if (!newSchoolMode) {
+      setSchoolName("");
+      setCity("");
+      setSchoolType("");
+    }
+  };
 
   // Function to get random loading message
   const getRandomLoadingMessage = () => {
@@ -384,8 +403,20 @@ export const FactsDebunker = () => {
 
   const handleNextStep = () => {
     if (isSchoolMode) {
-      if (!schoolName || !city || !schoolType) {
-        setError("Please fill in all school information.");
+      if (!schoolName?.trim()) {
+        setError("Please enter your school name.");
+        return;
+      }
+      if (!city?.trim()) {
+        setError("Please enter your city.");
+        return;
+      }
+      if (!schoolType) {
+        setError("Please select your school type.");
+        return;
+      }
+      if (!country) {
+        setError("Please select your country.");
         return;
       }
     } else {
@@ -581,8 +612,7 @@ export const FactsDebunker = () => {
 
   const resetForm = () => {
     setStep(1);
-    setIsSchoolMode(false);
-    setCountry("");
+    setCountry("Germany");
     setGraduationYear("");
     setSchoolName("");
     setCity("");
@@ -599,6 +629,11 @@ export const FactsDebunker = () => {
     setQuickFunFact(null);
     setReportDialogOpen(false);
     setSelectedFactForReport(null);
+    setHistoricalHeadlines([]);
+    setSchoolImages([]);
+    setCityImages([]);
+    setHistoricalSources([]);
+    setSchoolImage(null);
   };
 
   const handleReportFact = (fact: OutdatedFact) => {
@@ -613,13 +648,13 @@ export const FactsDebunker = () => {
           <AnimatedHeadline />
           <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-4 mt-4">
             {isSchoolMode 
-              ? "Discover personalized memories and events from your specific school and graduation year."
+              ? "✨ Take a nostalgic trip down memory lane! Relive the magic of your school days with personalized memories, events, and the unique atmosphere of your graduation year."
               : "Discover what you learned in school that has since been proven wrong. Find out how knowledge has evolved since you graduated."
             }
           </p>
         </div>
 
-        <SchoolModeToggle isSchoolMode={isSchoolMode} onToggle={setIsSchoolMode} />
+        <SchoolModeToggle isSchoolMode={isSchoolMode} onToggle={handleModeToggle} />
 
         <Card className="max-w-lg mx-auto mb-8 shadow-glow">{/*Increased width for better responsive display*/}
           {step === 1 ? (
@@ -630,7 +665,7 @@ export const FactsDebunker = () => {
                 </CardTitle>
                 <CardDescription className="text-center">
                   {isSchoolMode 
-                    ? "Enter your school details for personalized memories" 
+                    ? "🎓 Enter your school details to unlock nostalgic memories and relive the best years!" 
                     : "Choose your country for curriculum-specific analysis"
                   }
                 </CardDescription>
