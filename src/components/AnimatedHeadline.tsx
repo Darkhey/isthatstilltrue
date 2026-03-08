@@ -61,7 +61,7 @@ export const AnimatedHeadline: React.FC = () => {
 
         {/* Typewriter Text */}
         <div className="text-center">
-          <h1 className={`text-2xl md:text-3xl lg:text-5xl font-bold transition-all duration-1000 ${
+          <h1 className={`text-xl sm:text-2xl md:text-3xl lg:text-5xl font-bold transition-all duration-1000 ${
             isTypewriterComplete 
               ? 'animate-text-glow' 
               : ''

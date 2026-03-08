@@ -8,26 +8,28 @@ interface SchoolModeToggleProps {
 
 export const SchoolModeToggle = ({ isSchoolMode, onToggle }: SchoolModeToggleProps) => {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 mb-6">
-      <div className="flex items-center justify-center gap-2">
+    <div className="flex flex-col items-center justify-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+      <div className="flex items-center justify-center gap-1.5 sm:gap-2">
         <Button
           variant={!isSchoolMode ? "default" : "outline"}
           onClick={() => onToggle(false)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5 text-xs sm:text-sm px-3 sm:px-4 h-9 sm:h-10"
+          size="sm"
         >
-          <Globe className="h-4 w-4" />
+          <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           Country Mode
         </Button>
         <Button
           variant={isSchoolMode ? "default" : "outline"}
           onClick={() => onToggle(true)}
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5 text-xs sm:text-sm px-3 sm:px-4 h-9 sm:h-10"
+          size="sm"
         >
-          <GraduationCap className="h-4 w-4" />
+          <GraduationCap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
           School Mode
         </Button>
       </div>
-      <p className="text-xs text-muted-foreground text-center max-w-md">
+      <p className="text-xs text-muted-foreground text-center max-w-xs sm:max-w-md px-2">
         {isSchoolMode 
           ? "✨ Nostalgic journey: Relive your school memories with personalized research"
           : "📚 Educational facts: Discover what you learned that's now outdated"

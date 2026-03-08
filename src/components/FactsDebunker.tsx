@@ -657,13 +657,13 @@ export const FactsDebunker = () => {
 
   return (
     <div className="min-h-screen bg-gradient-background">
-      <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-8 md:mb-12">
+      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-12">
+        <div className="text-center mb-6 md:mb-12">
           <AnimatedHeadline />
-          <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-4 mt-4">
+          <p className="text-sm sm:text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4 mt-3 sm:mt-4 leading-relaxed">
             {isSchoolMode 
-              ? "✨ Take a nostalgic trip down memory lane! Relive the magic of your school days with personalized memories, events, and the unique atmosphere of your graduation year."
-              : "Discover what you learned in school that has since been proven wrong. Find out how knowledge has evolved since you graduated."
+              ? "✨ Relive the magic of your school days with personalized memories and verified sources."
+              : "Discover what you learned in school that has since been proven wrong."
             }
           </p>
         </div>
@@ -880,28 +880,28 @@ export const FactsDebunker = () => {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 <div className="relative h-full flex items-center justify-center">
-                  <div className="text-center space-y-6 p-8 max-w-2xl">
+                  <div className="text-center space-y-4 sm:space-y-6 p-4 sm:p-8 max-w-2xl">
                     <AnimatedLoader messages={loadingMessages} />
-                    <div className="space-y-4">
-                      <h3 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                    <div className="space-y-3 sm:space-y-4">
+                      <h3 className="text-xl sm:text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
                         Intensive Research in Progress...
                       </h3>
-                      <div className="space-y-2 mt-6">
-                        <p className="text-foreground/90 font-medium">
+                      <div className="space-y-1.5 sm:space-y-2 mt-4 sm:mt-6">
+                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
                           🔍 Searching Wikipedia for your school
                         </p>
-                        <p className="text-foreground/90 font-medium">
-                          📚 Analyzing historical context for your graduation year
+                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
+                          📚 Analyzing historical context
                         </p>
-                        <p className="text-foreground/90 font-medium">
+                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
                           🏫 Cross-referencing verified sources
                         </p>
-                        <p className="text-foreground/90 font-medium">
+                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
                           ✨ Creating nostalgic memories
                         </p>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-6 bg-background/80 rounded-lg p-3">
-                        ⏱️ This may take 20-40 seconds for accurate results with verified sources
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6 bg-background/80 rounded-lg p-2 sm:p-3">
+                        ⏱️ This may take 20-40 seconds for verified results
                       </p>
                     </div>
                     <div className="flex justify-center gap-3 mt-8">
