@@ -65,6 +65,9 @@ export const QuizMode = () => {
     }
   };
 
+  const score = answers.filter(Boolean).length;
+  const progress = ((currentIndex + (phase === "reveal" ? 1 : 0)) / questions.length) * 100;
+
   // 🎉 Confetti when score >= 8
   useEffect(() => {
     if (phase === "results" && score >= 8) {
@@ -78,9 +81,6 @@ export const QuizMode = () => {
       frame();
     }
   }, [phase, score]);
-
-  const score = answers.filter(Boolean).length;
-  const progress = ((currentIndex + (phase === "reveal" ? 1 : 0)) / questions.length) * 100;
 
   const shareResult = () => {
     const emoji = score >= 8 ? "🧠" : score >= 5 ? "📚" : "🤔";
