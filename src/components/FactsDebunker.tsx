@@ -1092,12 +1092,12 @@ export const FactsDebunker = () => {
                           </div>
 
                           {fact.mindBlowingFactor && (
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                              <h4 className="font-semibold text-amber-700 mb-2 flex items-center gap-2">
+                            <div className="bg-accent/50 border border-accent rounded-lg p-4">
+                              <h4 className="font-semibold text-accent-foreground mb-2 flex items-center gap-2">
                                 <Lightbulb className="w-4 h-4" />
                                 Why This Matters:
                               </h4>
-                              <p className="text-sm text-amber-800 break-words">
+                              <p className="text-sm text-accent-foreground/80 break-words">
                                 {fact.mindBlowingFactor}
                               </p>
                             </div>
