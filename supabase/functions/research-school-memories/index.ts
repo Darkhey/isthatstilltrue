@@ -61,14 +61,12 @@ async function searchWikipedia(query: string, lang = 'en', limit = 5): Promise<A
 async function gatherWikipediaResearch(schoolName: string, city: string, graduationYear: number, country: string) {
   console.log('Gathering Wikipedia research...');
 
-  // Determine Wikipedia language
   const langMap: Record<string, string> = {
     'Germany': 'de', 'Austria': 'de', 'Switzerland': 'de',
     'France': 'fr', 'Spain': 'es', 'Italy': 'it', 'Netherlands': 'nl',
   };
   const lang = langMap[country] || 'en';
 
-  // Run all searches in parallel
   const [
     schoolSearchEn,
     schoolSearchLang,
@@ -76,14 +74,13 @@ async function gatherWikipediaResearch(schoolName: string, city: string, graduat
     yearArticle,
     cityArticle,
   ] = await Promise.all([
-    searchWikipedia(`${schoolName} ${city} school`, 'en', 5),
-    lang !== 'en' ? searchWikipedia(`${schoolName} ${city} Schule`, lang, 5) : Promise.resolve([]),
+    searchWikipedia(`${schoolName} ${city}`, 'en', 5),
+    lang !== 'en' ? searchWikipedia(`${schoolName} ${city}`, lang, 5) : Promise.resolve([]),
     fetchWikipediaArticle(`${graduationYear} in ${city}`),
     fetchWikipediaArticle(`${graduationYear}`),
     fetchWikipediaArticle(city),
   ]);
 
-  // Try to get school article
   let schoolArticle = null;
   const allSchoolResults = [...schoolSearchEn, ...schoolSearchLang];
   for (const result of allSchoolResults.slice(0, 3)) {
@@ -94,7 +91,6 @@ async function gatherWikipediaResearch(schoolName: string, city: string, graduat
     }
   }
 
-  // Get year-specific events for the country
   const countryYearArticle = await fetchWikipediaArticle(`${graduationYear} in ${country}`);
 
   const sources: Array<{ title: string; url: string; content: string; type: string }> = [];
@@ -115,15 +111,17 @@ async function gatherWikipediaResearch(schoolName: string, city: string, graduat
     sources.push({ title: `${graduationYear} - Wikipedia`, url: yearArticle.url, content: yearArticle.extract.substring(0, 1000), type: 'year' });
   }
 
-  // Add search results as additional sources
   for (const result of allSchoolResults.slice(0, 3)) {
     if (!sources.find(s => s.url === result.url)) {
       sources.push({ title: result.title, url: result.url, content: result.snippet, type: 'search' });
     }
   }
 
-  console.log(`Gathered ${sources.length} Wikipedia sources`);
-  return sources;
+  // Collect best thumbnail: prefer school, then city, then country year
+  const thumbnail = schoolArticle?.thumbnail || cityArticle?.thumbnail || countryYearArticle?.thumbnail || null;
+
+  console.log(`Gathered ${sources.length} Wikipedia sources, thumbnail: ${thumbnail ? 'yes' : 'no'}`);
+  return { sources, thumbnail };
 }
 
 serve(async (req) => {
