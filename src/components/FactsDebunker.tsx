@@ -968,23 +968,23 @@ export const FactsDebunker = () => {
                    <CollapsibleContent className="mt-4">
                      <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
                       {educationProblems.map((problem, index) => (
-                         <Card key={index} className="border-orange-200 bg-orange-50/50">
-                           <CardHeader className="pb-2 md:pb-3">
-                             <CardTitle className="text-orange-800 text-sm md:text-base leading-tight">
-                               {problem.problem}
-                             </CardTitle>
-                           </CardHeader>
-                           <CardContent className="space-y-2 md:space-y-3 pt-0">
-                             <p className="text-xs md:text-sm text-orange-700 leading-relaxed break-words">
-                               {problem.description}
-                             </p>
-                             <div className="pt-2 border-t border-orange-200">
-                               <p className="text-xs font-medium text-orange-600 leading-relaxed break-words">
-                                 <strong>Impact:</strong> {problem.impact}
-                               </p>
-                             </div>
-                           </CardContent>
-                         </Card>
+                          <Card key={index} className="border-destructive/20 bg-destructive/5">
+                            <CardHeader className="pb-2 md:pb-3">
+                              <CardTitle className="text-destructive text-sm md:text-base leading-tight">
+                                {problem.problem}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2 md:space-y-3 pt-0">
+                              <p className="text-xs md:text-sm text-destructive/80 leading-relaxed break-words">
+                                {problem.description}
+                              </p>
+                              <div className="pt-2 border-t border-destructive/20">
+                                <p className="text-xs font-medium text-destructive/70 leading-relaxed break-words">
+                                  <strong>Impact:</strong> {problem.impact}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
                       ))}
                     </div>
                   </CollapsibleContent>
