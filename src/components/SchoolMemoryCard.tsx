@@ -148,20 +148,23 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex gap-3 justify-center">
+      <div className="flex gap-2 sm:gap-3 justify-center">
         <Button 
           onClick={handleShare}
-          className="bg-gradient-primary hover:opacity-90 text-primary-foreground"
+          className="bg-gradient-primary hover:opacity-90 text-primary-foreground text-xs sm:text-sm px-3 sm:px-4"
+          size="sm"
         >
-          <Share2 className="h-4 w-4 mr-2" />
-          Share Nostalgia ✨
+          <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+          Share ✨
         </Button>
         <Button 
           onClick={handleReportIssue}
           variant="outline"
+          size="sm"
+          className="text-xs sm:text-sm px-3 sm:px-4"
         >
-          <Flag className="h-4 w-4 mr-2" />
-          Report Inaccuracy
+          <Flag className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+          Report
         </Button>
       </div>
 
