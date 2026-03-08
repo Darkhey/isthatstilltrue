@@ -874,9 +874,9 @@ export const FactsDebunker = () => {
           <div ref={factsResultsRef} className="max-w-4xl mx-auto">
             <Card className="animate-fade-in overflow-hidden">
               <div className="relative h-80 bg-gradient-to-br from-primary/80 via-primary-glow/60 to-primary/90">
-                {schoolImages.length > 0 && (
+                {schoolImage && (
                   <img 
-                    src={schoolImages[0].url} 
+                    src={schoolImage} 
                     alt="School building"
                     className="w-full h-full object-cover opacity-40 absolute inset-0"
                   />
