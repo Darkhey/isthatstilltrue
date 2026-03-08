@@ -22,7 +22,31 @@ interface FactShareProps {
 
 export const FactShare = ({ fact, country, graduationYear }: FactShareProps) => {
   const [copied, setCopied] = useState(false);
+  const [shareSlug, setShareSlug] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const getOrCreateShareUrl = async (): Promise<string> => {
+    if (shareSlug) return `https://isthatstilltrue.com/fact/${shareSlug}`;
+    
+    try {
+      const { data, error } = await supabase
+        .from("shared_facts" as any)
+        .insert({
+          fact_data: fact as any,
+          country,
+          graduation_year: parseInt(graduationYear) || 2000,
+        } as any)
+        .select("slug")
+        .single();
+
+      if (error || !data) throw error;
+      const slug = (data as any).slug;
+      setShareSlug(slug);
+      return `https://isthatstilltrue.com/fact/${slug}`;
+    } catch {
+      return "https://isthatstilltrue.com";
+    }
+  };
 
   const generateShareText = () => {
     const maxFactLength = 120;
