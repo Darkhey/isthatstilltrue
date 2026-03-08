@@ -880,10 +880,10 @@ export const FactsDebunker = () => {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 <div className="relative h-full flex items-center justify-center">
-                  <div className="text-center space-y-6 p-8 max-w-2xl">
+                  <div className="text-center space-y-4 sm:space-y-6 p-4 sm:p-8 max-w-2xl">
                     <AnimatedLoader messages={loadingMessages} />
-                    <div className="space-y-4">
-                      <h3 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
+                    <div className="space-y-3 sm:space-y-4">
+                      <h3 className="text-xl sm:text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
                         Intensive Research in Progress...
                       </h3>
                       <div className="space-y-2 mt-6">
