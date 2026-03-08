@@ -65,6 +65,20 @@ export const QuizMode = () => {
     }
   };
 
+  // 🎉 Confetti when score >= 8
+  useEffect(() => {
+    if (phase === "results" && score >= 8) {
+      const duration = 2500;
+      const end = Date.now() + duration;
+      const frame = () => {
+        confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 }, colors: ["#a855f7", "#ec4899", "#f59e0b"] });
+        confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 }, colors: ["#a855f7", "#ec4899", "#f59e0b"] });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      };
+      frame();
+    }
+  }, [phase, score]);
+
   const score = answers.filter(Boolean).length;
   const progress = ((currentIndex + (phase === "reveal" ? 1 : 0)) / questions.length) * 100;
 
