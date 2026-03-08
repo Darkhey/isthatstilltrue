@@ -107,20 +107,18 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
       {/* Header with School Image */}
       <Card className="bg-gradient-primary text-primary-foreground overflow-hidden">
         <div className="relative">
-          <div className="h-48 bg-gradient-to-r from-primary/80 to-primary-glow/60 flex items-center justify-center relative">
+          <div className="h-32 sm:h-48 bg-gradient-to-r from-primary/80 to-primary-glow/60 flex items-center justify-center relative">
             <img 
               src={schoolImage || `https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=800&h=300&fit=crop&crop=center&auto=format&q=80`}
               alt={`${schoolName} school building`}
               className="w-full h-full object-cover opacity-60"
               onError={(e) => {
-                // Fallback to different school images if main one fails
                 const fallbackImages = [
                   'photo-1518005020951-eccb494ad742',
                   'photo-1496307653780-42ee777d4833',
                   'photo-1449157291145-7efd050a4d0e'
                 ];
                 const currentSrc = e.currentTarget.src;
-                const currentImageId = currentSrc.match(/photo-([a-f0-9-]+)/)?.[1];
                 const currentIndex = fallbackImages.findIndex(id => currentSrc.includes(id));
                 const nextIndex = (currentIndex + 1) % fallbackImages.length;
                 if (nextIndex < fallbackImages.length && !schoolImage) {
@@ -130,18 +128,18 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
           </div>
-          <CardHeader className="absolute bottom-0 left-0 right-0 text-center bg-gradient-to-t from-primary/95 to-transparent pt-8">
-            <CardTitle className="text-2xl flex items-center justify-center gap-2">
-              <Building className="h-6 w-6" />
+          <CardHeader className="absolute bottom-0 left-0 right-0 text-center bg-gradient-to-t from-primary/95 to-transparent pt-6 sm:pt-8 px-3 sm:px-6">
+            <CardTitle className="text-lg sm:text-2xl flex items-center justify-center gap-2">
+              <Building className="h-5 w-5 sm:h-6 sm:w-6" />
               {schoolName}
             </CardTitle>
-            <CardDescription className="text-primary-foreground/80 flex items-center justify-center gap-4">
+            <CardDescription className="text-primary-foreground/80 flex items-center justify-center gap-3 sm:gap-4 text-xs sm:text-sm">
               <span className="flex items-center gap-1">
-                <MapPin className="h-4 w-4" />
+                <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
                 {city}
               </span>
               <span className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                 Class of {graduationYear}
               </span>
             </CardDescription>
