@@ -886,22 +886,22 @@ export const FactsDebunker = () => {
                       <h3 className="text-xl sm:text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
                         Intensive Research in Progress...
                       </h3>
-                      <div className="space-y-2 mt-6">
-                        <p className="text-foreground/90 font-medium">
+                      <div className="space-y-1.5 sm:space-y-2 mt-4 sm:mt-6">
+                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
                           🔍 Searching Wikipedia for your school
                         </p>
-                        <p className="text-foreground/90 font-medium">
-                          📚 Analyzing historical context for your graduation year
+                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
+                          📚 Analyzing historical context
                         </p>
-                        <p className="text-foreground/90 font-medium">
+                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
                           🏫 Cross-referencing verified sources
                         </p>
-                        <p className="text-foreground/90 font-medium">
+                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
                           ✨ Creating nostalgic memories
                         </p>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-6 bg-background/80 rounded-lg p-3">
-                        ⏱️ This may take 20-40 seconds for accurate results with verified sources
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6 bg-background/80 rounded-lg p-2 sm:p-3">
+                        ⏱️ This may take 20-40 seconds for verified results
                       </p>
                     </div>
                     <div className="flex justify-center gap-3 mt-8">
