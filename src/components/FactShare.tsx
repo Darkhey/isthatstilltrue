@@ -104,7 +104,8 @@ Find out: https://isthatstilltrue.com
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+      const url = await getOrCreateShareUrl();
+      await navigator.clipboard.writeText(`${shareText}\n\n${url}`);
       setCopied(true);
       toast({
         title: "Copied to clipboard!",
