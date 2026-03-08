@@ -43,7 +43,7 @@ const SharedFact = () => {
         const fd = d.fact_data as OutdatedFact;
         setFact(fd);
         setCountry(d.country);
-        setGraduationYear(String(data.graduation_year));
+        setGraduationYear(String(d.graduation_year));
       }
       setLoading(false);
     };
