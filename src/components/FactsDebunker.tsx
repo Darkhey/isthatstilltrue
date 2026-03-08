@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,16 +54,28 @@ interface SchoolMemoryData {
     title: string;
     description: string;
     category: "facilities" | "academics" | "sports" | "culture" | "technology";
+    sourceUrl?: string;
+    sourceName?: string;
   }>;
   nostalgiaFactors: Array<{
     memory: string;
     shareableText: string;
+    sourceUrl?: string;
+    sourceName?: string;
   }>;
   localContext: Array<{
     event: string;
     relevance: string;
+    sourceUrl?: string;
+    sourceName?: string;
   }>;
   shareableQuotes: string[];
+}
+
+interface WikipediaSource {
+  title: string;
+  url: string;
+  type: string;
 }
 
 interface HistoricalHeadline {
@@ -108,31 +120,20 @@ const countries = [
 
 // Animated loading messages for school research
 const loadingMessages = [
-  "Reticulating splines...",
-  "Calibrating blue nexus...", 
-  "Gathering historical data...",
-  "Consulting the school archives...",
+  "Searching Wikipedia for your school...",
+  "Researching historical context...",
+  "Analyzing Wikipedia sources...",
+  "Looking up local events from that year...",
+  "Gathering verified facts...",
+  "Cross-referencing historical data...",
   "Loading nostalgia coefficient...",
   "Extracting memory fragments...",
-  "Analyzing educational wavelengths...",
   "Compiling classroom chronicles...",
-  "Downloading graduation vibes...",
   "Processing time capsule data...",
-  "Reconstructing cafeteria mysteries...",
   "Decoding yearbook algorithms...",
-  "Synchronizing with the education matrix...",
-  "Fetching forgotten homework memories...",
-  "Loading teacher's pet protocols...",
-  "Calculating detention probability...",
-  "Accessing hall pass database...",
-  "Retrieving locker combination magic...",
-  "Scanning school spirit frequencies...",
   "Initializing friendship subroutines...",
-  "Loading teenage drama protocols...",
   "Compiling test anxiety data...",
-  "Processing sports day algorithms...",
-  "Extracting school trip coordinates...",
-  "Analyzing lunch break patterns..."
+  "Scanning school spirit frequencies...",
 ];
 
 const getLocalGreeting = (country: string) => {
@@ -355,9 +356,7 @@ export const FactsDebunker = () => {
   const [selectedFactForReport, setSelectedFactForReport] = useState<OutdatedFact | null>(null);
   const [historicalHeadlines, setHistoricalHeadlines] = useState<HistoricalHeadline[]>([]);
   const [schoolImage, setSchoolImage] = useState<string | null>(null);
-  const [schoolImages, setSchoolImages] = useState<any[]>([]);
-  const [cityImages, setCityImages] = useState<any[]>([]);
-  const [historicalSources, setHistoricalSources] = useState<any[]>([]);
+  const [wikipediaSources, setWikipediaSources] = useState<WikipediaSource[]>([]);
   const [loadingMessage, setLoadingMessage] = useState<string>("Researching...");
   const [language, setLanguage] = useState<'en' | 'de'>('en');
   const [processingStage, setProcessingStage] = useState<string>('initialization');
@@ -366,6 +365,17 @@ export const FactsDebunker = () => {
   const [cacheInfo, setCacheInfo] = useState<any>(null);
 
   const factsResultsRef = useRef<HTMLDivElement>(null);
+  const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup loading interval on unmount
+  useEffect(() => {
+    return () => {
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
+    };
+  }, []);
   
   // Handle mode toggle with proper state reset
   const handleModeToggle = (newSchoolMode: boolean) => {
@@ -379,9 +389,7 @@ export const FactsDebunker = () => {
     setSchoolMemories(null);
     setSchoolShareableContent(null);
     setHistoricalHeadlines([]);
-    setSchoolImages([]);
-    setCityImages([]);
-    setHistoricalSources([]);
+    setWikipediaSources([]);
     setSchoolImage(null);
     setFunMessage(null);
     // Keep country selection but clear school-specific fields when going back to country mode
@@ -398,14 +406,21 @@ export const FactsDebunker = () => {
   };
 
   // Update loading message every 2 seconds during research
-  const startLoadingMessageRotation = () => {
-    const interval = setInterval(() => {
-      if (isLoading) {
-        setLoadingMessage(getRandomLoadingMessage());
-      }
+  const startLoadingMessageRotation = useCallback(() => {
+    if (loadingIntervalRef.current) {
+      clearInterval(loadingIntervalRef.current);
+    }
+    loadingIntervalRef.current = setInterval(() => {
+      setLoadingMessage(getRandomLoadingMessage());
     }, 2000);
-    return interval;
-  };
+  }, []);
+
+  const stopLoadingMessageRotation = useCallback(() => {
+    if (loadingIntervalRef.current) {
+      clearInterval(loadingIntervalRef.current);
+      loadingIntervalRef.current = null;
+    }
+  }, []);
 
   const handleNextStep = () => {
     if (isSchoolMode) {
@@ -454,7 +469,7 @@ export const FactsDebunker = () => {
     setShowSkeletons(true);
     setLoadingMessage(getRandomLoadingMessage());
     
-    const messageInterval = startLoadingMessageRotation();
+    startLoadingMessageRotation();
     setFacts([]);
     setSchoolMemories(null);
     setSchoolShareableContent(null);
@@ -499,18 +514,9 @@ export const FactsDebunker = () => {
         if (data.historicalHeadlines) {
           setHistoricalHeadlines(data.historicalHeadlines);
         }
-        // Set school images from research results if available
-        if (data.researchResults?.schoolImages?.length > 0) {
-          setSchoolImages(data.researchResults.schoolImages);
-          setSchoolImage(data.researchResults.schoolImages[0].url);
-        }
-        // Set city images from research results if available
-        if (data.researchResults?.cityImages?.length > 0) {
-          setCityImages(data.researchResults.cityImages);
-        }
-        // Set historical sources from research results if available
-        if (data.researchResults?.historicalSources?.length > 0) {
-          setHistoricalSources(data.researchResults.historicalSources);
+        // Set Wikipedia sources if available
+        if (data.wikipediaSources?.length > 0) {
+          setWikipediaSources(data.wikipediaSources);
         }
         setShowSkeletons(false);
         
@@ -610,7 +616,7 @@ export const FactsDebunker = () => {
       setError("Research error. Please try again.");
       setShowSkeletons(false);
     } finally {
-      clearInterval(messageInterval);
+      stopLoadingMessageRotation();
       setIsLoading(false);
       setShowSkeletons(false);
     }
@@ -636,10 +642,15 @@ export const FactsDebunker = () => {
     setReportDialogOpen(false);
     setSelectedFactForReport(null);
     setHistoricalHeadlines([]);
-    setSchoolImages([]);
-    setCityImages([]);
-    setHistoricalSources([]);
+    setWikipediaSources([]);
     setSchoolImage(null);
+  };
+
+  const handleBack = () => {
+    setStep(1);
+    setError(null);
+    setSuccessMessage(null);
+    setFunMessage(null);
   };
 
   const handleReportFact = (fact: OutdatedFact) => {
@@ -764,7 +775,7 @@ export const FactsDebunker = () => {
                 )}
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button 
-                    onClick={resetForm}
+                    onClick={handleBack}
                     variant="outline"
                     className="flex-1 order-2 sm:order-1"
                   >
@@ -793,14 +804,6 @@ export const FactsDebunker = () => {
         {/* School Memory Results */}
         {isSchoolMode && schoolMemories && schoolShareableContent && (
           <div ref={factsResultsRef} className="max-w-4xl mx-auto space-y-6">
-            {/* School Photo Gallery - PROMINENT AT TOP */}
-            {schoolImages.length > 0 && (
-              <SchoolPhotoGallery
-                schoolName={schoolName}
-                photos={schoolImages}
-              />
-            )}
-            
             <SchoolMemoryCard 
               schoolName={schoolName}
               city={city}
@@ -809,22 +812,35 @@ export const FactsDebunker = () => {
               shareableText={schoolShareableContent?.mainShare}
               schoolImage={schoolImage || undefined}
             />
-            
-            {/* City Images Gallery */}
-            {cityImages.length > 0 && (
-              <CityImagesGallery
-                city={city}
-                year={parseInt(graduationYear)}
-                images={cityImages}
-              />
-            )}
-            
-            {/* Historical Sources */}
-            {historicalSources.length > 0 && (
-              <HistoricalSourcesCard
-                sources={historicalSources}
-                year={parseInt(graduationYear)}
-              />
+
+            {/* Wikipedia Sources */}
+            {wikipediaSources.length > 0 && (
+              <Card className="border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <ExternalLink className="h-5 w-5" />
+                    Wikipedia Sources Used
+                  </CardTitle>
+                  <CardDescription>
+                    These verified sources were used to research your school memories
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {wikipediaSources.map((source, index) => (
+                    <a
+                      key={index}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/5 transition-colors text-sm"
+                    >
+                      <Badge variant="outline" className="text-xs capitalize">{source.type}</Badge>
+                      <span className="text-primary underline underline-offset-2 flex-1">{source.title}</span>
+                      <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                    </a>
+                  ))}
+                </CardContent>
+              </Card>
             )}
             
             {/* Historical Headlines */}
@@ -858,9 +874,9 @@ export const FactsDebunker = () => {
           <div ref={factsResultsRef} className="max-w-4xl mx-auto">
             <Card className="animate-fade-in overflow-hidden">
               <div className="relative h-80 bg-gradient-to-br from-primary/80 via-primary-glow/60 to-primary/90">
-                {schoolImages.length > 0 && (
+                {schoolImage && (
                   <img 
-                    src={schoolImages[0].url} 
+                    src={schoolImage} 
                     alt="School building"
                     className="w-full h-full object-cover opacity-40 absolute inset-0"
                   />
