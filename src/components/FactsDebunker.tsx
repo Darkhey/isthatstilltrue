@@ -775,7 +775,7 @@ export const FactsDebunker = () => {
                 )}
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Button 
-                    onClick={resetForm}
+                    onClick={handleBack}
                     variant="outline"
                     className="flex-1 order-2 sm:order-1"
                   >
