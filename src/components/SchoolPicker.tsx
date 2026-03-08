@@ -51,10 +51,12 @@ const countries = [
   { value: "Other", label: "🌍 Other" }
 ];
 
-async function searchWikipediaSchools(query: string, lang = 'en'): Promise<WikipediaSuggestion[]> {
-  if (query.length < 3) return [];
+async function searchWikipediaSchools(query: string, city: string, lang = 'en'): Promise<WikipediaSuggestion[]> {
+  if (query.length < 2) return [];
   try {
-    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query + ' school')}&srlimit=5&format=json&origin=*`;
+    // Search with city context but without appending "school" to avoid bad results for non-English school names
+    const searchTerms = city ? `${query} ${city}` : query;
+    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(searchTerms)}&srlimit=5&format=json&origin=*`;
     const res = await fetch(url);
     if (!res.ok) return [];
     const data = await res.json();
@@ -98,11 +100,10 @@ export const SchoolPicker = ({
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true);
       const lang = langMap[country] || 'en';
-      const searchQuery = city ? `${value} ${city}` : value;
-      const results = await searchWikipediaSchools(searchQuery, lang);
+      const results = await searchWikipediaSchools(value, city, lang);
       // Also search in English if not already
       if (lang !== 'en') {
-        const enResults = await searchWikipediaSchools(searchQuery, 'en');
+        const enResults = await searchWikipediaSchools(value, city, 'en');
         const combined = [...results, ...enResults].filter(
           (r, i, arr) => arr.findIndex(a => a.title === r.title) === i
         ).slice(0, 6);
