@@ -120,31 +120,20 @@ const countries = [
 
 // Animated loading messages for school research
 const loadingMessages = [
-  "Reticulating splines...",
-  "Calibrating blue nexus...", 
-  "Gathering historical data...",
-  "Consulting the school archives...",
+  "Searching Wikipedia for your school...",
+  "Researching historical context...",
+  "Analyzing Wikipedia sources...",
+  "Looking up local events from that year...",
+  "Gathering verified facts...",
+  "Cross-referencing historical data...",
   "Loading nostalgia coefficient...",
   "Extracting memory fragments...",
-  "Analyzing educational wavelengths...",
   "Compiling classroom chronicles...",
-  "Downloading graduation vibes...",
   "Processing time capsule data...",
-  "Reconstructing cafeteria mysteries...",
   "Decoding yearbook algorithms...",
-  "Synchronizing with the education matrix...",
-  "Fetching forgotten homework memories...",
-  "Loading teacher's pet protocols...",
-  "Calculating detention probability...",
-  "Accessing hall pass database...",
-  "Retrieving locker combination magic...",
-  "Scanning school spirit frequencies...",
   "Initializing friendship subroutines...",
-  "Loading teenage drama protocols...",
   "Compiling test anxiety data...",
-  "Processing sports day algorithms...",
-  "Extracting school trip coordinates...",
-  "Analyzing lunch break patterns..."
+  "Scanning school spirit frequencies...",
 ];
 
 const getLocalGreeting = (country: string) => {
