@@ -1,4 +1,5 @@
 import { FactsDebunker } from "@/components/FactsDebunker";
+import { MindBlowingFacts } from "@/components/MindBlowingFacts";
 import { FAQSection } from "@/components/FAQSection";
 import { EducationalResources } from "@/components/EducationalResources";
 import { FloatingBackground } from "@/components/FloatingBackground";
