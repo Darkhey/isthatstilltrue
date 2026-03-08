@@ -356,9 +356,7 @@ export const FactsDebunker = () => {
   const [selectedFactForReport, setSelectedFactForReport] = useState<OutdatedFact | null>(null);
   const [historicalHeadlines, setHistoricalHeadlines] = useState<HistoricalHeadline[]>([]);
   const [schoolImage, setSchoolImage] = useState<string | null>(null);
-  const [schoolImages, setSchoolImages] = useState<any[]>([]);
-  const [cityImages, setCityImages] = useState<any[]>([]);
-  const [historicalSources, setHistoricalSources] = useState<any[]>([]);
+  const [wikipediaSources, setWikipediaSources] = useState<WikipediaSource[]>([]);
   const [loadingMessage, setLoadingMessage] = useState<string>("Researching...");
   const [language, setLanguage] = useState<'en' | 'de'>('en');
   const [processingStage, setProcessingStage] = useState<string>('initialization');
