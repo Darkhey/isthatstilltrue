@@ -957,47 +957,46 @@ export const FactsDebunker = () => {
 
         {/* School Mode Loading Screen */}
         {isSchoolMode && isLoading && !schoolMemories && (
-          <div ref={factsResultsRef} className="max-w-4xl mx-auto">
-            <Card className="animate-fade-in overflow-hidden">
-              <div className="relative h-80 bg-gradient-to-br from-primary/80 via-primary-glow/60 to-primary/90">
-                {schoolImage && (
-                  <img 
-                    src={schoolImage} 
-                    alt="School building"
-                    className="w-full h-full object-cover opacity-40 absolute inset-0"
-                  />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-                <div className="relative h-full flex items-center justify-center">
-                  <div className="text-center space-y-4 sm:space-y-6 p-4 sm:p-8 max-w-2xl">
-                    <AnimatedLoader messages={loadingMessages} />
-                    <div className="space-y-3 sm:space-y-4">
-                      <h3 className="text-xl sm:text-2xl md:text-4xl font-bold bg-gradient-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                        Intensive Research in Progress...
-                      </h3>
-                      <div className="space-y-1.5 sm:space-y-2 mt-4 sm:mt-6">
-                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
-                          🔍 Searching Wikipedia for your school
-                        </p>
-                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
-                          📚 Analyzing historical context
-                        </p>
-                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
-                          🏫 Cross-referencing verified sources
-                        </p>
-                        <p className="text-sm sm:text-base text-foreground/90 font-medium">
-                          ✨ Creating nostalgic memories
-                        </p>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-4 sm:mt-6 bg-background/80 rounded-lg p-2 sm:p-3">
-                        ⏱️ This may take 20-40 seconds for verified results
-                      </p>
+          <div ref={factsResultsRef} className="max-w-2xl mx-auto mt-6">
+            <Card className="animate-fade-in overflow-hidden border-primary/20 shadow-glow">
+              <div className="relative bg-gradient-to-br from-primary/10 via-accent/5 to-primary/10 p-6 sm:p-10">
+                <div className="text-center space-y-5 sm:space-y-8">
+                  <AnimatedLoader messages={loadingMessages} />
+                  
+                  <div className="space-y-3">
+                    <h3 className="text-lg sm:text-2xl font-bold text-foreground">
+                      🔬 Researching Your School...
+                    </h3>
+                    <div className="space-y-2 text-left max-w-sm mx-auto">
+                      {[
+                        { emoji: "🔍", text: "Searching Wikipedia for your school" },
+                        { emoji: "📚", text: "Analyzing historical context" },
+                        { emoji: "🏫", text: "Cross-referencing verified sources" },
+                        { emoji: "✨", text: "Creating nostalgic memories" },
+                      ].map((item, i) => (
+                        <div key={i} className="flex items-center gap-2.5 p-2 rounded-md bg-background/60">
+                          <span className="text-base">{item.emoji}</span>
+                          <span className="text-sm text-foreground/80">{item.text}</span>
+                        </div>
+                      ))}
                     </div>
-                    <div className="flex justify-center gap-3 mt-8">
-                      <div className="h-4 w-4 bg-primary rounded-full animate-bounce"></div>
-                      <div className="h-4 w-4 bg-primary rounded-full animate-bounce delay-100"></div>
-                      <div className="h-4 w-4 bg-primary rounded-full animate-bounce delay-200"></div>
-                    </div>
+                  </div>
+
+                  <div className="bg-background/80 rounded-lg p-3 border border-border/50 max-w-sm mx-auto">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      ⏱️ This may take 20-40 seconds for verified results
+                    </p>
+                  </div>
+
+                  <div className="flex justify-center gap-2">
+                    <div className="h-2.5 w-2.5 bg-primary rounded-full animate-bounce" />
+                    <div className="h-2.5 w-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                    <div className="h-2.5 w-2.5 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
                   </div>
                 </div>
               </div>
