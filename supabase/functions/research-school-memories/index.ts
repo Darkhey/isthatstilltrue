@@ -254,6 +254,7 @@ Return ONLY valid JSON (no markdown) with this structure:
     const response = {
       schoolMemories: memories,
       shareableContent,
+      schoolImage: thumbnail || null,
       historicalHeadlines: (memories.localContext || []).map((ctx: any) => ({
         title: ctx.event,
         date: String(graduationYear),
