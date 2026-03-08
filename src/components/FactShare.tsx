@@ -2,6 +2,7 @@ import { Share2, MessageCircle, Linkedin, Facebook, Copy, Check } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OutdatedFact {
   category: string;
@@ -21,7 +22,31 @@ interface FactShareProps {
 
 export const FactShare = ({ fact, country, graduationYear }: FactShareProps) => {
   const [copied, setCopied] = useState(false);
+  const [shareSlug, setShareSlug] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const getOrCreateShareUrl = async (): Promise<string> => {
+    if (shareSlug) return `https://isthatstilltrue.com/fact/${shareSlug}`;
+    
+    try {
+      const { data, error } = await supabase
+        .from("shared_facts" as any)
+        .insert({
+          fact_data: fact as any,
+          country,
+          graduation_year: parseInt(graduationYear) || 2000,
+        } as any)
+        .select("slug")
+        .single();
+
+      if (error || !data) throw error;
+      const slug = (data as any).slug;
+      setShareSlug(slug);
+      return `https://isthatstilltrue.com/fact/${slug}`;
+    } catch {
+      return "https://isthatstilltrue.com";
+    }
+  };
 
   const generateShareText = () => {
     const maxFactLength = 120;
@@ -52,30 +77,35 @@ Find out: https://isthatstilltrue.com
   const shareText = generateShareText();
   const shortShareText = generateShortShareText();
 
-  const handleTwitterShare = () => {
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shortShareText)}&url=${encodeURIComponent(shareUrl)}`;
+  const handleTwitterShare = async () => {
+    const url = await getOrCreateShareUrl();
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shortShareText)}&url=${encodeURIComponent(url)}`;
     window.open(twitterUrl, '_blank', 'width=550,height=420');
   };
 
-  const handleFacebookShare = () => {
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shortShareText)}`;
+  const handleFacebookShare = async () => {
+    const url = await getOrCreateShareUrl();
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(shortShareText)}`;
     window.open(facebookUrl, '_blank', 'width=550,height=420');
   };
 
-  const handleLinkedInShare = () => {
-    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(shortShareText)}`;
+  const handleLinkedInShare = async () => {
+    const url = await getOrCreateShareUrl();
+    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(shortShareText)}`;
     window.open(linkedinUrl, '_blank', 'width=550,height=420');
   };
 
-  const handleRedditShare = () => {
+  const handleRedditShare = async () => {
+    const url = await getOrCreateShareUrl();
     const redditTitle = `🤯 School taught me this about ${fact.category.toLowerCase()} - turns out it was completely wrong!`;
-    const redditUrl = `https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(redditTitle)}&text=${encodeURIComponent(shareText)}`;
+    const redditUrl = `https://reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(redditTitle)}&text=${encodeURIComponent(shareText)}`;
     window.open(redditUrl, '_blank', 'width=550,height=420');
   };
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+      const url = await getOrCreateShareUrl();
+      await navigator.clipboard.writeText(`${shareText}\n\n${url}`);
       setCopied(true);
       toast({
         title: "Copied to clipboard!",
@@ -92,16 +122,16 @@ Find out: https://isthatstilltrue.com
   };
 
   const handleWebShare = async () => {
+    const url = await getOrCreateShareUrl();
     if (navigator.share && typeof navigator.share === 'function') {
       try {
         await navigator.share({
           title: `Is That Still True? - ${fact.category} Facts Debunked`,
           text: shortShareText,
-          url: shareUrl,
+          url,
         });
       } catch (error) {
         console.log('Web share cancelled or failed:', error);
-        // Fallback to copy on any error
         handleCopyLink();
       }
     } else {

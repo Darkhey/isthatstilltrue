@@ -16,6 +16,12 @@ const Footer = () => {
           {/* Legal Navigation and Quick Fact Check */}
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <nav className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+              <Link to="/about" className="hover:text-primary transition-colors">
+                About
+              </Link>
+              <Link to="/how-it-works" className="hover:text-primary transition-colors">
+                How It Works
+              </Link>
               <Link to="/privacy" className="hover:text-primary transition-colors">
                 Privacy Policy
               </Link>
