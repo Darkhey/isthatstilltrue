@@ -246,61 +246,144 @@ const getResultsDescription = (facts: OutdatedFact[], year: number) => {
 
 const generateFunMessage = (year: number) => {
   const yearNum = parseInt(year.toString());
-  
+
+  // Year-specific Easter eggs first
+  const yearSpecific: Record<number, string[]> = {
+    1969: ["One small step for man... one giant leap for your education 🌕", "You graduated the year we walked on the Moon! 🚀"],
+    1977: ["Star Wars just came out — may the Force be with your diploma 🌟", "A New Hope... for your career! ⚔️"],
+    1984: ["Big Brother is watching your grades 👁️", "George Orwell's year — at least school wasn't THAT dystopian 📖"],
+    1989: ["The Wall came down — and so did your school stress! 🧱", "Freedom year! Berlin Wall fell, you graduated 🎉"],
+    1990: ["Germany reunited, you graduated — big year! 🇩🇪", "Fresh into a brand new world order 🌍"],
+    1991: ["The Soviet Union collapsed — your school too? 😅", "World Wide Web went public — you had no idea what was coming 🌐"],
+    1994: ["Friends premiered — were your school friends as iconic? ☕", "Kurt Cobain's last year... grunge graduation 🎸"],
+    1995: ["Windows 95 launched — your PC probably had 8MB RAM 💾", "Toy Story came out — you were still a kid at heart 🤠"],
+    1996: ["Dolly the sheep was cloned — science was wild 🐑", "The Macarena was everywhere. EVERYWHERE. 💃"],
+    1997: ["Titanic in cinemas — 'I'm the king of the world!' 🚢", "Harry Potter Book 1 — a magical graduation year ⚡"],
+    1998: ["Google was founded — you survived without it 🔍", "France won the World Cup — Zidane era! ⚽"],
+    1999: ["Y2K panic — did you store canned food? 🥫", "The Matrix came out — were you in the simulation? 💊", "Napster launched — free music, guilty conscience 🎵"],
+    2000: ["Millennium baby! You survived Y2K 🎆", "The future is here... where's my flying car? 🚗"],
+    2001: ["The year everything changed. Respect. 🕊️", "iPod launched — 1000 songs in your pocket 🎶", "Wikipedia was born — your future cheat sheet 📚"],
+    2002: ["Euro coins arrived — goodbye Deutsche Mark! 💶", "Spider-Man in cinemas — with great power... 🕷️"],
+    2003: ["MySpace launched — your first HTML was on your profile 💫", "Finding Nemo — just keep swimming through school 🐠"],
+    2004: ["Facebook launched — from dorm project to... everything 👤", "Tsunami year — the world held its breath 🌊", "Google went public at $85/share... if only you'd invested 📈"],
+    2005: ["YouTube started — 'Me at the zoo' era 📹", "Hurricane Katrina — a year of resilience 💪"],
+    2006: ["Twitter launched — 140 characters of wisdom 🐦", "Wii Sports era — your arm still hurts 🎮"],
+    2007: ["The iPhone changed EVERYTHING 📱", "The last generation to graduate without smartphones 🤳"],
+    2008: ["Obama's 'Yes We Can' — and you graduated into a recession 📉", "Iron Man launched the MCU — Avengers, assemble your resume! 🦸"],
+    2009: ["Bitcoin was born — worth $0. ZERO. 💸", "Michael Jackson died — end of an era 🎤", "Avatar in 3D — the future seemed so close 🌿"],
+    2010: ["Instagram launched — your food has never been the same 📸", "Vuvuzelas traumatized us all at the World Cup 📯"],
+    2011: ["Bin Laden found. Royal Wedding. Fukushima. What a year 🌍", "Snapchat launched — your messages now self-destruct 👻"],
+    2012: ["The world didn't end — Mayans were wrong! 🗓️", "Gangnam Style broke YouTube's view counter 🐴", "Curiosity landed on Mars — your curiosity landed you here 🔴"],
+    2013: ["Frozen came out — Let It Go... let your school years go ❄️", "Edward Snowden — now you know they read everything 🕵️"],
+    2014: ["Ice Bucket Challenge graduate — you got soaked 🪣", "The year of the selfie stick — dark times 🤳"],
+    2015: ["Back to the Future Day was Oct 21 — where's our hoverboard? 🛹", "Star Wars came back — so did your childhood 🌟"],
+    2016: ["Brexit, Trump, Harambe — nobody saw any of it coming 🦍", "Pokémon Go — you walked into a pole for a Pikachu ⚡"],
+    2017: ["Fidget spinners were a personality trait 🌀", "Bitcoin hit $20K — your classmate who bought at $100 retired 💰"],
+    2018: ["Fortnite took over — default dance at graduation? 💃", "Royal Wedding 2.0 — Meghan Markle era 👑"],
+    2019: ["Area 51 raid (that didn't happen) 👽", "The last 'normal' year... enjoy it while it lasts 😬", "Baby Yoda stole everyone's heart 💚"],
+    2020: ["Zoom University graduate 🎓💻", "Tiger King was your professor now 🐯", "Banana bread baker with a diploma 🍞", "Graduated in pajamas — still valid! 🩳"],
+    2021: ["Vaccinated and graduated! Double shot 💉🎓", "Dogecoin to the moon... your degree too? 🚀", "Supply chain issues — couldn't even get a graduation gown 📦"],
+    2022: ["Wordle was your morning routine 🟩🟨", "Nobody knows what an NFT was anymore 🖼️", "Queen Elizabeth — end of a 70-year era 👑"],
+    2023: ["ChatGPT wrote half your thesis, didn't it? 🤖", "Barbenheimer graduate — pink or boom? 💗💣", "Taylor Swift's Eras Tour — your school era ends too 🎤"],
+    2024: ["AI might take your job before you even start 🤖", "Olympic year — graduating is also a sport 🏅", "TikTok brain with a diploma — respect 🧠"],
+    2025: ["Fresh out! The world is... complicated 🌍", "You graduated into the AI revolution 🚀", "Gen Alpha is right behind you — run 🏃"],
+    2026: ["You literally just graduated — go touch grass 🌿", "The ink on your diploma is still wet 📜"],
+  };
+
+  // Check for year-specific messages first
+  if (yearSpecific[yearNum]) {
+    const specific = yearSpecific[yearNum];
+    return specific[Math.floor(Math.random() * specific.length)];
+  }
+
   const messages = {
     ancient: [
       "Respect! You've chosen a fascinating historical era 🏛️",
-      "Ancient times - when the world was so different! ⏰",
-      "You're exploring deep history! 📚",
-      "Medieval worldviews incoming! 🕰️"
+      "Ancient times — when leeches were healthcare 🩸",
+      "Back when 'going viral' meant the plague 💀",
+      "Your teachers literally used stone tablets 🪨",
+      "Flat Earth was mainstream opinion — not a meme 🌍",
     ],
     vintage: [
-      "Historical era - what a different world! 📻",
-      "Back when everything was changing 🎭",
-      "You've picked an interesting century! 🎓",
-      "Classic historical period! 🕰️"
+      "The Enlightenment era — candles were high-tech 🕯️",
+      "Before electricity — homework by candlelight 🔥",
+      "Industrial Revolution loading... ⚙️",
+      "Steam power was the 'AI' of your century 🚂",
     ],
-    retro: [
-      "Retro times! 📼",
-      "When life was so different 📺",
-      "Classic era, nice choice! 🎸",
-      "You remember when... 💭"
+    earlyModern: [
+      "World Wars shaped everything — heavy times 🌍",
+      "Radio was social media — imagine waiting for news 📻",
+      "Your teachers survived actual history 📖",
+      "Rock'n'Roll was born — rebels with a cause 🎸",
+    ],
+    sixties: [
+      "Flower power graduate! ✌️🌸",
+      "Beatles or Stones? The eternal question 🎵",
+      "Moon landing generation — one small step! 🌕",
+      "Woodstock vibes — peace, love & diplomas ☮️",
+    ],
+    seventies: [
+      "Disco fever graduate! 🕺",
+      "Platform shoes to the graduation ceremony 👠",
+      "Star Wars generation — the Force is with you ⚔️",
+      "Oil crisis — even gas was drama 🛢️",
+    ],
+    eighties: [
+      "Big hair, bigger dreams! 💇‍♀️",
+      "Walkman generation — you were wireless before AirPods 🎧",
+      "Pac-Man was your after-school therapy 👾",
+      "Neon colors were a lifestyle, not a mistake 🌈",
+      "Your mixtape game was legendary 📼",
     ],
     nineties: [
       "90s kid! Peak nostalgia 📱",
-      "Dial-up internet survivor 💻",
-      "When MTV still played music 🎵",
-      "You had a Nokia brick phone 📞"
+      "Dial-up internet survivor — that SOUND 💻",
+      "When MTV still played actual music 🎵",
+      "You had a Nokia 3310 — indestructible 📞",
+      "Tamagotchi parent — your first responsibility 🥚",
+      "MSN Messenger status was your social media 💬",
+      "You burned CDs — literally curated playlists 💿",
+      "Frosted tips were acceptable. Somehow. 🧊",
     ],
     earlyTwoThousands: [
-      "Y2K survivor! 💾",
-      "MySpace era graduate 🌐",
-      "iPod generation 🎧",
-      "When flip phones were cool 📱"
+      "Y2K survivor! The computers didn't explode 💾",
+      "MySpace era — your top 8 defined friendships 🌐",
+      "iPod generation — 1000 songs, one white cable 🎧",
+      "Flip phone master — T9 texting speed record 📱",
+      "LimeWire gave your PC every virus known to man 🦠",
+      "You waited 3 minutes to download one song on Napster 🎵",
+      "Low-rise jeans. We don't talk about it. 👖",
     ],
     recession: [
-      "2008 recession graduate... tough times! 📉",
-      "You graduated into chaos, respect 💪",
-      "Financial crisis couldn't stop you! 🚀",
-      "Economy was rough but you made it 🎯"
+      "2008 recession graduate... your timing was *chef's kiss* 📉",
+      "You graduated into financial chaos — built different 💪",
+      "Banks collapsed but your spirit didn't 🏦",
+      "Economy was rough — at least memes were free 🎯",
+      "Your first job paid in 'experience' 💼",
     ],
     modern: [
       "You probably still can't afford a house 🏠",
-      "Student loans are forever, right? 💸",
-      "Graduated into the gig economy 📱",
-      "Adulting is harder than expected 😅"
+      "Student loans are your longest relationship 💸",
+      "Graduated into the gig economy — side hustles only 📱",
+      "Adulting is a scam and nobody warned you 😅",
+      "Instagram made everyone else's life look better 📸",
+      "Avocado toast > home ownership, apparently 🥑",
     ],
     pandemic: [
-      "Zoom graduation, been there! 💻",
-      "Masks and hand sanitizer era 😷",
-      "You graduated during apocalypse mode 🦠",
-      "Remote everything graduate! 🏠"
+      "Zoom graduation — your cat made a cameo 💻🐱",
+      "Masks, hand sanitizer, and existential dread 😷",
+      "You graduated during the actual apocalypse 🦠",
+      "Remote everything — pants were optional 🩳",
+      "Sourdough starter had more attention than your thesis 🍞",
+      "Class of COVID — unkillable 💪",
     ],
     fresh: [
-      "Fresh grad! Job market is... interesting 📊",
-      "Entry level: 5+ years experience required 😂",
-      "You need 10 years experience for your first job 💼",
-      "Welcome to inflation nation! 💰"
+      "Fresh grad! The world is... a lot right now 📊",
+      "Entry level job: requires 5+ years + PhD + time travel 😂",
+      "AI might automate your job before you start it 🤖",
+      "Welcome to inflation nation — $7 coffee ☕",
+      "Your diploma costs more than your first car 📜",
+      "LinkedIn influencers are your new nightmare 💼",
     ]
   };
 
@@ -309,10 +392,14 @@ const generateFunMessage = (year: number) => {
     categoryMessages = messages.ancient;
   } else if (yearNum <= 1700) {
     categoryMessages = messages.vintage;
-  } else if (yearNum <= 1850) {
-    categoryMessages = messages.retro;
   } else if (yearNum <= 1950) {
-    categoryMessages = messages.retro;
+    categoryMessages = messages.earlyModern;
+  } else if (yearNum <= 1969) {
+    categoryMessages = messages.sixties;
+  } else if (yearNum <= 1979) {
+    categoryMessages = messages.seventies;
+  } else if (yearNum <= 1989) {
+    categoryMessages = messages.eighties;
   } else if (yearNum <= 1999) {
     categoryMessages = messages.nineties;
   } else if (yearNum <= 2007) {
