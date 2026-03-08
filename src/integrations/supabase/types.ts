@@ -86,6 +86,33 @@ export type Database = {
         }
         Relationships: []
       }
+      shared_facts: {
+        Row: {
+          country: string
+          created_at: string
+          fact_data: Json
+          graduation_year: number
+          id: string
+          slug: string
+        }
+        Insert: {
+          country: string
+          created_at?: string
+          fact_data: Json
+          graduation_year: number
+          id?: string
+          slug?: string
+        }
+        Update: {
+          country?: string
+          created_at?: string
+          fact_data?: Json
+          graduation_year?: number
+          id?: string
+          slug?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
