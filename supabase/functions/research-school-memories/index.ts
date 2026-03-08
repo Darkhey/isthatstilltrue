@@ -23,10 +23,10 @@ function cleanJsonResponse(jsonString: string): string {
   return s.trim();
 }
 
-// Fetch Wikipedia article extract by title
-async function fetchWikipediaArticle(title: string, lang = 'en'): Promise<{ extract: string; url: string } | null> {
+// Fetch Wikipedia article extract and thumbnail by title
+async function fetchWikipediaArticle(title: string, lang = 'en'): Promise<{ extract: string; url: string; thumbnail?: string } | null> {
   try {
-    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts&exintro=1&explaintext=1&format=json&origin=*`;
+    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts|pageimages&exintro=1&explaintext=1&pithumbsize=800&format=json&origin=*`;
     const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
@@ -37,6 +37,7 @@ async function fetchWikipediaArticle(title: string, lang = 'en'): Promise<{ extr
     return {
       extract: pages[pageId].extract || '',
       url: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`,
+      thumbnail: pages[pageId].thumbnail?.source || undefined,
     };
   } catch { return null; }
 }
