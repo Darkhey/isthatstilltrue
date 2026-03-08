@@ -616,7 +616,7 @@ export const FactsDebunker = () => {
       setError("Research error. Please try again.");
       setShowSkeletons(false);
     } finally {
-      clearInterval(messageInterval);
+      stopLoadingMessageRotation();
       setIsLoading(false);
       setShowSkeletons(false);
     }
