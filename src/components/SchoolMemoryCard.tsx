@@ -253,27 +253,25 @@ export const SchoolMemoryCard = ({ schoolName, city, graduationYear, memoryData,
               return (
                 <div 
                   key={index} 
-                  className={`p-4 bg-primary/5 rounded-lg border-2 transition-all duration-200 ${
+                  className={`p-3 sm:p-4 bg-primary/5 rounded-lg border-2 transition-all duration-200 ${
                     nostalgia.sourceUrl 
                       ? 'cursor-pointer hover:bg-primary/10 hover:border-primary/50 border-primary/30' 
                       : 'border-primary/20'
                   }`}
                   onClick={handleNostalgiaClick}
                 >
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="font-medium flex-1">{nostalgia.memory}</p>
-                    {nostalgia.sourceUrl && (
-                      <Badge variant="outline" className="text-xs bg-primary/10 border-primary/30">
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        {nostalgia.sourceName || 'Verified Source'}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="font-medium text-sm sm:text-base">{nostalgia.memory}</p>
+                  {nostalgia.sourceUrl && (
+                    <Badge variant="outline" className="text-[10px] sm:text-xs bg-primary/10 border-primary/30 mt-1.5 inline-flex">
+                      <ExternalLink className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
+                      {nostalgia.sourceName || 'Source'}
+                    </Badge>
+                  )}
+                  <p className="text-xs sm:text-sm text-muted-foreground italic mt-2">
                     💬 "{nostalgia.shareableText}"
                   </p>
                   {nostalgia.sourceUrl && (
-                    <div className="mt-3 flex items-center gap-2 text-xs text-primary font-medium">
+                    <div className="mt-2 flex items-center gap-1.5 text-[10px] sm:text-xs text-primary font-medium">
                       <ExternalLink className="h-3 w-3" />
                       Click to view source and verify →
                     </div>
