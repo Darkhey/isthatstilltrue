@@ -128,7 +128,7 @@ const SharedFact = () => {
             </div>
 
             <div className="space-y-2">
-              <p className="text-sm font-medium text-green-600 flex items-center gap-2">
+              <p className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-2">
                 <CheckCircle className="h-4 w-4" /> What's actually true:
               </p>
               <p className="text-lg">{fact.correction}</p>
