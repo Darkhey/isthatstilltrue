@@ -12,6 +12,7 @@ import SchoolMemoryShare from "./pages/SchoolMemoryShare";
 import SharedFact from "./pages/SharedFact";
 import About from "./pages/About";
 import HowItWorks from "./pages/HowItWorks";
+import AskBot from "./pages/AskBot";
 
 const queryClient = new QueryClient();
 
