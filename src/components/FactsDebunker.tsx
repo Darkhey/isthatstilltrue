@@ -54,16 +54,28 @@ interface SchoolMemoryData {
     title: string;
     description: string;
     category: "facilities" | "academics" | "sports" | "culture" | "technology";
+    sourceUrl?: string;
+    sourceName?: string;
   }>;
   nostalgiaFactors: Array<{
     memory: string;
     shareableText: string;
+    sourceUrl?: string;
+    sourceName?: string;
   }>;
   localContext: Array<{
     event: string;
     relevance: string;
+    sourceUrl?: string;
+    sourceName?: string;
   }>;
   shareableQuotes: string[];
+}
+
+interface WikipediaSource {
+  title: string;
+  url: string;
+  type: string;
 }
 
 interface HistoricalHeadline {
