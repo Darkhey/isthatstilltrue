@@ -77,24 +77,28 @@ Find out: https://isthatstilltrue.com
   const shareText = generateShareText();
   const shortShareText = generateShortShareText();
 
-  const handleTwitterShare = () => {
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shortShareText)}&url=${encodeURIComponent(shareUrl)}`;
+  const handleTwitterShare = async () => {
+    const url = await getOrCreateShareUrl();
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shortShareText)}&url=${encodeURIComponent(url)}`;
     window.open(twitterUrl, '_blank', 'width=550,height=420');
   };
 
-  const handleFacebookShare = () => {
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shortShareText)}`;
+  const handleFacebookShare = async () => {
+    const url = await getOrCreateShareUrl();
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(shortShareText)}`;
     window.open(facebookUrl, '_blank', 'width=550,height=420');
   };
 
-  const handleLinkedInShare = () => {
-    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}&summary=${encodeURIComponent(shortShareText)}`;
+  const handleLinkedInShare = async () => {
+    const url = await getOrCreateShareUrl();
+    const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&summary=${encodeURIComponent(shortShareText)}`;
     window.open(linkedinUrl, '_blank', 'width=550,height=420');
   };
 
-  const handleRedditShare = () => {
+  const handleRedditShare = async () => {
+    const url = await getOrCreateShareUrl();
     const redditTitle = `🤯 School taught me this about ${fact.category.toLowerCase()} - turns out it was completely wrong!`;
-    const redditUrl = `https://reddit.com/submit?url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(redditTitle)}&text=${encodeURIComponent(shareText)}`;
+    const redditUrl = `https://reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(redditTitle)}&text=${encodeURIComponent(shareText)}`;
     window.open(redditUrl, '_blank', 'width=550,height=420');
   };
 
