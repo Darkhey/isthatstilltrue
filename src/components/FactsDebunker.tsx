@@ -406,14 +406,21 @@ export const FactsDebunker = () => {
   };
 
   // Update loading message every 2 seconds during research
-  const startLoadingMessageRotation = () => {
-    const interval = setInterval(() => {
-      if (isLoading) {
-        setLoadingMessage(getRandomLoadingMessage());
-      }
+  const startLoadingMessageRotation = useCallback(() => {
+    if (loadingIntervalRef.current) {
+      clearInterval(loadingIntervalRef.current);
+    }
+    loadingIntervalRef.current = setInterval(() => {
+      setLoadingMessage(getRandomLoadingMessage());
     }, 2000);
-    return interval;
-  };
+  }, []);
+
+  const stopLoadingMessageRotation = useCallback(() => {
+    if (loadingIntervalRef.current) {
+      clearInterval(loadingIntervalRef.current);
+      loadingIntervalRef.current = null;
+    }
+  }, []);
 
   const handleNextStep = () => {
     if (isSchoolMode) {
