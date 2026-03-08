@@ -1104,8 +1104,8 @@ export const FactsDebunker = () => {
                           )}
 
                           {(fact.sourceUrl || fact.sourceName) && (
-                            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                              <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                            <div className="bg-muted/50 border border-border rounded-lg p-4">
+                              <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
                                 <ExternalLink className="w-4 h-4" />
                                 Source:
                               </h4>
@@ -1120,7 +1120,7 @@ export const FactsDebunker = () => {
                                   <ExternalLink className="w-3 h-3" />
                                 </a>
                               ) : (
-                                <p className="text-sm text-slate-600 break-words">{fact.sourceName}</p>
+                                <p className="text-sm text-muted-foreground break-words">{fact.sourceName}</p>
                               )}
                             </div>
                           )}
