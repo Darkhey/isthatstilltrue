@@ -11,6 +11,7 @@ const BASE = "https://isthatstilltrue.com";
 const STATIC_PAGES = [
   { loc: "/", priority: "1.0", changefreq: "weekly" },
   { loc: "/ask", priority: "0.9", changefreq: "weekly" },
+  { loc: "/quiz", priority: "0.9", changefreq: "weekly" },
   { loc: "/about", priority: "0.8", changefreq: "monthly" },
   { loc: "/how-it-works", priority: "0.8", changefreq: "monthly" },
   { loc: "/terms", priority: "0.5", changefreq: "monthly" },
