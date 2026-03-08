@@ -1,4 +1,5 @@
 import { FactsDebunker } from "@/components/FactsDebunker";
+import { MindBlowingFacts } from "@/components/MindBlowingFacts";
 import { FAQSection } from "@/components/FAQSection";
 import { EducationalResources } from "@/components/EducationalResources";
 import { FloatingBackground } from "@/components/FloatingBackground";
@@ -10,6 +11,7 @@ const Index = () => {
       <FloatingBackground />
       <div className="flex-1 relative z-10">
         <FactsDebunker />
+        <MindBlowingFacts />
         <FAQSection />
         <EducationalResources />
       </div>
