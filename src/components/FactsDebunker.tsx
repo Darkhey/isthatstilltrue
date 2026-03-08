@@ -365,6 +365,17 @@ export const FactsDebunker = () => {
   const [cacheInfo, setCacheInfo] = useState<any>(null);
 
   const factsResultsRef = useRef<HTMLDivElement>(null);
+  const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup loading interval on unmount
+  useEffect(() => {
+    return () => {
+      if (loadingIntervalRef.current) {
+        clearInterval(loadingIntervalRef.current);
+        loadingIntervalRef.current = null;
+      }
+    };
+  }, []);
   
   // Handle mode toggle with proper state reset
   const handleModeToggle = (newSchoolMode: boolean) => {
