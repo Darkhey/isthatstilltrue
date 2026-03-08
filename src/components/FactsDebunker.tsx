@@ -389,9 +389,7 @@ export const FactsDebunker = () => {
     setSchoolMemories(null);
     setSchoolShareableContent(null);
     setHistoricalHeadlines([]);
-    setSchoolImages([]);
-    setCityImages([]);
-    setHistoricalSources([]);
+    setWikipediaSources([]);
     setSchoolImage(null);
     setFunMessage(null);
     // Keep country selection but clear school-specific fields when going back to country mode
