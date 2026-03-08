@@ -642,10 +642,15 @@ export const FactsDebunker = () => {
     setReportDialogOpen(false);
     setSelectedFactForReport(null);
     setHistoricalHeadlines([]);
-    setSchoolImages([]);
-    setCityImages([]);
-    setHistoricalSources([]);
+    setWikipediaSources([]);
     setSchoolImage(null);
+  };
+
+  const handleBack = () => {
+    setStep(1);
+    setError(null);
+    setSuccessMessage(null);
+    setFunMessage(null);
   };
 
   const handleReportFact = (fact: OutdatedFact) => {
