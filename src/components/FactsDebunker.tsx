@@ -997,11 +997,6 @@ export const FactsDebunker = () => {
               </div>
             </Card>
           </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-          </div>
         )}
 
         {/* Country Facts Results */}
