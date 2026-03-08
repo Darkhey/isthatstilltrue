@@ -122,16 +122,16 @@ Find out: https://isthatstilltrue.com
   };
 
   const handleWebShare = async () => {
+    const url = await getOrCreateShareUrl();
     if (navigator.share && typeof navigator.share === 'function') {
       try {
         await navigator.share({
           title: `Is That Still True? - ${fact.category} Facts Debunked`,
           text: shortShareText,
-          url: shareUrl,
+          url,
         });
       } catch (error) {
         console.log('Web share cancelled or failed:', error);
-        // Fallback to copy on any error
         handleCopyLink();
       }
     } else {
