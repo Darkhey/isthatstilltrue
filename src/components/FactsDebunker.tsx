@@ -20,9 +20,6 @@ import { SchoolShareCard } from "./SchoolShareCard";
 import { HistoricalHeadlines } from "./HistoricalHeadlines";
 import { EnhancedProgressTracker } from "./EnhancedProgressTracker";
 import { LanguageSelector } from "./LanguageSelector";
-import { CityImagesGallery } from "./CityImagesGallery";
-import { HistoricalSourcesCard } from "./HistoricalSourcesCard";
-import { SchoolPhotoGallery } from "./SchoolPhotoGallery";
 import { AnimatedLoader } from "./AnimatedLoader";
 
 interface OutdatedFact {
