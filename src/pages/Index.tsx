@@ -11,6 +11,7 @@ const Index = () => {
       <FloatingBackground />
       <div className="flex-1 relative z-10">
         <FactsDebunker />
+        <MindBlowingFacts />
         <FAQSection />
         <EducationalResources />
       </div>
