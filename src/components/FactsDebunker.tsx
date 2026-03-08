@@ -804,14 +804,6 @@ export const FactsDebunker = () => {
         {/* School Memory Results */}
         {isSchoolMode && schoolMemories && schoolShareableContent && (
           <div ref={factsResultsRef} className="max-w-4xl mx-auto space-y-6">
-            {/* School Photo Gallery - PROMINENT AT TOP */}
-            {schoolImages.length > 0 && (
-              <SchoolPhotoGallery
-                schoolName={schoolName}
-                photos={schoolImages}
-              />
-            )}
-            
             <SchoolMemoryCard 
               schoolName={schoolName}
               city={city}
@@ -820,22 +812,35 @@ export const FactsDebunker = () => {
               shareableText={schoolShareableContent?.mainShare}
               schoolImage={schoolImage || undefined}
             />
-            
-            {/* City Images Gallery */}
-            {cityImages.length > 0 && (
-              <CityImagesGallery
-                city={city}
-                year={parseInt(graduationYear)}
-                images={cityImages}
-              />
-            )}
-            
-            {/* Historical Sources */}
-            {historicalSources.length > 0 && (
-              <HistoricalSourcesCard
-                sources={historicalSources}
-                year={parseInt(graduationYear)}
-              />
+
+            {/* Wikipedia Sources */}
+            {wikipediaSources.length > 0 && (
+              <Card className="border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <ExternalLink className="h-5 w-5" />
+                    Wikipedia Sources Used
+                  </CardTitle>
+                  <CardDescription>
+                    These verified sources were used to research your school memories
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {wikipediaSources.map((source, index) => (
+                    <a
+                      key={index}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/5 transition-colors text-sm"
+                    >
+                      <Badge variant="outline" className="text-xs capitalize">{source.type}</Badge>
+                      <span className="text-primary underline underline-offset-2 flex-1">{source.title}</span>
+                      <ExternalLink className="h-3 w-3 text-muted-foreground shrink-0" />
+                    </a>
+                  ))}
+                </CardContent>
+              </Card>
             )}
             
             {/* Historical Headlines */}

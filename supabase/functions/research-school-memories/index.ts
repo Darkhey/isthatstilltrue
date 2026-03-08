@@ -225,7 +225,18 @@ Return ONLY valid JSON (no markdown) with this structure:
       });
     }
 
-    const memories = JSON.parse(cleanJsonResponse(aiContent));
+    let memories;
+    try {
+      memories = JSON.parse(cleanJsonResponse(aiContent));
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', parseError, 'Raw:', aiContent.substring(0, 500));
+      memories = {
+        whatHappenedAtSchool: [],
+        nostalgiaFactors: [],
+        localContext: [],
+        shareableQuotes: [`Class of ${graduationYear} at ${schoolName} in ${city}!`],
+      };
+    }
     console.log('Generated memories with', sources.length, 'real sources');
 
     // Build shareable content
