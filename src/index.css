@@ -60,6 +60,10 @@ All colors MUST be HSL.
   }
 
   .dark {
+    --gradient-primary: linear-gradient(135deg, hsl(262 60% 60%), hsl(280 50% 50%));
+    --gradient-background: linear-gradient(180deg, hsl(222 84% 5%), hsl(230 60% 8%));
+    --shadow-glow: 0 0 30px hsl(262 60% 60% / 0.2);
+
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
 
@@ -103,8 +107,17 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    transition: color-scheme 0.3s ease;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   p {
