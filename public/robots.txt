@@ -13,4 +13,5 @@ Allow: /
 User-agent: *
 Allow: /
 
+Sitemap: https://wyritonnqbjyfuuulcpm.supabase.co/functions/v1/sitemap
 Sitemap: https://isthatstilltrue.com/sitemap.xml

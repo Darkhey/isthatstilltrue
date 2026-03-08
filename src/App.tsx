@@ -13,6 +13,7 @@ import SharedFact from "./pages/SharedFact";
 import About from "./pages/About";
 import HowItWorks from "./pages/HowItWorks";
 import AskBot from "./pages/AskBot";
+import Quiz from "./pages/Quiz";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +28,7 @@ const App = () => (
           <Route path="/fact/:slug" element={<SharedFact />} />
           <Route path="/school/:slug" element={<SchoolMemoryShare />} />
           <Route path="/ask" element={<AskBot />} />
+          <Route path="/quiz" element={<Quiz />} />
           <Route path="/about" element={<About />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />

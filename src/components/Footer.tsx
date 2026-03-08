@@ -5,57 +5,59 @@ import { CreditCard, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SingleFactChecker } from "./SingleFactChecker";
+import { useLanguage } from "@/hooks/use-language";
 
 const Footer = () => {
   const [isFactCheckerOpen, setIsFactCheckerOpen] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <footer className="bg-card border-t mt-auto">
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-          {/* Legal Navigation and Quick Fact Check */}
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <nav className="flex flex-wrap gap-4 text-sm text-muted-foreground">
               <Link to="/ask" className="hover:text-primary transition-colors font-medium">
-                🤓 Fact-Checker Bot
+                {t("factCheckerBot")}
+              </Link>
+              <Link to="/quiz" className="hover:text-primary transition-colors font-medium">
+                🧠 {t("quiz")}
               </Link>
               <Link to="/about" className="hover:text-primary transition-colors">
-                About
+                {t("about")}
               </Link>
               <Link to="/how-it-works" className="hover:text-primary transition-colors">
-                How It Works
+                {t("howItWorks")}
               </Link>
               <Link to="/privacy" className="hover:text-primary transition-colors">
-                Privacy Policy
+                {t("privacy")}
               </Link>
               <Link to="/terms" className="hover:text-primary transition-colors">
-                Terms of Service
+                {t("terms")}
               </Link>
               <Link to="/imprint" className="hover:text-primary transition-colors">
-                Imprint
+                {t("imprint")}
               </Link>
             </nav>
             
-            {/* Quick Fact Check Button */}
             <Dialog open={isFactCheckerOpen} onOpenChange={setIsFactCheckerOpen}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <Search className="h-4 w-4" />
-                  Quick Fact Check
+                  {t("quickFactCheck")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Quick Fact Checker</DialogTitle>
+                  <DialogTitle>{t("quickFactCheck")}</DialogTitle>
                 </DialogHeader>
                 <SingleFactChecker />
               </DialogContent>
             </Dialog>
           </div>
 
-          {/* PayPal Donate Button */}
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Support us:</span>
+            <span className="text-sm text-muted-foreground">{t("supportUs")}</span>
             <a
               href="https://www.paypal.com/donate/?hosted_button_id=CRF92JRY9SW4J"
               target="_blank"
@@ -63,14 +65,13 @@ const Footer = () => {
               className="inline-flex items-center gap-2 bg-[#0070ba] hover:bg-[#005ea6] text-white px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105"
             >
               <CreditCard className="w-4 h-4" />
-              Donate
+              {t("donate")}
             </a>
           </div>
         </div>
 
-        {/* Copyright */}
         <div className="mt-4 pt-4 border-t text-center text-sm text-muted-foreground">
-          <p>© 2024 Klexgetier - Maximilian Leistner. All rights reserved.</p>
+          <p>{t("copyright")}</p>
         </div>
       </div>
     </footer>
