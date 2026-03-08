@@ -469,7 +469,7 @@ export const FactsDebunker = () => {
     setShowSkeletons(true);
     setLoadingMessage(getRandomLoadingMessage());
     
-    const messageInterval = startLoadingMessageRotation();
+    startLoadingMessageRotation();
     setFacts([]);
     setSchoolMemories(null);
     setSchoolShareableContent(null);
