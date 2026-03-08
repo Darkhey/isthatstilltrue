@@ -141,7 +141,7 @@ serve(async (req) => {
     console.log(`Research: ${schoolName}, ${city}, ${graduationYear}, ${country}`);
 
     // Phase 1: Gather real Wikipedia research
-    const sources = await gatherWikipediaResearch(schoolName, city, graduationYear, country);
+    const { sources, thumbnail } = await gatherWikipediaResearch(schoolName, city, graduationYear, country);
 
     // Phase 2: Build context from real sources
     const sourcesContext = sources.map(s =>
