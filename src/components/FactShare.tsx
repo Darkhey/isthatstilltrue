@@ -2,6 +2,7 @@ import { Share2, MessageCircle, Linkedin, Facebook, Copy, Check } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface OutdatedFact {
   category: string;
