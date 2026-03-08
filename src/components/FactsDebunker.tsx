@@ -595,10 +595,12 @@ export const FactsDebunker = () => {
 
         setSchoolMemories(data.schoolMemories);
         setSchoolShareableContent(data.shareableContent);
+        if (data.schoolImage) {
+          setSchoolImage(data.schoolImage);
+        }
         if (data.historicalHeadlines) {
           setHistoricalHeadlines(data.historicalHeadlines);
         }
-        // Set Wikipedia sources if available
         if (data.wikipediaSources?.length > 0) {
           setWikipediaSources(data.wikipediaSources);
         }
