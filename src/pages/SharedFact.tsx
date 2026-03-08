@@ -31,7 +31,7 @@ const SharedFact = () => {
     const fetchFact = async () => {
       if (!slug) return;
       const { data, error: err } = await supabase
-        .from("shared_facts")
+        .from("shared_facts" as any)
         .select("*")
         .eq("slug", slug)
         .maybeSingle();
@@ -39,9 +39,10 @@ const SharedFact = () => {
       if (err || !data) {
         setError(true);
       } else {
-        const fd = data.fact_data as unknown as OutdatedFact;
+        const d = data as any;
+        const fd = d.fact_data as OutdatedFact;
         setFact(fd);
-        setCountry(data.country);
+        setCountry(d.country);
         setGraduationYear(String(data.graduation_year));
       }
       setLoading(false);
