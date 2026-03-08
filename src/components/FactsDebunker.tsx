@@ -765,7 +765,7 @@ export const FactsDebunker = () => {
                   </div>
                 )}
                 {successMessage && (
-                  <div className="flex items-start gap-2 text-green-700 text-sm bg-green-50 p-3 rounded-md border border-green-200">
+                  <div className="flex items-start gap-2 text-primary text-sm bg-primary/10 p-3 rounded-md border border-primary/20">
                     <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
                     <span className="break-words">{successMessage}</span>
                   </div>
