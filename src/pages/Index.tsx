@@ -3,6 +3,7 @@ import { MindBlowingFacts } from "@/components/MindBlowingFacts";
 import { FAQSection } from "@/components/FAQSection";
 import { EducationalResources } from "@/components/EducationalResources";
 import { FloatingBackground } from "@/components/FloatingBackground";
+import { SEOHead } from "@/components/SEOHead";
 import Footer from "@/components/Footer";
 
 const Index = () => {
