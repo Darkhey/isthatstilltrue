@@ -14,3 +14,12 @@ verify_jwt = false
 
 [functions.research-school-memories]
 verify_jwt = false
+
+[functions.school-fact-chat]
+verify_jwt = false
+
+[functions.quiz-generator]
+verify_jwt = false
+
+[functions.sitemap]
+verify_jwt = false
