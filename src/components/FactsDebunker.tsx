@@ -888,13 +888,13 @@ export const FactsDebunker = () => {
                       </h3>
                       <div className="space-y-2 mt-6">
                         <p className="text-foreground/90 font-medium">
-                          🔍 Collecting school photos and historical sources
+                          🔍 Searching Wikipedia for your school
                         </p>
                         <p className="text-foreground/90 font-medium">
-                          📰 Searching newspaper archives and local reports
+                          📚 Analyzing historical context for your graduation year
                         </p>
                         <p className="text-foreground/90 font-medium">
-                          🏫 Researching school events with verified sources
+                          🏫 Cross-referencing verified sources
                         </p>
                         <p className="text-foreground/90 font-medium">
                           ✨ Creating nostalgic memories
