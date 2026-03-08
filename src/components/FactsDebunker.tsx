@@ -20,9 +20,6 @@ import { SchoolShareCard } from "./SchoolShareCard";
 import { HistoricalHeadlines } from "./HistoricalHeadlines";
 import { EnhancedProgressTracker } from "./EnhancedProgressTracker";
 import { LanguageSelector } from "./LanguageSelector";
-import { CityImagesGallery } from "./CityImagesGallery";
-import { HistoricalSourcesCard } from "./HistoricalSourcesCard";
-import { SchoolPhotoGallery } from "./SchoolPhotoGallery";
 import { AnimatedLoader } from "./AnimatedLoader";
 
 interface OutdatedFact {
@@ -768,7 +765,7 @@ export const FactsDebunker = () => {
                   </div>
                 )}
                 {successMessage && (
-                  <div className="flex items-start gap-2 text-green-700 text-sm bg-green-50 p-3 rounded-md border border-green-200">
+                  <div className="flex items-start gap-2 text-primary text-sm bg-primary/10 p-3 rounded-md border border-primary/20">
                     <Lightbulb className="h-4 w-4 shrink-0 mt-0.5" />
                     <span className="break-words">{successMessage}</span>
                   </div>
@@ -891,13 +888,13 @@ export const FactsDebunker = () => {
                       </h3>
                       <div className="space-y-2 mt-6">
                         <p className="text-foreground/90 font-medium">
-                          🔍 Collecting school photos and historical sources
+                          🔍 Searching Wikipedia for your school
                         </p>
                         <p className="text-foreground/90 font-medium">
-                          📰 Searching newspaper archives and local reports
+                          📚 Analyzing historical context for your graduation year
                         </p>
                         <p className="text-foreground/90 font-medium">
-                          🏫 Researching school events with verified sources
+                          🏫 Cross-referencing verified sources
                         </p>
                         <p className="text-foreground/90 font-medium">
                           ✨ Creating nostalgic memories
@@ -971,23 +968,23 @@ export const FactsDebunker = () => {
                    <CollapsibleContent className="mt-4">
                      <div className="grid gap-3 md:gap-4 grid-cols-1 md:grid-cols-2">
                       {educationProblems.map((problem, index) => (
-                         <Card key={index} className="border-orange-200 bg-orange-50/50">
-                           <CardHeader className="pb-2 md:pb-3">
-                             <CardTitle className="text-orange-800 text-sm md:text-base leading-tight">
-                               {problem.problem}
-                             </CardTitle>
-                           </CardHeader>
-                           <CardContent className="space-y-2 md:space-y-3 pt-0">
-                             <p className="text-xs md:text-sm text-orange-700 leading-relaxed break-words">
-                               {problem.description}
-                             </p>
-                             <div className="pt-2 border-t border-orange-200">
-                               <p className="text-xs font-medium text-orange-600 leading-relaxed break-words">
-                                 <strong>Impact:</strong> {problem.impact}
-                               </p>
-                             </div>
-                           </CardContent>
-                         </Card>
+                          <Card key={index} className="border-destructive/20 bg-destructive/5">
+                            <CardHeader className="pb-2 md:pb-3">
+                              <CardTitle className="text-destructive text-sm md:text-base leading-tight">
+                                {problem.problem}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2 md:space-y-3 pt-0">
+                              <p className="text-xs md:text-sm text-destructive/80 leading-relaxed break-words">
+                                {problem.description}
+                              </p>
+                              <div className="pt-2 border-t border-destructive/20">
+                                <p className="text-xs font-medium text-destructive/70 leading-relaxed break-words">
+                                  <strong>Impact:</strong> {problem.impact}
+                                </p>
+                              </div>
+                            </CardContent>
+                          </Card>
                       ))}
                     </div>
                   </CollapsibleContent>
@@ -1095,20 +1092,20 @@ export const FactsDebunker = () => {
                           </div>
 
                           {fact.mindBlowingFactor && (
-                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                              <h4 className="font-semibold text-amber-700 mb-2 flex items-center gap-2">
+                            <div className="bg-accent/50 border border-accent rounded-lg p-4">
+                              <h4 className="font-semibold text-accent-foreground mb-2 flex items-center gap-2">
                                 <Lightbulb className="w-4 h-4" />
                                 Why This Matters:
                               </h4>
-                              <p className="text-sm text-amber-800 break-words">
+                              <p className="text-sm text-accent-foreground/80 break-words">
                                 {fact.mindBlowingFactor}
                               </p>
                             </div>
                           )}
 
                           {(fact.sourceUrl || fact.sourceName) && (
-                            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                              <h4 className="font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                            <div className="bg-muted/50 border border-border rounded-lg p-4">
+                              <h4 className="font-semibold text-foreground mb-2 flex items-center gap-2">
                                 <ExternalLink className="w-4 h-4" />
                                 Source:
                               </h4>
@@ -1123,7 +1120,7 @@ export const FactsDebunker = () => {
                                   <ExternalLink className="w-3 h-3" />
                                 </a>
                               ) : (
-                                <p className="text-sm text-slate-600 break-words">{fact.sourceName}</p>
+                                <p className="text-sm text-muted-foreground break-words">{fact.sourceName}</p>
                               )}
                             </div>
                           )}
