@@ -100,11 +100,10 @@ export const SchoolPicker = ({
     debounceRef.current = setTimeout(async () => {
       setIsSearching(true);
       const lang = langMap[country] || 'en';
-      const searchQuery = city ? `${value} ${city}` : value;
-      const results = await searchWikipediaSchools(searchQuery, lang);
+      const results = await searchWikipediaSchools(value, city, lang);
       // Also search in English if not already
       if (lang !== 'en') {
-        const enResults = await searchWikipediaSchools(searchQuery, 'en');
+        const enResults = await searchWikipediaSchools(value, city, 'en');
         const combined = [...results, ...enResults].filter(
           (r, i, arr) => arr.findIndex(a => a.title === r.title) === i
         ).slice(0, 6);
