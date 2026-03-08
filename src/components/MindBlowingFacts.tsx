@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ThumbsUp, ThumbsDown, Check, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MindBlowingFact {
@@ -86,58 +87,107 @@ const facts: MindBlowingFact[] = [
   },
 ];
 
+type Vote = 'real' | 'fake' | null;
+
 const FactCard: React.FC<{ fact: MindBlowingFact; index: number; isVisible: boolean }> = ({ fact, index, isVisible }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [vote, setVote] = useState<Vote>(null);
+  const [revealed, setRevealed] = useState(false);
+
+  const handleVote = (choice: Vote) => {
+    if (revealed) return;
+    setVote(choice);
+    // Short delay before reveal for suspense
+    setTimeout(() => setRevealed(true), 400);
+  };
+
+  const gotItRight = vote === 'real';
 
   return (
     <Card
       className={cn(
-        'group cursor-pointer border-border/50 bg-card/80 backdrop-blur-sm hover:shadow-glow transition-all duration-500 overflow-hidden',
+        'border-border/50 bg-card/80 backdrop-blur-sm transition-all duration-500 overflow-hidden',
+        revealed && gotItRight && 'ring-2 ring-primary/40',
+        revealed && !gotItRight && 'ring-2 ring-destructive/30',
         isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       )}
       style={{ transitionDelay: isVisible ? `${index * 80}ms` : '0ms' }}
-      onClick={() => setIsOpen(!isOpen)}
     >
       <CardContent className="p-4 sm:p-5">
         <div className="flex items-start gap-3">
-          <span className="text-3xl sm:text-4xl shrink-0 group-hover:scale-110 transition-transform duration-300">
+          <span className={cn(
+            "text-3xl sm:text-4xl shrink-0 transition-transform duration-500",
+            revealed && "scale-110"
+          )}>
             {fact.emoji}
           </span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-accent/15 text-accent border-accent/30 shrink-0">
-                Sounds Fake 🤔
+                {revealed ? '✅ 100% Real' : 'Real or Fake? 🤔'}
               </Badge>
             </div>
             <h3 className="font-bold text-sm sm:text-base text-foreground leading-snug">
               {fact.title}
             </h3>
-            <div
-              className={cn(
-                'overflow-hidden transition-all duration-300',
-                isOpen ? 'max-h-40 opacity-100 mt-2' : 'max-h-0 opacity-0'
-              )}
-            >
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                ✅ <strong>But it's true!</strong> {fact.explanation}
-              </p>
-              <a
-                href={fact.sourceUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-2 text-[10px] text-primary/70 hover:text-primary underline transition-colors"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Source: {fact.source}
-              </a>
-            </div>
-            <div className={cn(
-              'flex items-center gap-1 mt-1.5 text-[10px] text-muted-foreground/60 transition-opacity',
-              isOpen ? 'opacity-0 h-0' : 'opacity-100'
-            )}>
-              <ChevronDown className="h-3 w-3" />
-              <span>Tap to reveal</span>
-            </div>
+
+            {/* Voting buttons */}
+            {!revealed && !vote && (
+              <div className="flex gap-2 mt-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 text-xs gap-1.5 h-8 border-primary/30 hover:bg-primary/10 hover:border-primary/50"
+                  onClick={() => handleVote('real')}
+                >
+                  <ThumbsUp className="h-3.5 w-3.5" />
+                  I believe it
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1 text-xs gap-1.5 h-8 border-destructive/30 hover:bg-destructive/10 hover:border-destructive/50"
+                  onClick={() => handleVote('fake')}
+                >
+                  <ThumbsDown className="h-3.5 w-3.5" />
+                  No way!
+                </Button>
+              </div>
+            )}
+
+            {/* Voted but not yet revealed - suspense */}
+            {vote && !revealed && (
+              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="inline-block h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                Checking...
+              </div>
+            )}
+
+            {/* Revealed answer */}
+            {revealed && (
+              <div className="mt-3 space-y-2 animate-fade-in">
+                <div className={cn(
+                  "flex items-center gap-1.5 text-xs font-semibold",
+                  gotItRight ? "text-primary" : "text-destructive"
+                )}>
+                  {gotItRight ? (
+                    <><Check className="h-3.5 w-3.5" /> You got it right! 🎉</>
+                  ) : (
+                    <><X className="h-3.5 w-3.5" /> Surprise — it's actually true! 🤯</>
+                  )}
+                </div>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                  {fact.explanation}
+                </p>
+                <a
+                  href={fact.sourceUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-[10px] text-primary/70 hover:text-primary underline transition-colors"
+                >
+                  Source: {fact.source}
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
@@ -174,7 +224,7 @@ export const MindBlowingFacts: React.FC = () => {
           Sounds Fake, But It's True
         </h2>
         <p className="text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-          10 mind-blowing facts that sound completely made up — but are 100% real. Tap any card to see the proof.
+          10 mind-blowing facts that sound completely made up. Vote first — then see if you were right!
         </p>
       </div>
 
