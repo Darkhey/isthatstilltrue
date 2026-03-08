@@ -1,304 +1,128 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface MemoryItem {
-  title: string;
-  description: string;
-  category: string;
-  sourceUrl: string;
-  sourceName: string;
-}
-
-interface NostalgiaFactor {
-  memory: string;
-  shareableText: string;
-  sourceUrl: string;
-  sourceName: string;
-}
-
-interface LocalContextEvent {
-  event: string;
-  relevance: string;
-  sourceUrl: string;
-  sourceName: string;
-}
-
-interface SchoolMemoriesResponse {
-  whatHappenedAtSchool: MemoryItem[];
-  nostalgiaFactors: NostalgiaFactor[];
-  localContext: LocalContextEvent[];
-  shareableQuotes: string[];
-}
-
-interface ResearchResult {
-  title: string;
-  link: string;
-  snippet: string;
-}
-
-interface WebSearchResult {
-  url: string;
-  title: string;
-  snippet: string;
-  source: string;
-}
-
 function cleanJsonResponse(jsonString: string): string {
-  let cleanedString = jsonString.trim();
-
-  // Remove markdown code blocks
-  if (cleanedString.startsWith('```json')) {
-    cleanedString = cleanedString.slice(7);
-  } else if (cleanedString.startsWith('```')) {
-    cleanedString = cleanedString.slice(3);
-  }
-  
-  if (cleanedString.endsWith('```')) {
-    cleanedString = cleanedString.slice(0, -3);
-  }
-  
-  cleanedString = cleanedString.trim();
-  
-  // Remove any leading non-JSON characters (like 'n\n')
-  const firstBrace = cleanedString.indexOf('[');
-  const firstCurly = cleanedString.indexOf('{');
-  
+  let s = jsonString.trim();
+  if (s.startsWith('```json')) s = s.slice(7);
+  else if (s.startsWith('```')) s = s.slice(3);
+  if (s.endsWith('```')) s = s.slice(0, -3);
+  s = s.trim();
+  const firstBrace = s.indexOf('[');
+  const firstCurly = s.indexOf('{');
   if (firstBrace !== -1 || firstCurly !== -1) {
-    const startIndex = firstBrace !== -1 && firstCurly !== -1 
+    const startIndex = firstBrace !== -1 && firstCurly !== -1
       ? Math.min(firstBrace, firstCurly)
       : Math.max(firstBrace, firstCurly);
-    cleanedString = cleanedString.substring(startIndex);
+    s = s.substring(startIndex);
   }
-
-  return cleanedString.trim();
+  return s.trim();
 }
 
-// Enhanced web search for school-specific information with sources
-async function performSchoolSpecificWebSearch(
-  schoolName: string,
-  city: string,
-  graduationYear: number,
-  country: string
-): Promise<any[]> {
-  console.log('\n--- PERFORMING SCHOOL-SPECIFIC WEB SEARCH ---');
-  
-  // Use Lovable AI to search for school-specific information
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    console.log('LOVABLE_API_KEY not available for web search');
-    return [];
-  }
-
-  const searchQueries = [
-    `"${schoolName}" ${city} ${graduationYear} school events news`,
-    `"${schoolName}" ${city} ${graduationYear} renovations facilities`,
-    `"${schoolName}" ${city} ${graduationYear} sports achievements`,
-    `"${schoolName}" ${city} history traditions`,
-    `${city} ${graduationYear} local news events`,
-  ];
-
-  console.log(`Performing ${searchQueries.length} web searches...`);
-  
-  // Since we don't have direct web search API, we'll simulate this by having AI generate
-  // plausible sources based on the school and year
-  const prompt = `Find and list real, verifiable web sources (news articles, school websites, local newspapers) 
-about "${schoolName}" school in ${city}, ${country} for the year ${graduationYear}.
-
-For EACH source, provide:
-1. A realistic URL (school website, local newspaper, education portal)
-2. Title of the article/page
-3. Brief description of what information it contains
-
-Return as JSON array with format:
-[
-  {
-    "url": "https://...",
-    "title": "...",
-    "snippet": "...",
-    "source": "Source name"
-  }
-]
-
-Generate 5-8 realistic sources that would exist for this school and year.`;
-
+// Fetch Wikipedia article extract by title
+async function fetchWikipediaArticle(title: string, lang = 'en'): Promise<{ extract: string; url: string } | null> {
   try {
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'user', content: prompt }
-        ]
-      })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content || '[]';
-      const sources = JSON.parse(cleanJsonResponse(content));
-      console.log(`Generated ${sources.length} web search results with sources`);
-      return sources;
-    }
-  } catch (error) {
-    console.log('Web search simulation failed:', error);
-  }
-  
-  return [];
+    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}&prop=extracts&exintro=1&explaintext=1&format=json&origin=*`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const pages = data.query?.pages;
+    if (!pages) return null;
+    const pageId = Object.keys(pages)[0];
+    if (pageId === '-1') return null;
+    return {
+      extract: pages[pageId].extract || '',
+      url: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`,
+    };
+  } catch { return null; }
 }
 
-async function performGoogleSearch(query: string): Promise<ResearchResult[]> {
-  const API_KEY = Deno.env.get('GOOGLE_API_KEY');
-  const SEARCH_ENGINE_ID = Deno.env.get('GOOGLE_SEARCH_ENGINE_ID');
-  if (!API_KEY || !SEARCH_ENGINE_ID) {
-    console.log('Google Search API keys not available');
-    return [];
-  }
-
-  const url = `https://www.googleapis.com/customsearch/v1?key=${API_KEY}&cx=${SEARCH_ENGINE_ID}&q=${encodeURIComponent(query)}`;
-
+// Search Wikipedia for articles matching a query
+async function searchWikipedia(query: string, lang = 'en', limit = 5): Promise<Array<{ title: string; snippet: string; url: string }>> {
   try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
-      return [];
-    }
-    const data = await response.json();
-    if (data.items && Array.isArray(data.items)) {
-      return data.items.map((item: any) => ({
-        title: item.title,
-        link: item.link,
-        snippet: item.snippet
-      }));
-    } else {
-      console.warn('No items found in Google Search response or items is not an array.');
-      return [];
-    }
-  } catch (e) {
-    console.error("Error performing Google search:", e);
-    return [];
-  }
+    const url = `https://${lang}.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&srlimit=${limit}&format=json&origin=*`;
+    const res = await fetch(url);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.query?.search || []).map((r: any) => ({
+      title: r.title,
+      snippet: r.snippet.replace(/<[^>]*>/g, ''),
+      url: `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(r.title.replace(/ /g, '_'))}`,
+    }));
+  } catch { return []; }
 }
 
-async function performNewsSearch(query: string): Promise<ResearchResult[]> {
-  const API_KEY = Deno.env.get('GNEWS_API_KEY');
-  if (!API_KEY) {
-    console.log('GNews API key not available');
-    return [];
-  }
+// Gather real research data from Wikipedia
+async function gatherWikipediaResearch(schoolName: string, city: string, graduationYear: number, country: string) {
+  console.log('Gathering Wikipedia research...');
 
-  const url = `https://gnews.io/api/v4/search?q=${encodeURIComponent(query)}&apikey=${API_KEY}`;
-
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      console.error(`HTTP error! status: ${response.status}`);
-      return [];
-    }
-    const data = await response.json();
-    if (data.articles && Array.isArray(data.articles)) {
-      return data.articles.map((article: any) => ({
-        title: article.title,
-        link: article.url,
-        snippet: article.description
-      }));
-    } else {
-      console.warn('No articles found in GNews response or articles is not an array.');
-      return [];
-    }
-  } catch (e) {
-    console.error("Error performing GNews search:", e);
-    return [];
-  }
-}
-
-async function conductComprehensiveMultiEngineResearch(
-  schoolName: string,
-  city: string,
-  graduationYear: number,
-  country: string
-): Promise<any> {
-  console.log('\n--- BEGINNING COMPREHENSIVE MULTI-ENGINE RESEARCH ---');
-
-  // Phase 1: Define Targeted Search Queries
-  console.log('\nPhase 1: Defining targeted search queries...');
-  const schoolSearchQuery = `"${schoolName}" school in ${city}, ${country}`;
-  const graduationYearQuery = `${graduationYear} graduation events in ${city}`;
-  const localContextQuery = `${city} local events and news in ${graduationYear}`;
-
-  // Phase 2: Execute Google Searches
-  console.log('\nPhase 2: Executing Google Searches...');
-  const schoolGoogleResults = await performGoogleSearch(schoolSearchQuery);
-  const graduationGoogleResults = await performGoogleSearch(graduationYearQuery);
-  const localGoogleResults = await performGoogleSearch(localContextQuery);
-
-  console.log(`School Google Results: ${schoolGoogleResults.length}`);
-  console.log(`Graduation Google Results: ${graduationGoogleResults.length}`);
-  console.log(`Local Google Results: ${localGoogleResults.length}`);
-
-  // Phase 3: Execute News Searches
-  console.log('\nPhase 3: Executing News Searches...');
-  const schoolNewsResults = await performNewsSearch(schoolSearchQuery);
-  const graduationNewsResults = await performNewsSearch(graduationYearQuery);
-  const localNewsResults = await performNewsSearch(localContextQuery);
-
-  console.log(`School News Results: ${schoolNewsResults.length}`);
-  console.log(`Graduation News Results: ${graduationNewsResults.length}`);
-  console.log(`Local News Results: ${localNewsResults.length}`);
-
-  // Phase 4: Consolidate and Deduplicate Results
-  console.log('\nPhase 4: Consolidating and deduplicating results...');
-  const allResults = [
-    ...schoolGoogleResults,
-    ...graduationGoogleResults,
-    ...localGoogleResults,
-    ...schoolNewsResults,
-    ...graduationNewsResults,
-    ...localNewsResults
-  ];
-
-  const deduplicatedResults = allResults.reduce((unique: ResearchResult[], result: ResearchResult) => {
-    if (!unique.find(item => item.link === result.link)) {
-      unique.push(result);
-    }
-    return unique;
-  }, []);
-
-  console.log(`Total Deduplicated Results: ${deduplicatedResults.length}`);
-
-  // Phase 5: Filter and Prioritize Results (Hypothetical - requires more advanced logic)
-  console.log('\nPhase 5: Filtering and prioritizing results...');
-  const filteredResults = deduplicatedResults.filter(result => {
-    // Hypothetical criteria: relevance to school, location, and year
-    return result.title.toLowerCase().includes(schoolName.toLowerCase()) ||
-           result.snippet.toLowerCase().includes(city.toLowerCase()) ||
-           result.title.toLowerCase().includes(String(graduationYear)) ||
-           result.snippet.toLowerCase().includes(String(graduationYear));
-  });
-
-  console.log(`Filtered Results: ${filteredResults.length}`);
-  
-  // Perform intensive web search for sources
-  const webSearchResults = await performSchoolSpecificWebSearch(schoolName, city, graduationYear, country);
-
-  console.log('\n=== COMPREHENSIVE MULTI-ENGINE RESEARCH COMPLETED ===');
-  console.log(`Web Search Results: ${webSearchResults.length}`);
-  console.log(`Filtered Results: ${filteredResults.length}`);
-
-  return {
-    organicResults: filteredResults,
-    newsResults: schoolNewsResults,
-    webSearchResults,
+  // Determine Wikipedia language
+  const langMap: Record<string, string> = {
+    'Germany': 'de', 'Austria': 'de', 'Switzerland': 'de',
+    'France': 'fr', 'Spain': 'es', 'Italy': 'it', 'Netherlands': 'nl',
   };
+  const lang = langMap[country] || 'en';
+
+  // Run all searches in parallel
+  const [
+    schoolSearchEn,
+    schoolSearchLang,
+    cityYearArticle,
+    yearArticle,
+    cityArticle,
+  ] = await Promise.all([
+    searchWikipedia(`${schoolName} ${city} school`, 'en', 5),
+    lang !== 'en' ? searchWikipedia(`${schoolName} ${city} Schule`, lang, 5) : Promise.resolve([]),
+    fetchWikipediaArticle(`${graduationYear} in ${city}`),
+    fetchWikipediaArticle(`${graduationYear}`),
+    fetchWikipediaArticle(city),
+  ]);
+
+  // Try to get school article
+  let schoolArticle = null;
+  const allSchoolResults = [...schoolSearchEn, ...schoolSearchLang];
+  for (const result of allSchoolResults.slice(0, 3)) {
+    const article = await fetchWikipediaArticle(result.title, result.url.includes('de.wikipedia') ? 'de' : 'en');
+    if (article && article.extract.length > 50) {
+      schoolArticle = { ...article, title: result.title };
+      break;
+    }
+  }
+
+  // Get year-specific events for the country
+  const countryYearArticle = await fetchWikipediaArticle(`${graduationYear} in ${country}`);
+
+  const sources: Array<{ title: string; url: string; content: string; type: string }> = [];
+
+  if (schoolArticle) {
+    sources.push({ title: `${schoolArticle.title} - Wikipedia`, url: schoolArticle.url, content: schoolArticle.extract.substring(0, 1500), type: 'school' });
+  }
+  if (cityArticle) {
+    sources.push({ title: `${city} - Wikipedia`, url: cityArticle.url, content: cityArticle.extract.substring(0, 1000), type: 'city' });
+  }
+  if (cityYearArticle) {
+    sources.push({ title: `${graduationYear} in ${city} - Wikipedia`, url: cityYearArticle.url, content: cityYearArticle.extract.substring(0, 1000), type: 'city_year' });
+  }
+  if (countryYearArticle) {
+    sources.push({ title: `${graduationYear} in ${country} - Wikipedia`, url: countryYearArticle.url, content: countryYearArticle.extract.substring(0, 1000), type: 'country_year' });
+  }
+  if (yearArticle) {
+    sources.push({ title: `${graduationYear} - Wikipedia`, url: yearArticle.url, content: yearArticle.extract.substring(0, 1000), type: 'year' });
+  }
+
+  // Add search results as additional sources
+  for (const result of allSchoolResults.slice(0, 3)) {
+    if (!sources.find(s => s.url === result.url)) {
+      sources.push({ title: result.title, url: result.url, content: result.snippet, type: 'search' });
+    }
+  }
+
+  console.log(`Gathered ${sources.length} Wikipedia sources`);
+  return sources;
 }
 
 serve(async (req) => {
@@ -311,82 +135,71 @@ serve(async (req) => {
 
     if (!schoolName || !city || !graduationYear || !country) {
       return new Response(JSON.stringify({ error: 'Missing parameters' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`\nRequest received for: ${schoolName}, ${city}, ${graduationYear}, ${country}`);
+    console.log(`Research: ${schoolName}, ${city}, ${graduationYear}, ${country}`);
 
-    const researchResults = await conductComprehensiveMultiEngineResearch(schoolName, city, graduationYear, country);
+    // Phase 1: Gather real Wikipedia research
+    const sources = await gatherWikipediaResearch(schoolName, city, graduationYear, country);
 
-    const allSourcesContext = `
-Available research data with MANDATORY SOURCES:
-${JSON.stringify({
-  organicResults: researchResults.organicResults,
-  newsResults: researchResults.newsResults,
-  webSearchResults: researchResults.webSearchResults,
-}, null, 2)}
-`;
+    // Phase 2: Build context from real sources
+    const sourcesContext = sources.map(s =>
+      `[${s.type.toUpperCase()}] ${s.title}\nURL: ${s.url}\nContent: ${s.content}\n`
+    ).join('\n---\n');
 
-  const systemPrompt = `You are an expert researcher creating verifiable school memories.
+    // Phase 3: Use AI to synthesize memories from real sources
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY is not set');
 
-CRITICAL REQUIREMENTS:
-1. ONLY include items with verifiable sources - if you cannot cite a source, DO NOT include the item
-2. Every single item in whatHappenedAtSchool, nostalgiaFactors, and localContext MUST have both sourceUrl and sourceName
-3. Use the provided research data to create accurate, source-backed memories
-4. For local/world events, prefer well-documented historical events with reliable sources
-5. Focus on factual, verifiable information over generic assumptions
+    const systemPrompt = `You are an expert researcher creating school memories based ONLY on verified Wikipedia sources provided below.
 
-Return ONLY valid JSON with this exact structure (no markdown):
+CRITICAL RULES:
+1. Every item MUST reference one of the provided Wikipedia sources with its exact URL
+2. Do NOT invent or fabricate any sources or URLs
+3. If a source doesn't exist for something, DO NOT include it
+4. For nostalgia items, you may create relatable memories typical for schools in ${country} during ${graduationYear}, but mark them clearly without sourceUrl
+5. Focus on factual, verifiable information from the provided sources
+
+Available Wikipedia sources:
+${sourcesContext || 'No specific sources found. Create general memories based on well-known facts about schools in ' + country + ' during ' + graduationYear + '.'}
+
+Return ONLY valid JSON (no markdown) with this structure:
 {
   "whatHappenedAtSchool": [
     {
       "title": "Event title",
-      "description": "Detailed description based on source",
+      "description": "Description based on Wikipedia source",
       "category": "facilities|academics|sports|culture|technology",
-      "sourceUrl": "https://verifiable-url.com",
-      "sourceName": "Source name"
+      "sourceUrl": "exact Wikipedia URL from sources above or empty string",
+      "sourceName": "Wikipedia article title or empty string"
     }
   ],
   "nostalgiaFactors": [
     {
-      "memory": "Relatable memory based on documented facts",
-      "shareableText": "Personal quote reflecting verified information",
-      "sourceUrl": "https://verifiable-url.com",
-      "sourceName": "Source name"
+      "memory": "Relatable school memory for that era",
+      "shareableText": "Shareable quote",
+      "sourceUrl": "Wikipedia URL if based on source, otherwise empty string",
+      "sourceName": "Source name or empty string"
     }
   ],
   "localContext": [
     {
-      "event": "Well-documented local or world event from that year",
-      "relevance": "How it impacted students (based on sources)",
-      "sourceUrl": "https://verifiable-url.com",
-      "sourceName": "Source name"
+      "event": "Verified historical event from ${graduationYear}",
+      "relevance": "How it affected students",
+      "sourceUrl": "exact Wikipedia URL from sources above",
+      "sourceName": "Wikipedia article title"
     }
   ],
-  "shareableQuotes": ["Quotes reflecting documented experiences"]
-}
+  "shareableQuotes": ["Quotes reflecting the era"]
+}`;
 
-If insufficient research data is available, include fewer items but ensure ALL items have proper sources.`;
-
-    const userPrompt = `Create engaging school memories for ${schoolName} in ${city}, ${country} from graduation year ${graduationYear}.
-    
-${researchResults.webSearchResults.length > 0 || researchResults.organicResults.length > 0 || researchResults.newsResults.length > 0 
-  ? `Use this research data and include sources:\n${allSourcesContext}` 
-  : `No specific research data available. Create realistic, universal school memories based on the location and year. Include what would have been typical for schools in ${country} during ${graduationYear}.`}`;
-
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not set');
-    }
+    const userPrompt = `Create engaging, evidence-based school memories for "${schoolName}" in ${city}, ${country}, graduation year ${graduationYear}. Use ONLY the Wikipedia sources provided in the system prompt.`;
 
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Authorization': `Bearer ${LOVABLE_API_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
         messages: [
@@ -397,47 +210,58 @@ ${researchResults.webSearchResults.length > 0 || researchResults.organicResults.
     });
 
     if (!aiResponse.ok) {
-      console.error('AI response error:', aiResponse.status, await aiResponse.text());
-      return new Response(JSON.stringify({ error: 'AI processing failed', details: await aiResponse.text() }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      const errText = await aiResponse.text();
+      console.error('AI error:', aiResponse.status, errText);
+      return new Response(JSON.stringify({ error: 'AI processing failed' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const aiData = await aiResponse.json();
     const aiContent = aiData.choices?.[0]?.message?.content;
-
     if (!aiContent) {
-      console.error('No content in AI response:', aiData);
-      return new Response(JSON.stringify({ error: 'No content in AI response', aiData }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      return new Response(JSON.stringify({ error: 'No AI content' }), {
+        status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    try {
-      const memories: SchoolMemoriesResponse = JSON.parse(cleanJsonResponse(aiContent));
-        
-        // Log the generated memories for review
-        console.log("Generated Memories:", JSON.stringify(memories, null, 2));
+    const memories = JSON.parse(cleanJsonResponse(aiContent));
+    console.log('Generated memories with', sources.length, 'real sources');
 
-      return new Response(JSON.stringify(memories), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    } catch (parseError) {
-      console.error('Failed to parse AI response:', aiContent, parseError);
-      return new Response(JSON.stringify({ error: 'Failed to parse AI response', aiContent, parseError }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    // Build shareable content
+    const shareableContent = {
+      mainShare: `🎓 ${schoolName} in ${city} - Class of ${graduationYear}! Here's what was happening back then...`,
+      whatsappShare: `Hey! Check out what was going on at ${schoolName} when we graduated in ${graduationYear}! 🎓✨`,
+      instagramStory: `Class of ${graduationYear} 🎓 | ${schoolName} | ${city}`,
+      twitterPost: `Throwback to ${graduationYear} at ${schoolName} in ${city}! 🎓 Here's what was really going on... #ClassOf${graduationYear} #SchoolMemories`,
+      variants: [
+        `Remember ${schoolName}? Here's what was happening in ${graduationYear}! 🎓`,
+        `Class of ${graduationYear} at ${schoolName} - the memories! ✨`,
+      ],
+    };
+
+    // Wrap response to match frontend expectations
+    const response = {
+      schoolMemories: memories,
+      shareableContent,
+      historicalHeadlines: (memories.localContext || []).map((ctx: any) => ({
+        title: ctx.event,
+        date: String(graduationYear),
+        description: ctx.relevance,
+        category: 'local' as const,
+        source: ctx.sourceUrl || undefined,
+      })),
+      wikipediaSources: sources.map(s => ({ title: s.title, url: s.url, type: s.type })),
+    };
+
+    return new Response(JSON.stringify(response), {
+      status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (e) {
-    console.error('General error:', e);
+    console.error('Error:', e);
     return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
