@@ -514,18 +514,9 @@ export const FactsDebunker = () => {
         if (data.historicalHeadlines) {
           setHistoricalHeadlines(data.historicalHeadlines);
         }
-        // Set school images from research results if available
-        if (data.researchResults?.schoolImages?.length > 0) {
-          setSchoolImages(data.researchResults.schoolImages);
-          setSchoolImage(data.researchResults.schoolImages[0].url);
-        }
-        // Set city images from research results if available
-        if (data.researchResults?.cityImages?.length > 0) {
-          setCityImages(data.researchResults.cityImages);
-        }
-        // Set historical sources from research results if available
-        if (data.researchResults?.historicalSources?.length > 0) {
-          setHistoricalSources(data.researchResults.historicalSources);
+        // Set Wikipedia sources if available
+        if (data.wikipediaSources?.length > 0) {
+          setWikipediaSources(data.wikipediaSources);
         }
         setShowSkeletons(false);
         
