@@ -658,12 +658,12 @@ export const FactsDebunker = () => {
   return (
     <div className="min-h-screen bg-gradient-background">
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-12">
-        <div className="text-center mb-8 md:mb-12">
+        <div className="text-center mb-6 md:mb-12">
           <AnimatedHeadline />
-          <p className="text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-4 mt-4">
+          <p className="text-sm sm:text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4 mt-3 sm:mt-4 leading-relaxed">
             {isSchoolMode 
-              ? "✨ Take a nostalgic trip down memory lane! Relive the magic of your school days with personalized memories, events, and the unique atmosphere of your graduation year."
-              : "Discover what you learned in school that has since been proven wrong. Find out how knowledge has evolved since you graduated."
+              ? "✨ Relive the magic of your school days with personalized memories and verified sources."
+              : "Discover what you learned in school that has since been proven wrong."
             }
           </p>
         </div>
