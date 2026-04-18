@@ -42,6 +42,8 @@ export const translations = {
     factSource: "Quelle",
     factTaughtIn: "Was gelehrt wurde in",
     factWeKnowNow: "Was wir heute wissen",
+    filterAll: "Alle",
+    filterBy: "Filter:",
     copyright: "© 2024 Klexgetier - Maximilian Leistner. Alle Rechte vorbehalten.",
   },
   en: {
@@ -85,6 +87,8 @@ export const translations = {
     factSource: "Source",
     factTaughtIn: "Taught in",
     factWeKnowNow: "What we know now",
+    filterAll: "All",
+    filterBy: "Filter:",
     copyright: "© 2024 Klexgetier - Maximilian Leistner. All rights reserved.",
   },
 } as const;

@@ -438,6 +438,7 @@ export const FactsDebunker = () => {
   const { toast } = useToast();
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSchoolMode, setIsSchoolMode] = useState(false);
   const [country, setCountry] = useState("Germany");
   const [graduationYear, setGraduationYear] = useState("");
@@ -1123,6 +1124,46 @@ export const FactsDebunker = () => {
               </div>
             )}
             
+            {/* Subject filter chips */}
+            {!showSkeletons && facts.length > 1 && (() => {
+              const uniqueCategories = Array.from(new Set(facts.map(f => f.category)));
+              if (uniqueCategories.length < 2) return null;
+              return (
+                <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-xs text-muted-foreground mr-1">{t("filterBy")}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCategory(null)}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                      selectedCategory === null
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background text-foreground border-border hover:bg-muted"
+                    }`}
+                  >
+                    {t("filterAll")} ({facts.length})
+                  </button>
+                  {uniqueCategories.map((cat) => {
+                    const count = facts.filter(f => f.category === cat).length;
+                    const isActive = selectedCategory === cat;
+                    return (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setSelectedCategory(isActive ? null : cat)}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                          isActive
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : `${getCategoryPillClass(cat)} hover:opacity-80`
+                        }`}
+                      >
+                        {cat} ({count})
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+
             <Accordion type="multiple" className="space-y-4">
               {showSkeletons ? (
                 Array.from({ length: 6 }, (_, index) => (
@@ -1130,6 +1171,7 @@ export const FactsDebunker = () => {
                 ))
               ) : (
                 facts
+                  .filter(f => selectedCategory === null || f.category === selectedCategory)
                   .sort((a, b) => {
                     const categoryOrder = [
                       'Space/Astronomy', 'Medicine', 'Technology', 'Science', 
