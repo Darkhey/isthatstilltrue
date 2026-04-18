@@ -21,6 +21,7 @@ import { HistoricalHeadlines } from "./HistoricalHeadlines";
 import { EnhancedProgressTracker } from "./EnhancedProgressTracker";
 import { LanguageSelector } from "./LanguageSelector";
 import { AnimatedLoader } from "./AnimatedLoader";
+import { useLanguage } from "@/hooks/use-language";
 
 interface OutdatedFact {
   category: string;
@@ -191,6 +192,20 @@ const getCategoryColor = (category: string) => {
     return "bg-red-500";
   }
   return "bg-destructive";
+};
+
+// Subject-bucket pill colors using semantic tokens — gives visual variety at a glance
+const getCategoryPillClass = (category: string): string => {
+  const c = category.toLowerCase();
+  if (c.includes("scien") || c.includes("physic") || c.includes("chem") || c.includes("biolog") || c.includes("space") || c.includes("astro")) return "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30";
+  if (c.includes("histor")) return "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30";
+  if (c.includes("geograph")) return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30";
+  if (c.includes("health") || c.includes("medic") || c.includes("nutri") || c.includes("body")) return "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30";
+  if (c.includes("tech") || c.includes("comput")) return "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30";
+  if (c.includes("math") || c.includes("logic")) return "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30";
+  if (c.includes("lang") || c.includes("liter")) return "bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/30";
+  if (c.includes("cultur") || c.includes("societ") || c.includes("polit")) return "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30";
+  return "bg-primary/15 text-primary border-primary/30";
 };
 
 const getFactGenerationType = (year: number): 'modern' | 'historical' | 'ancient' => {
