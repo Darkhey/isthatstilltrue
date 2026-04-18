@@ -66,9 +66,9 @@ export const QuizLeaderboard = ({ score, totalQuestions }: QuizLeaderboardProps)
   };
 
   const getRankIcon = (rank: number) => {
-    if (rank === 0) return <Trophy className="h-4 w-4 text-yellow-500" />;
-    if (rank === 1) return <Medal className="h-4 w-4 text-gray-400" />;
-    if (rank === 2) return <Award className="h-4 w-4 text-amber-700" />;
+    if (rank === 0) return <Trophy className="h-4 w-4 text-primary" />;
+    if (rank === 1) return <Medal className="h-4 w-4 text-muted-foreground" />;
+    if (rank === 2) return <Award className="h-4 w-4 text-accent-foreground" />;
     return <span className="text-xs font-bold text-muted-foreground w-4 text-center">{rank + 1}</span>;
   };
 
