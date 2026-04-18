@@ -884,7 +884,7 @@ export const FactsDebunker = () => {
                     Back
                   </Button>
                    <Button 
-                     onClick={generateFacts}
+                     onClick={() => generateFacts()}
                      disabled={isLoading}
                       className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity order-1 sm:order-2"
                      >
