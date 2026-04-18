@@ -178,13 +178,13 @@ function calculateSemanticSimilarity(text1: string, text2: string): number {
   return intersection.size / union.size;
 }
 
-// Find and remove duplicates
+// Find and remove duplicates (stricter threshold for better variety)
 function findDuplicates(facts: EnhancedFact[]): EnhancedFact[] {
   const unique: EnhancedFact[] = [];
   
   for (const fact of facts) {
     const isDuplicate = unique.some(existing => 
-      calculateSemanticSimilarity(fact.fact, existing.fact) > 0.6
+      calculateSemanticSimilarity(fact.fact, existing.fact) > 0.45
     );
     
     if (!isDuplicate) {
@@ -241,9 +241,9 @@ serve(async (req) => {
   const processingStage = { current: 'initialization' };
 
   try {
-    const { country, graduationYear, language = 'en' } = await req.json();
+    const { country, graduationYear, language = 'en', seed } = await req.json();
     
-    console.log('Enhanced fact generator request:', { country, graduationYear, language });
+    console.log('Enhanced fact generator request:', { country, graduationYear, language, seed });
 
     if (!country || !graduationYear) {
       return new Response(
@@ -256,11 +256,12 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Check cache first
+    // Check cache first - bypass cache when explicit seed is provided (regenerate)
     processingStage.current = 'cache_check';
-    console.log('Checking cache...');
+    const bypassCache = typeof seed === 'number' && seed > 0;
+    console.log(`Checking cache... (bypass=${bypassCache})`);
     
-    const { data: cachedData } = await supabase
+    const { data: cachedData } = bypassCache ? { data: null } : await supabase
       .from('cached_facts')
       .select('*')
       .eq('country', country)
@@ -297,7 +298,7 @@ serve(async (req) => {
 
     // Generate facts with enhanced RAG prompt
     processingStage.current = 'ai_generation';
-    const prompt = generateEnhancedRAGPrompt(country, graduationYear, wikiContext, language);
+    const prompt = generateEnhancedRAGPrompt(country, graduationYear, wikiContext, language, seed);
     console.log('✓ Making Lovable AI call with RAG...');
     
     const systemPrompt = `You are an expert educational historian specializing in debunked school facts.
@@ -345,7 +346,8 @@ If the answer to any question is "no", DO NOT include that fact.`;
               content: prompt
             }
           ],
-          temperature: 0.1,
+          temperature: graduationYear < 1800 ? 0.2 : 0.85,
+          top_p: 0.95,
           max_tokens: 4000,
         })
       },
@@ -453,18 +455,22 @@ If the answer to any question is "no", DO NOT include that fact.`;
     const avgQuality = finalFacts.reduce((sum, f) => sum + (f.qualityScore?.overall || 0), 0) / finalFacts.length;
     console.log(`✓ Average quality score: ${(avgQuality * 100).toFixed(0)}%`);
 
-    // Cache results
+    // Cache results - only cache the "default" set (no seed), to keep regenerated variants ephemeral
     processingStage.current = 'caching';
-    try {
-      await supabase.from('cached_facts').insert({
-        country,
-        graduation_year: graduationYear,
-        facts_data: finalFacts,
-        education_system_problems: educationProblems
-      });
-      console.log('✓ Cached successfully');
-    } catch (cacheError) {
-      console.error('Cache error (non-critical):', cacheError);
+    if (!bypassCache) {
+      try {
+        await supabase.from('cached_facts').insert({
+          country,
+          graduation_year: graduationYear,
+          facts_data: finalFacts,
+          education_system_problems: educationProblems
+        });
+        console.log('✓ Cached successfully');
+      } catch (cacheError) {
+        console.error('Cache error (non-critical):', cacheError);
+      }
+    } else {
+      console.log('⏭ Skipped caching (regenerate request)');
     }
 
     return new Response(JSON.stringify({
