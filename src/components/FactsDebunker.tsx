@@ -21,6 +21,7 @@ import { HistoricalHeadlines } from "./HistoricalHeadlines";
 import { EnhancedProgressTracker } from "./EnhancedProgressTracker";
 import { LanguageSelector } from "./LanguageSelector";
 import { AnimatedLoader } from "./AnimatedLoader";
+import { useLanguage } from "@/hooks/use-language";
 
 interface OutdatedFact {
   category: string;
@@ -191,6 +192,20 @@ const getCategoryColor = (category: string) => {
     return "bg-red-500";
   }
   return "bg-destructive";
+};
+
+// Subject-bucket pill colors using semantic tokens — gives visual variety at a glance
+const getCategoryPillClass = (category: string): string => {
+  const c = category.toLowerCase();
+  if (c.includes("scien") || c.includes("physic") || c.includes("chem") || c.includes("biolog") || c.includes("space") || c.includes("astro")) return "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30";
+  if (c.includes("histor")) return "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30";
+  if (c.includes("geograph")) return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30";
+  if (c.includes("health") || c.includes("medic") || c.includes("nutri") || c.includes("body")) return "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30";
+  if (c.includes("tech") || c.includes("comput")) return "bg-violet-500/15 text-violet-700 dark:text-violet-300 border-violet-500/30";
+  if (c.includes("math") || c.includes("logic")) return "bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/30";
+  if (c.includes("lang") || c.includes("liter")) return "bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 border-fuchsia-500/30";
+  if (c.includes("cultur") || c.includes("societ") || c.includes("polit")) return "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30";
+  return "bg-primary/15 text-primary border-primary/30";
 };
 
 const getFactGenerationType = (year: number): 'modern' | 'historical' | 'ancient' => {
@@ -418,6 +433,8 @@ const generateFunMessage = (year: number) => {
 };
 
 export const FactsDebunker = () => {
+  const { t } = useLanguage();
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [isSchoolMode, setIsSchoolMode] = useState(false);
   const [country, setCountry] = useState("Germany");
   const [graduationYear, setGraduationYear] = useState("");
@@ -541,7 +558,7 @@ export const FactsDebunker = () => {
     setError(null);
   };
 
-  const generateFacts = async () => {
+  const generateFacts = async (regenerateSeed?: number) => {
     if (!graduationYear || parseInt(graduationYear) < 1200 || parseInt(graduationYear) > new Date().getFullYear()) {
       setError("Please enter a valid graduation year between 1200 and current year.");
       return;
@@ -640,7 +657,8 @@ export const FactsDebunker = () => {
           body: {
             country,
             graduationYear: parseInt(graduationYear),
-            language
+            language,
+            ...(regenerateSeed ? { seed: regenerateSeed } : {}),
           }
         });
 
@@ -752,7 +770,7 @@ export const FactsDebunker = () => {
           <p className="text-sm sm:text-base md:text-xl text-muted-foreground max-w-3xl mx-auto px-2 sm:px-4 mt-3 sm:mt-4 leading-relaxed">
             {isSchoolMode 
               ? "✨ Relive the magic of your school days with personalized memories and verified sources."
-              : "Discover what you learned in school that has since been proven wrong."
+              : t("heroSubtitle")
             }
           </p>
         </div>
@@ -868,7 +886,7 @@ export const FactsDebunker = () => {
                     Back
                   </Button>
                    <Button 
-                     onClick={generateFacts}
+                     onClick={() => generateFacts()}
                      disabled={isLoading}
                       className="flex-1 bg-gradient-primary hover:opacity-90 transition-opacity order-1 sm:order-2"
                      >
@@ -1010,9 +1028,36 @@ export const FactsDebunker = () => {
                 {country} • Graduated {graduationYear}
               </Badge>
               {!showSkeletons && facts.length > 0 && (
-                <p className="text-muted-foreground mt-2">
-                  {getResultsDescription(facts, parseInt(graduationYear))}
-                </p>
+                <>
+                  <p className="text-muted-foreground mt-2">
+                    {getResultsDescription(facts, parseInt(graduationYear))}
+                  </p>
+                  <div className="mt-4 flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isRegenerating || isLoading}
+                      onClick={async () => {
+                        setIsRegenerating(true);
+                        try {
+                          await generateFacts(Math.floor(Math.random() * 1_000_000) + 1);
+                        } finally {
+                          setIsRegenerating(false);
+                        }
+                      }}
+                      className="gap-2"
+                    >
+                      {isRegenerating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          {t("regenerating")}
+                        </>
+                      ) : (
+                        t("regenerateFacts")
+                      )}
+                    </Button>
+                  </div>
+                </>
               )}
               {quickFunFact && (
                 <div className="mt-4 max-w-2xl mx-auto">
@@ -1122,7 +1167,9 @@ export const FactsDebunker = () => {
                              </div>
                              <div className="flex-1 min-w-0">
                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
-                                 <span className="font-semibold text-sm md:text-base">{fact.category}</span>
+                                 <Badge variant="outline" className={`text-xs self-start w-fit border ${getCategoryPillClass(fact.category)}`}>
+                                   {fact.category}
+                                 </Badge>
                                  {isPolitics && (
                                    <Badge variant="destructive" className="text-xs self-start w-fit">
                                      {getFactGenerationType(parseInt(graduationYear)) === 'modern' ? 'Controversial' : 'Historical'}
@@ -1175,12 +1222,11 @@ export const FactsDebunker = () => {
                           </div>
 
                           {fact.mindBlowingFactor && (
-                            <div className="bg-accent/50 border border-accent rounded-lg p-4">
-                              <h4 className="font-semibold text-accent-foreground mb-2 flex items-center gap-2">
-                                <Lightbulb className="w-4 h-4" />
-                                Why This Matters:
+                            <div className="bg-gradient-to-br from-amber-500/10 to-primary/10 border-2 border-amber-500/30 rounded-lg p-4 shadow-sm">
+                              <h4 className="font-bold text-foreground mb-2 flex items-center gap-2 text-base">
+                                {t("whyItMatters")}
                               </h4>
-                              <p className="text-sm text-accent-foreground/80 break-words">
+                              <p className="text-sm text-foreground/90 break-words leading-relaxed">
                                 {fact.mindBlowingFactor}
                               </p>
                             </div>

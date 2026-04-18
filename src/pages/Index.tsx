@@ -19,10 +19,9 @@ const Index = () => {
       <SEOHead url="https://isthatstilltrue.com/" />
       <div className="flex-1 relative z-10">
         <FactsDebunker />
-        <MindBlowingFacts />
 
-        {/* CTA Section: Bot + Quiz */}
-        <section className="container mx-auto px-4 py-12">
+        {/* CTA Section: Bot + Quiz — placed before MindBlowingFacts so mobile users see them immediately */}
+        <section className="container mx-auto px-4 py-8 md:py-12">
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* Fact-Checker Bot */}
             <div className="p-8 rounded-2xl border bg-card text-center">
@@ -51,6 +50,8 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        <MindBlowingFacts />
 
         <FAQSection />
         <EducationalResources />
