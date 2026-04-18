@@ -31,6 +31,10 @@ export const translations = {
     quickFactCheck: "Quick Fact Check",
     supportUs: "Unterstütze uns:",
     donate: "Spenden",
+    regenerateFacts: "🎲 Andere Fakten zeigen",
+    regenerating: "Generiere neue Fakten…",
+    whyItMatters: "💡 Warum das heute noch zählt",
+    heroSubtitle: "Wähle dein Land und Abschlussjahr – wir zeigen dir, was deine Schule falsch erzählt hat.",
     copyright: "© 2024 Klexgetier - Maximilian Leistner. Alle Rechte vorbehalten.",
   },
   en: {
@@ -63,6 +67,10 @@ export const translations = {
     quickFactCheck: "Quick Fact Check",
     supportUs: "Support us:",
     donate: "Donate",
+    regenerateFacts: "🎲 Show me different facts",
+    regenerating: "Generating fresh facts…",
+    whyItMatters: "💡 Why this still matters",
+    heroSubtitle: "Pick your country and graduation year — we'll show you what your school got wrong.",
     copyright: "© 2024 Klexgetier - Maximilian Leistner. All rights reserved.",
   },
 } as const;
