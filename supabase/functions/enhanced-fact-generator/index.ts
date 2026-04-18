@@ -603,84 +603,74 @@ ${wikiContext}
   }
   
   return `${languageInstruction}
-
-**Task:** Generate 8 highly accurate, verifiable educational facts that students in ${country} learned around ${year} which are now completely debunked, based on Wikipedia's documented misconceptions.
+${varietyHint}
+**Task:** Generate 8 SPECIFIC, mind-blowing, and VARIED facts that students in ${country} learned around ${year} which are now known to be wrong, oversimplified, or completely outdated.
 
 **Wikipedia Research Context:**
 ${wikiContext}
 
-**CRITICAL REQUIREMENTS:**
-- Use ONLY documented misconceptions from trusted academic sources
-- Every fact MUST be verifiable and historically accurate
-- Adapt misconceptions to ${country}'s educational context in ${year}
-- Be specific about curriculum, textbooks, and teaching methods
-- Provide REAL URLs from trusted sources:
-  * Wikipedia: https://en.wikipedia.org/wiki/List_of_common_misconceptions
-  * Britannica: https://www.britannica.com/
-  * Educational institutions (.edu)
-  * Scientific journals (nature.com, science.org)
-  * Archive.org for historical documents
+# 🎯 SUBJECT DIVERSITY (NON-NEGOTIABLE)
+You MUST generate exactly ONE fact from each of these 8 different subject buckets. No bucket may appear twice:
+1. **Science** (physics, chemistry, biology — pick ONE)
+2. **History** (a specific historical narrative students were taught wrong)
+3. **Geography** (countries, borders, capitals, populations, maps)
+4. **Health/Body** (anatomy, nutrition, medicine, sex-ed)
+5. **Tech/Computing** (what was the cutting-edge truth then vs. now)
+6. **Math/Logic** (a rule, formula, or "fact" later refined or proven incomplete)
+7. **Language/Literature** (a grammar rule, etymology, or literary "truth")
+8. **Culture/Society** (gender roles, archaeology, anthropology, civics)
 
-**DOCUMENTED MISCONCEPTIONS (adapt to ${year} school context):**
+# ✍️ WRITING STYLE — BREAK THE TEMPLATE
+- **NEVER** start two facts with the same 3 words.
+- **NEVER** use the formulaic opener "In ${year}, students in ${country} were taught that...". Vary openers across facts: a question, a startling stat, a textbook quote, an anecdote, "Picture a ${year} classroom where...", "${country}'s national curriculum confidently asserted that...", "Every ${year} biology test asked students to memorize...", etc.
+- The **fact** field itself must contain the surprise — the "wow" lives inside the fact, not in a separate field.
+- The **mindBlowingFactor** field is now a one-line "💡 Why this still matters today" hook (max 25 words) — NOT filler about how generations believed something.
 
-Biology & Medicine:
-- "Bats are blind" → FALSE: Excellent vision + echolocation
-- "Bulls enraged by red color" → FALSE: Bulls are colorblind
-- "Goldfish 3-second memory" → FALSE: Months-long memory
-- "Humans use only 10% of brain" → FALSE: Use all parts actively
-- "Tongue taste zones map" → FALSE: All taste buds distributed everywhere
-- "8 glasses water daily required" → FALSE: No scientific basis
-- "Sugar causes hyperactivity in children" → FALSE: Placebo effect
-- "Stomach ulcers from stress/spicy food" → FALSE: H. pylori bacteria
+# 🔬 SPECIFICITY TEST (every fact must pass)
+Each fact MUST contain at least ONE of:
+- A real textbook series of that era in ${country} (e.g., German Biologie heute, US Holt Science, UK Letts Revision Guide)
+- A specific curriculum/exam reference (Abitur, A-Level, SAT, Baccalauréat, Matura, Gaokao)
+- A named teacher-training reform, education ministry directive, or school-TV programme
+- A concrete number, named place, or person beyond just "${country}" and "${year}"
 
-Physics & Space:
-- "Seasons from Earth-Sun distance" → FALSE: Earth's axial tilt
-- "Great Wall visible from space" → FALSE: Not with naked eye
-- "Weightless in space = no gravity" → FALSE: Continuous free fall
-- "Dark side of Moon never gets sunlight" → FALSE: Gets same amount
-- "Lightning never strikes same place twice" → FALSE: It frequently does
+# 🚫 BANNED OVERUSED FACTS
+Do NOT use these unless you bring a fresh, country-specific angle:
+bats are blind • tongue taste map • Great Wall visible from space • Vikings horned helmets • H. pylori/ulcers from stress • seasons caused by Earth-Sun distance • 10% of brain • Napoleon was short • Columbus proved Earth round • goldfish 3-second memory • bulls hate red
 
-History & Geography:
-- "Vikings wore horned helmets" → FALSE: No archaeological evidence
-- "Medieval people believed flat Earth" → FALSE: Educated knew spherical
-- "Napoleon was very short" → FALSE: Average height for his time
-- "Columbus proved Earth was round" → FALSE: Already common knowledge
+Wikipedia's misconception list is a starting point — go beyond it. Prefer country- and curriculum-specific items: e.g., outdated Pluto status (taught as planet until 2006), reclassified dinosaur taxonomy (Brontosaurus saga), wrong number of countries / continents taught, outdated maps (USSR, Yugoslavia, Czechoslovakia depending on year), food pyramid revisions, cholesterol/eggs reversal, gender of Anne Frank's diary translation issues, retracted nutrition science (low-fat dogma), pre-decimal currency math problems, etc.
 
-**OUTPUT FORMAT (NO markdown, NO code blocks, PURE JSON):**
+# 📚 SOURCES
+Every \`sourceName\` MUST be a real, clickable URL from: wikipedia.org, britannica.com, .edu, .gov, archive.org, jstor.org, nature.com, science.org, scholar.google.com, or books.google.com.
 
+# 📤 OUTPUT FORMAT (NO markdown, NO code blocks, PURE JSON)
 {
   "facts": [
     {
-      "category": "[Science/Medicine/Technology/Geography/History]",
-      "fact": "In ${year}, students in ${country} were authoritatively taught in [specific textbook/curriculum] that [documented misconception adapted to school context with specific details about how it was taught]",
-      "correction": "[The documented scientifically correct information, with specific details about when/how it was debunked]", 
-      "yearDebunked": [realistic year between ${year + 5} and ${currentYear}],
-      "mindBlowingFactor": "[Specific explanation of how this documented misconception fooled generations of students, with emotional impact]",
-      "sourceName": "https://[trusted-source].com/[Path_To_Article]"
+      "category": "Science|History|Geography|Health|Tech|Math|Language|Culture",
+      "fact": "[A vivid, specific 1-3 sentence statement of what was taught — surprise built in, varied opener, includes a concrete anchor like a textbook/exam/reform/number]",
+      "correction": "[What we know now, with the year/study/discovery that changed it]",
+      "yearDebunked": [year between ${year + 1} and ${currentYear}],
+      "mindBlowingFactor": "[ONE short line: why this still matters today — max 25 words]",
+      "sourceName": "https://[trusted-source]/[real-article-path]"
     }
   ],
   "educationProblems": [
     {
-      "problem": "[Systemic educational issue that allowed these documented misconceptions to spread]",
-      "description": "[Specific explanation of how textbooks and teachers perpetuated these Wikipedia-documented false facts]",
-      "impact": "[Quantified impact: how many students, which grades, how long these misconceptions persisted]"
+      "problem": "[A real systemic issue in ${country}'s ${year}-era schools]",
+      "description": "[How textbooks/curriculum/teacher training perpetuated outdated knowledge]",
+      "impact": "[Concrete impact: cohort size, years it persisted, exam consequences]"
     }
   ]
 }
 
-**ABSOLUTE REQUIREMENTS:**
-1. Use ONLY verified misconceptions from Wikipedia's documented list
-2. Every sourceName MUST be a real Wikipedia article URL (e.g., "https://en.wikipedia.org/wiki/List_of_common_misconceptions")
-3. Every yearDebunked MUST be realistic: between ${year + 5} and ${currentYear}
-4. Make facts sound like authoritative school knowledge taught with absolute confidence
-5. Show dramatic contrast between what was taught vs. correct information
-6. Be specific about ${country}'s educational practices in ${year}
-7. Generate EXACTLY 8 facts (no more, no less)
-8. Each fact must be at least 80 characters long
-9. Each correction must be at least 50 characters long
-10. ${languageInstruction}
-11. Focus on misconceptions that were ACTUALLY taught in schools as established facts
-12. NEVER use "hypothetical textbook" or invented sources - use REAL Wikipedia URLs`;
+# ✅ HARD RULES
+1. Exactly 8 facts, one per bucket above (Science, History, Geography, Health, Tech, Math, Language, Culture).
+2. No two facts may start with the same 3 words.
+3. Each fact ≥ 100 characters and contains at least one specific anchor (textbook, exam, reform, number, named place beyond country/year).
+4. yearDebunked between ${year + 1} and ${currentYear}.
+5. sourceName MUST be a real URL (not a placeholder).
+6. mindBlowingFactor ≤ 25 words, framed as "why it still matters today".
+7. ${languageInstruction}`;
 }
 
 function parseFactResponse(rawContent: string, graduationYear: number) {
