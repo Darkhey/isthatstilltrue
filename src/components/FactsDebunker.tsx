@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle, ChevronDown, Flag, Shield, CheckCircle, type LucideIcon } from "lucide-react";
+import { Loader2, AlertTriangle, BookOpen, Beaker, Atom, Zap, Clock, Globe, Monitor, ExternalLink, Lightbulb, GraduationCap, AlertCircle, ChevronDown, Flag, Shield, CheckCircle, Copy, Check, type LucideIcon } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FactSkeleton } from "./FactSkeleton";
 import { FactShare } from "./FactShare";
@@ -434,7 +435,9 @@ const generateFunMessage = (year: number) => {
 
 export const FactsDebunker = () => {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [isSchoolMode, setIsSchoolMode] = useState(false);
   const [country, setCountry] = useState("Germany");
   const [graduationYear, setGraduationYear] = useState("");
@@ -1259,15 +1262,46 @@ export const FactsDebunker = () => {
                             country={country} 
                             graduationYear={graduationYear} 
                           />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleReportFact(fact)}
-                            className="flex items-center gap-2 text-muted-foreground hover:text-destructive"
-                          >
-                            <Flag className="h-4 w-4" />
-                            Report
-                          </Button>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                const sourceLine = fact.sourceUrl || fact.sourceName || '';
+                                const text = `📚 ${fact.category} — ${country}, ${graduationYear}\n\n${t("factTaughtIn")} ${graduationYear}:\n${fact.fact}\n\n${t("factWeKnowNow")}:\n${fact.correction}${fact.mindBlowingFactor ? `\n\n${t("whyItMatters")}\n${fact.mindBlowingFactor}` : ''}${sourceLine ? `\n\n${t("factSource")}: ${sourceLine}` : ''}\n\n— isthatstilltrue.com`;
+                                try {
+                                  await navigator.clipboard.writeText(text);
+                                  setCopiedIndex(index);
+                                  toast({ title: t("copied"), description: t("copiedDesc") });
+                                  setTimeout(() => setCopiedIndex((c) => (c === index ? null : c)), 2000);
+                                } catch {
+                                  toast({ title: t("copyFailed"), variant: "destructive" });
+                                }
+                              }}
+                              className="flex items-center gap-2"
+                            >
+                              {copiedIndex === index ? (
+                                <>
+                                  <Check className="h-4 w-4 text-primary" />
+                                  {t("copied")}
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="h-4 w-4" />
+                                  {t("copyFact")}
+                                </>
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleReportFact(fact)}
+                              className="flex items-center gap-2 text-muted-foreground hover:text-destructive"
+                            >
+                              <Flag className="h-4 w-4" />
+                              Report
+                            </Button>
+                          </div>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
