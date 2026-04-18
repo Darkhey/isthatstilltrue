@@ -556,7 +556,7 @@ export const FactsDebunker = () => {
     setError(null);
   };
 
-  const generateFacts = async () => {
+  const generateFacts = async (regenerateSeed?: number) => {
     if (!graduationYear || parseInt(graduationYear) < 1200 || parseInt(graduationYear) > new Date().getFullYear()) {
       setError("Please enter a valid graduation year between 1200 and current year.");
       return;
@@ -655,7 +655,8 @@ export const FactsDebunker = () => {
           body: {
             country,
             graduationYear: parseInt(graduationYear),
-            language
+            language,
+            ...(regenerateSeed ? { seed: regenerateSeed } : {}),
           }
         });
 
