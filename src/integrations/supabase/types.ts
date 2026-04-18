@@ -47,33 +47,6 @@ export type Database = {
         }
         Relationships: []
       }
-      quiz_scores: {
-        Row: {
-          created_at: string
-          id: string
-          language: string
-          nickname: string
-          score: number
-          total_questions: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          language?: string
-          nickname?: string
-          score: number
-          total_questions: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          language?: string
-          nickname?: string
-          score?: number
-          total_questions?: number
-        }
-        Relationships: []
-      }
       school_research_cache: {
         Row: {
           city: string

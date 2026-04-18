@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/hooks/use-language";
-import { QuizLeaderboard } from "@/components/QuizLeaderboard";
 import { Share2, RotateCcw, Zap, CheckCircle2, XCircle, Loader2, Brain, Trophy, Sparkles } from "lucide-react";
 
 interface QuizQuestion {
@@ -179,8 +178,6 @@ export const QuizMode = () => {
             {t("quizShare")}
           </Button>
         </div>
-
-        <QuizLeaderboard score={score} totalQuestions={questions.length} />
       </div>
     );
   }
