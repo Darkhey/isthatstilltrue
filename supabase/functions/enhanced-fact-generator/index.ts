@@ -531,13 +531,14 @@ function getErrorSuggestion(stage: string): string {
   return suggestions[stage] || 'Temporary issue. Please retry.';
 }
 
-function generateEnhancedRAGPrompt(country: string, year: number, wikiContext: string, language: string): string {
+function generateEnhancedRAGPrompt(country: string, year: number, wikiContext: string, language: string, seed?: number): string {
   const currentYear = new Date().getFullYear();
   const languageInstruction = language === 'de' 
     ? 'WICHTIG: Generiere ALLE Inhalte auf Deutsch. Antworte auf Deutsch.' 
     : 'IMPORTANT: Generate ALL content in English. Respond in English.';
   
   const isHistoricalPeriod = year < 1800;
+  const varietyHint = seed ? `\n**VARIETY SEED:** ${seed} — produce a DIFFERENT angle than previous generations. Pick uncommon, lesser-known examples.\n` : '';
   
   if (isHistoricalPeriod) {
     return `${languageInstruction}
