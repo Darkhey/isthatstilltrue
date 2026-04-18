@@ -433,6 +433,8 @@ const generateFunMessage = (year: number) => {
 };
 
 export const FactsDebunker = () => {
+  const { t } = useLanguage();
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [isSchoolMode, setIsSchoolMode] = useState(false);
   const [country, setCountry] = useState("Germany");
   const [graduationYear, setGraduationYear] = useState("");
