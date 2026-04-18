@@ -438,6 +438,7 @@ export const FactsDebunker = () => {
   const { toast } = useToast();
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSchoolMode, setIsSchoolMode] = useState(false);
   const [country, setCountry] = useState("Germany");
   const [graduationYear, setGraduationYear] = useState("");
