@@ -346,7 +346,7 @@ If the answer to any question is "no", DO NOT include that fact.`;
               content: prompt
             }
           ],
-          temperature: graduationYear < 1800 ? 0.2 : 0.85,
+          temperature: graduationYear < 1800 ? 0.2 : 0.95,
           top_p: 0.95,
           max_tokens: 4000,
         })
