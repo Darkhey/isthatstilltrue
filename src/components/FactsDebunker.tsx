@@ -486,6 +486,8 @@ export const FactsDebunker = () => {
   }, []);
 
   // Handle ?surprise=1 — pick random country + year and auto-generate
+  const [pendingSurprise, setPendingSurprise] = useState(false);
+
   useEffect(() => {
     if (searchParams.get("surprise") !== "1" || surpriseFiredRef.current || isLoading) return;
     surpriseFiredRef.current = true;
@@ -500,6 +502,7 @@ export const FactsDebunker = () => {
     setGraduationYear(randomYear);
     setFunMessage(generateFunMessage(parseInt(randomYear)));
     setStep(2);
+    setPendingSurprise(true);
 
     toast({
       title: t("surpriseToast"),
@@ -512,19 +515,18 @@ export const FactsDebunker = () => {
     const next = new URLSearchParams(searchParams);
     next.delete("surprise");
     setSearchParams(next, { replace: true });
-
-    // Defer to ensure state is committed before generating
-    setTimeout(() => {
-      void (async () => {
-        // generateFacts reads graduationYear from state; the above setState is async,
-        // so we re-read via a microtask. Use a small delay to let React flush.
-        await new Promise((r) => setTimeout(r, 50));
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        generateFacts();
-      })();
-    }, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Once state is committed after a surprise pick, fire the generation
+  useEffect(() => {
+    if (!pendingSurprise) return;
+    if (!graduationYear || !country) return;
+    setPendingSurprise(false);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    generateFacts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingSurprise, graduationYear, country]);
   
   // Handle mode toggle with proper state reset
   const handleModeToggle = (newSchoolMode: boolean) => {
