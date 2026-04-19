@@ -346,7 +346,7 @@ If the answer to any question is "no", DO NOT include that fact.`;
               content: prompt
             }
           ],
-          temperature: graduationYear < 1800 ? 0.2 : 0.85,
+          temperature: graduationYear < 1800 ? 0.2 : 0.95,
           top_p: 0.95,
           max_tokens: 4000,
         })
@@ -385,8 +385,8 @@ If the answer to any question is "no", DO NOT include that fact.`;
     const validatedFacts: EnhancedFact[] = [];
     
     for (const fact of facts) {
-      // Basic validation
-      if (!fact.fact || fact.fact.length < 30 || !fact.correction || fact.correction.length < 20) {
+      // Basic validation — punchy hooks can be short, so allow ≥20 chars on the fact and ≥30 on correction
+      if (!fact.fact || fact.fact.length < 20 || !fact.correction || fact.correction.length < 30) {
         console.log('✗ Rejected (too short):', fact.fact?.substring(0, 50));
         continue;
       }
@@ -604,73 +604,93 @@ ${wikiContext}
   
   return `${languageInstruction}
 ${varietyHint}
-**Task:** Generate 8 SPECIFIC, mind-blowing, and VARIED facts that students in ${country} learned around ${year} which are now known to be wrong, oversimplified, or completely outdated.
+**Task:** Generate 8 mind-blowing facts that students in ${country} learned around ${year} which are now known to be wrong, oversimplified, or completely outdated.
 
 **Wikipedia Research Context:**
 ${wikiContext}
 
 # 🎯 SUBJECT DIVERSITY (NON-NEGOTIABLE)
-You MUST generate exactly ONE fact from each of these 8 different subject buckets. No bucket may appear twice:
-1. **Science** (physics, chemistry, biology — pick ONE)
-2. **History** (a specific historical narrative students were taught wrong)
-3. **Geography** (countries, borders, capitals, populations, maps)
-4. **Health/Body** (anatomy, nutrition, medicine, sex-ed)
-5. **Tech/Computing** (what was the cutting-edge truth then vs. now)
-6. **Math/Logic** (a rule, formula, or "fact" later refined or proven incomplete)
-7. **Language/Literature** (a grammar rule, etymology, or literary "truth")
-8. **Culture/Society** (gender roles, archaeology, anthropology, civics)
+Exactly ONE fact from each of these 8 buckets — no bucket twice:
+1. **Science** (physics, chemistry, biology)
+2. **History**
+3. **Geography**
+4. **Health/Body** (anatomy, nutrition, medicine)
+5. **Tech/Computing**
+6. **Math/Logic**
+7. **Language/Literature**
+8. **Culture/Society**
 
-# ✍️ WRITING STYLE — BREAK THE TEMPLATE
-- **NEVER** start two facts with the same 3 words.
-- **NEVER** use the formulaic opener "In ${year}, students in ${country} were taught that...". Vary openers across facts: a question, a startling stat, a textbook quote, an anecdote, "Picture a ${year} classroom where...", "${country}'s national curriculum confidently asserted that...", "Every ${year} biology test asked students to memorize...", etc.
-- The **fact** field itself must contain the surprise — the "wow" lives inside the fact, not in a separate field.
-- The **mindBlowingFactor** field is now a one-line "💡 Why this still matters today" hook (max 25 words) — NOT filler about how generations believed something.
+# ✍️ WRITING STYLE — THE "GLASS IS A LIQUID" TEST
+Think of how a friendly fact-checker would surprise someone at a party. Each fact must read like that.
 
-# 🔬 SPECIFICITY TEST (every fact must pass)
-Each fact MUST contain at least ONE of:
-- A real textbook series of that era in ${country} (e.g., German Biologie heute, US Holt Science, UK Letts Revision Guide)
-- A specific curriculum/exam reference (Abitur, A-Level, SAT, Baccalauréat, Matura, Gaokao)
-- A named teacher-training reform, education ministry directive, or school-TV programme
-- A concrete number, named place, or person beyond just "${country}" and "${year}"
+**The \`fact\` field IS the hook.** Write it as ONE punchy, intriguing sentence — ideally a surprising claim or a "wait, really?" question, NOT a dry classroom report.
 
-# 🚫 BANNED OVERUSED FACTS
-Do NOT use these unless you bring a fresh, country-specific angle:
+✅ GOOD examples (this is the vibe):
+- "Glass is actually a slow-flowing liquid — that's why old church windows are thicker at the bottom."
+- "Pluto was a real planet when you took your first science test."
+- "Humans have five senses. Right? RIGHT?"
+- "There are seven continents. Unless your teacher came from a different country."
+- "Bats are blind."
+- "You only use 10% of your brain."
+- "Vikings wore horned helmets into battle."
+
+❌ BAD examples (do NOT write like this):
+- "In ${year}, students in ${country} were authoritatively taught in every textbook that..."
+- "${country}'s national curriculum confidently asserted that..."
+- "Every ${year} biology examination required candidates to memorize that..."
+
+**Rules for the \`fact\` field:**
+- 1 sentence, max ~25 words. Punchy. Quotable. Shareable.
+- NEVER start with "In ${year}" or "Students in ${country}".
+- NO mention of textbooks, curricula, exams, or ministries inside the fact itself.
+- Vary openers wildly across the 8 facts. Some can be a bald claim, some a question, some a quote.
+- The surprise lives in the fact. The reader should think "wait, is that still true?"
+
+**The \`correction\` field** is the reveal — written like the chatbot does it:
+- 2-3 short sentences, conversational tone.
+- Open with what changed, then briefly why or when.
+- No academic jargon. Imagine explaining to a curious 14-year-old.
+
+**The \`mindBlowingFactor\` field** = ONE sentence (≤20 words) finishing the thought "💡 Why this still matters today: ..."
+
+# 🚫 BANNED CLICHÉS (only use if you find a genuinely fresh angle)
 bats are blind • tongue taste map • Great Wall visible from space • Vikings horned helmets • H. pylori/ulcers from stress • seasons caused by Earth-Sun distance • 10% of brain • Napoleon was short • Columbus proved Earth round • goldfish 3-second memory • bulls hate red
 
-Wikipedia's misconception list is a starting point — go beyond it. Prefer country- and curriculum-specific items: e.g., outdated Pluto status (taught as planet until 2006), reclassified dinosaur taxonomy (Brontosaurus saga), wrong number of countries / continents taught, outdated maps (USSR, Yugoslavia, Czechoslovakia depending on year), food pyramid revisions, cholesterol/eggs reversal, gender of Anne Frank's diary translation issues, retracted nutrition science (low-fat dogma), pre-decimal currency math problems, etc.
+Better territory: outdated Pluto status, dinosaur reclassifications (Brontosaurus), changing continent counts, Soviet/Yugoslav-era maps, food-pyramid reversals, cholesterol/eggs flip, retracted nutrition science, dropped grammar rules, debunked psychology (left-brain/right-brain), reclassified species, etc.
 
 # 📚 SOURCES
-Every \`sourceName\` MUST be a real, clickable URL from: wikipedia.org, britannica.com, .edu, .gov, archive.org, jstor.org, nature.com, science.org, scholar.google.com, or books.google.com.
+Every \`sourceName\` MUST be a real, clickable URL from: wikipedia.org, britannica.com, .edu, .gov, archive.org, jstor.org, nature.com, science.org, scholar.google.com, books.google.com.
 
 # 📤 OUTPUT FORMAT (NO markdown, NO code blocks, PURE JSON)
 {
   "facts": [
     {
       "category": "Science|History|Geography|Health|Tech|Math|Language|Culture",
-      "fact": "[A vivid, specific 1-3 sentence statement of what was taught — surprise built in, varied opener, includes a concrete anchor like a textbook/exam/reform/number]",
-      "correction": "[What we know now, with the year/study/discovery that changed it]",
+      "fact": "[ONE punchy sentence — the hook itself, like 'Glass is a slow-flowing liquid.' Max ~25 words. No 'In ${year}' opener.]",
+      "correction": "[2-3 short conversational sentences explaining what we know now and roughly when/why it changed. No jargon.]",
       "yearDebunked": [year between ${year + 1} and ${currentYear}],
-      "mindBlowingFactor": "[ONE short line: why this still matters today — max 25 words]",
+      "mindBlowingFactor": "[ONE sentence ≤20 words: why this still matters today]",
       "sourceName": "https://[trusted-source]/[real-article-path]"
     }
   ],
   "educationProblems": [
     {
       "problem": "[A real systemic issue in ${country}'s ${year}-era schools]",
-      "description": "[How textbooks/curriculum/teacher training perpetuated outdated knowledge]",
-      "impact": "[Concrete impact: cohort size, years it persisted, exam consequences]"
+      "description": "[How knowledge got outdated — kept short and plain]",
+      "impact": "[Concrete impact in plain language]"
     }
   ]
 }
 
 # ✅ HARD RULES
-1. Exactly 8 facts, one per bucket above (Science, History, Geography, Health, Tech, Math, Language, Culture).
-2. No two facts may start with the same 3 words.
-3. Each fact ≥ 100 characters and contains at least one specific anchor (textbook, exam, reform, number, named place beyond country/year).
-4. yearDebunked between ${year + 1} and ${currentYear}.
-5. sourceName MUST be a real URL (not a placeholder).
-6. mindBlowingFactor ≤ 25 words, framed as "why it still matters today".
-7. ${languageInstruction}`;
+1. Exactly 8 facts, one per bucket (Science, History, Geography, Health, Tech, Math, Language, Culture).
+2. The \`fact\` field is a punchy hook ≤25 words. No "In ${year}" / "students were taught" openers. No textbook/curriculum mentions inside the fact.
+3. No two facts may start with the same word.
+4. \`correction\` reads like a friendly chatbot reply — 2-3 short sentences, no jargon.
+5. yearDebunked between ${year + 1} and ${currentYear}.
+6. sourceName MUST be a real URL.
+7. mindBlowingFactor ≤20 words.
+8. ${languageInstruction}`;
 }
 
 function parseFactResponse(rawContent: string, graduationYear: number) {
