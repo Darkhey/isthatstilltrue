@@ -4,7 +4,7 @@ import { FAQSection } from "@/components/FAQSection";
 import { EducationalResources } from "@/components/EducationalResources";
 import { FloatingBackground } from "@/components/FloatingBackground";
 import { Link } from "react-router-dom";
-import { Sparkles, Brain } from "lucide-react";
+import { Sparkles, Brain, Dices } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SEOHead } from "@/components/SEOHead";
 import Footer from "@/components/Footer";
