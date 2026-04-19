@@ -23,6 +23,7 @@ import { EnhancedProgressTracker } from "./EnhancedProgressTracker";
 import { LanguageSelector } from "./LanguageSelector";
 import { AnimatedLoader } from "./AnimatedLoader";
 import { useLanguage } from "@/hooks/use-language";
+import { useSearchParams } from "react-router-dom";
 
 interface OutdatedFact {
   category: string;
