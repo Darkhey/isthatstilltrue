@@ -20,9 +20,22 @@ const Index = () => {
       <div className="flex-1 relative z-10">
         <FactsDebunker />
 
-        {/* CTA Section: Bot + Quiz — placed before MindBlowingFacts so mobile users see them immediately */}
+        {/* CTA Section: Bot + Quiz + Surprise — placed before MindBlowingFacts so mobile users see them immediately */}
         <section className="container mx-auto px-4 py-8 md:py-12">
-          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Surprise me CTA */}
+            <div className="p-8 rounded-2xl border bg-card text-center">
+              <div className="text-4xl mb-3">🎲</div>
+              <h2 className="text-xl font-bold mb-2 text-foreground">{t("surpriseMe")}</h2>
+              <p className="text-muted-foreground mb-4 text-sm">{t("surpriseMeSub")}</p>
+              <Button asChild variant="secondary" className="gap-2">
+                <Link to="/?surprise=1">
+                  <Dices className="h-4 w-4" />
+                  {t("surpriseMe")}
+                </Link>
+              </Button>
+            </div>
+
             {/* Fact-Checker Bot */}
             <div className="p-8 rounded-2xl border bg-card text-center">
               <div className="text-4xl mb-3">🤓</div>
