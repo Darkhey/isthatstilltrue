@@ -23,6 +23,7 @@ import { EnhancedProgressTracker } from "./EnhancedProgressTracker";
 import { LanguageSelector } from "./LanguageSelector";
 import { AnimatedLoader } from "./AnimatedLoader";
 import { useLanguage } from "@/hooks/use-language";
+import { useSearchParams } from "react-router-dom";
 
 interface OutdatedFact {
   category: string;
@@ -471,6 +472,8 @@ export const FactsDebunker = () => {
 
   const factsResultsRef = useRef<HTMLDivElement>(null);
   const loadingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const surpriseFiredRef = useRef(false);
 
   // Cleanup loading interval on unmount
   useEffect(() => {
@@ -481,6 +484,49 @@ export const FactsDebunker = () => {
       }
     };
   }, []);
+
+  // Handle ?surprise=1 — pick random country + year and auto-generate
+  const [pendingSurprise, setPendingSurprise] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("surprise") !== "1" || surpriseFiredRef.current || isLoading) return;
+    surpriseFiredRef.current = true;
+
+    const randomCountry = countries[Math.floor(Math.random() * countries.length)].value;
+    const currentYear = new Date().getFullYear();
+    // Bias toward modern years (1960–current) so most people get relatable facts
+    const randomYear = String(1960 + Math.floor(Math.random() * (currentYear - 1960 + 1)));
+
+    setIsSchoolMode(false);
+    setCountry(randomCountry);
+    setGraduationYear(randomYear);
+    setFunMessage(generateFunMessage(parseInt(randomYear)));
+    setStep(2);
+    setPendingSurprise(true);
+
+    toast({
+      title: t("surpriseToast"),
+      description: t("surpriseToastDesc")
+        .replace("{country}", randomCountry)
+        .replace("{year}", randomYear),
+    });
+
+    // Clear the param so refresh doesn't loop
+    const next = new URLSearchParams(searchParams);
+    next.delete("surprise");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Once state is committed after a surprise pick, fire the generation
+  useEffect(() => {
+    if (!pendingSurprise) return;
+    if (!graduationYear || !country) return;
+    setPendingSurprise(false);
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    generateFacts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingSurprise, graduationYear, country]);
   
   // Handle mode toggle with proper state reset
   const handleModeToggle = (newSchoolMode: boolean) => {
