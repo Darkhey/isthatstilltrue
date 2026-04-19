@@ -385,8 +385,8 @@ If the answer to any question is "no", DO NOT include that fact.`;
     const validatedFacts: EnhancedFact[] = [];
     
     for (const fact of facts) {
-      // Basic validation
-      if (!fact.fact || fact.fact.length < 30 || !fact.correction || fact.correction.length < 20) {
+      // Basic validation — punchy hooks can be short, so allow ≥20 chars on the fact and ≥30 on correction
+      if (!fact.fact || fact.fact.length < 20 || !fact.correction || fact.correction.length < 30) {
         console.log('✗ Rejected (too short):', fact.fact?.substring(0, 50));
         continue;
       }
