@@ -8,6 +8,7 @@ import { FactSkeleton } from "@/components/FactSkeleton";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SEOHead } from "@/components/SEOHead";
 
 interface SchoolMemoryData {
   school_name: string;
@@ -118,8 +119,25 @@ const SchoolMemoryShare = () => {
     );
   }
 
+  const pageTitle = `${data.school_name} — Class of ${data.graduation_year}`;
+  const pageDesc = `Memories, headlines and trivia from ${data.school_name} in ${data.city}, class of ${data.graduation_year}.`;
+  const pageUrl = `https://isthatstilltrue.com/school/${slug}`;
+  const schoolJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: pageTitle,
+    description: pageDesc,
+    url: pageUrl,
+    about: {
+      "@type": "EducationalOrganization",
+      name: data.school_name,
+      address: data.city,
+    },
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+    <main className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-4">
+      <SEOHead title={pageTitle} description={pageDesc} url={pageUrl} jsonLd={schoolJsonLd} />
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-card/50 backdrop-blur-sm p-6 rounded-lg border">
@@ -167,7 +185,7 @@ const SchoolMemoryShare = () => {
           shareableContent={data.shareable_content}
         />
       </div>
-    </div>
+    </main>
   );
 };
 

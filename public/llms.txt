@@ -1,0 +1,19 @@
+# Is That Still True?
+
+> Discover outdated facts you learned in school. Enter your graduation year and country to reveal what science has since debunked or updated, with sources you can verify.
+
+Is That Still True? uses AI to compare what was taught in school curricula with the latest scientific findings. Every fact links to a verified source (Wikipedia, academic journals, government data). Free to use, no signup required.
+
+## Pages
+
+- [Home](/): Generate outdated facts based on your graduation year and country.
+- [Ask the Bot](/ask): Ask the fact-checker bot any question and get a sourced answer.
+- [Quiz](/quiz): Ten-question quiz testing whether common school facts are still true.
+- [How It Works](/how-it-works): Four-step explanation of the AI research pipeline.
+- [About](/about): Mission and team behind Is That Still True?
+
+## Optional
+
+- [Privacy Policy](/privacy)
+- [Terms](/terms)
+- [Imprint](/imprint)

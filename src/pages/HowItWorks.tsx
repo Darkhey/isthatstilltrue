@@ -69,7 +69,7 @@ const HowItWorks = () => {
       <FloatingBackground />
       <SEOHead
         title="How It Works"
-        description="Learn how Is That Still True? uses AI to discover outdated school facts. Enter your graduation year, get personalized results, and share mind-blowing discoveries."
+        description="Four steps: enter your graduation year, our AI researches outdated curriculum facts, get sourced results, share with friends."
         url="https://isthatstilltrue.com/how-it-works"
         jsonLd={faqJsonLd}
       />

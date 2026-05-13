@@ -10,14 +10,32 @@ import { SEOHead } from "@/components/SEOHead";
 import Footer from "@/components/Footer";
 import { useLanguage } from "@/hooks/use-language";
 
+const FAQ_ITEMS: { q: string; a: string }[] = [
+  { q: "What is 'Is That Still True?' and how does it work?", a: "Is That Still True? reveals how scientific understanding and commonly taught facts have evolved. Select your graduation year and country to discover what was taught as fact that has since been updated, with verifiable sources." },
+  { q: "Why do facts change over time?", a: "Scientific knowledge evolves as new methods, technology, and data emerge. What seemed established decades ago may be revised as understanding deepens." },
+  { q: "Are the facts on this website accurate and verified?", a: "Yes. Every fact links to reputable sources including Wikipedia, Encyclopedia Britannica, .edu and .gov domains, JSTOR, Nature, and Google Scholar." },
+  { q: "Can I use this for educational purposes?", a: "Absolutely. It's a great resource for demonstrating the scientific method, critical thinking, and how knowledge evolves." },
+  { q: "How far back in history can I explore?", a: "You can explore historical perspectives dating back to year 1 CE." },
+];
+
 const Index = () => {
   const { t } = useLanguage();
+
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: FAQ_ITEMS.map(({ q, a }) => ({
+      "@type": "Question",
+      name: q,
+      acceptedAnswer: { "@type": "Answer", text: a },
+    })),
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative">
       <FloatingBackground />
-      <SEOHead url="https://isthatstilltrue.com/" />
-      <div className="flex-1 relative z-10">
+      <SEOHead url="https://isthatstilltrue.com/" jsonLd={faqJsonLd} />
+      <main className="flex-1 relative z-10">
         <FactsDebunker />
 
         {/* CTA Section: Bot + Quiz + Surprise — placed before MindBlowingFacts so mobile users see them immediately */}
@@ -68,7 +86,7 @@ const Index = () => {
 
         <FAQSection />
         <EducationalResources />
-      </div>
+      </main>
       <Footer />
     </div>
   );
