@@ -19,7 +19,7 @@ const About = () => {
       <FloatingBackground />
       <SEOHead
         title="About Us"
-        description="Learn about our mission to uncover outdated school knowledge and replace it with modern scientific facts. Is That Still True? helps you discover what's changed since graduation."
+        description="Our mission: uncover outdated school knowledge and replace it with modern scientific facts you can verify."
         url="https://isthatstilltrue.com/about"
         jsonLd={jsonLd}
       />
